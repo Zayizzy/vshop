@@ -1,0 +1,5 @@
+<view class="c-navbar" style="height:{{navHeight}}px;padding-top:{{statusBarHeight}}px;background:{{bg}};color:{{color}};">
+  <view class="c-navbar-back" wx:if="{{showBack}}" bindtap="onBack">‹</view>
+  <text class="c-navbar-title">{{title}}</text>
+  <view class="c-navbar-right"><slot name="right" /></view>
+</view>

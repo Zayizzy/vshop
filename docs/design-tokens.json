@@ -1,0 +1,78 @@
+{
+  "name": "生鲜商城 · 鲜活田园风 Style A",
+  "version": "1.0",
+  "updated": "2026-06-14",
+  "colors": {
+    "primary": "#07C160",
+    "primaryLight": "#E8F8EE",
+    "accent": "#FF6B35",
+    "accentLight": "#FFF3E0",
+    "background": "#F5F7F5",
+    "card": "#FFFFFF",
+    "textPrimary": "#333333",
+    "textSecondary": "#666666",
+    "textHint": "#999999",
+    "textDisabled": "#CCCCCC",
+    "borderLight": "#E5EBE5",
+    "border": "#C8D6C8",
+    "divider": "#F0F0F0",
+    "success": "#07C160",
+    "warning": "#FF6B35",
+    "danger": "#E24B4A",
+    "white": "#FFFFFF",
+    "black": "#000000"
+  },
+  "typography": {
+    "fontFamily": "PingFang SC, -apple-system, Helvetica Neue, sans-serif",
+    "h1": { "size": "18px", "weight": 500, "lineHeight": 1.4 },
+    "h2": { "size": "15px", "weight": 500, "lineHeight": 1.4 },
+    "body": { "size": "13px", "weight": 400, "lineHeight": 1.6 },
+    "caption": { "size": "12px", "weight": 400, "lineHeight": 1.5 },
+    "small": { "size": "11px", "weight": 400, "lineHeight": 1.4 },
+    "price": { "size": "20px", "weight": 500, "lineHeight": 1.2 },
+    "priceSmall": { "size": "14px", "weight": 500, "lineHeight": 1.2 }
+  },
+  "spacing": {
+    "pageMargin": "12px",
+    "cardPadding": "16px",
+    "cardGap": "10px",
+    "sectionGap": "12px",
+    "itemGap": "8px",
+    "contentGap": "12px"
+  },
+  "radius": {
+    "card": "12px",
+    "button": "24px",
+    "tag": "4px",
+    "image": "8px",
+    "badgePill": "12px",
+    "iconArea": "12px"
+  },
+  "components": {
+    "card": { "bg": "card", "radius": "card", "padding": "cardPadding" },
+    "primaryButton": { "bg": "primary", "color": "white", "radius": "button", "height": "44px" },
+    "secondaryButton": { "bg": "white", "color": "primary", "border": "primary", "radius": "button", "height": "44px" },
+    "skuSelector": { "bg": "background", "radius": "8px", "padding": "8px 16px", "selectedBg": "primary", "selectedColor": "white" },
+    "tagBadge": { "padding": "3px 8px", "radius": "tag", "fontSize": "10px", "fontWeight": 500 },
+    "divider": { "color": "divider", "height": "1px" }
+  },
+  "pages": {
+    "home": {
+      "navBar": { "height": "44px", "bg": "white" },
+      "searchBar": { "height": "40px", "bg": "background", "radius": "8px" },
+      "cutoffBanner": { "bg": "accentLight", "color": "accent", "radius": "8px", "padding": "8px 12px" },
+      "banner": { "height": "120px", "bg": "primaryLight", "radius": "12px" },
+      "categoryGrid": { "columns": 5, "iconSize": "44px", "gap": "8px" },
+      "productGrid": { "columns": 2, "gap": "10px" }
+    },
+    "goodsDetail": {
+      "imageCarousel": { "height": "260px", "bg": "primaryLight" },
+      "infoCard": { "radius": "12px", "padding": "16px" },
+      "bottomBar": { "height": "56px", "bg": "white" }
+    },
+    "checkout": {
+      "packageCard": { "radius": "12px", "padding": "14px 16px" },
+      "priceSummary": { "radius": "12px", "padding": "14px 16px" }
+    }
+  }
+}

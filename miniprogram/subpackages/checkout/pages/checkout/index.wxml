@@ -1,0 +1,51 @@
+<view class="page">
+  <view class="delivery-hint">
+    <text>预计{{deliveryDate}}送达</text>
+    <text>20:00前下单次日达</text>
+  </view>
+
+  <view class="card" bindtap="goAddress">
+    <view class="flex-row" wx:if="{{address}}">
+      <text class="addr-icon">📍</text>
+      <view class="flex-1">
+        <text class="addr-name">{{address.name}} {{address.phone}}</text>
+        <text class="addr-detail">{{address.fullAddress || address.detail}}</text>
+      </view>
+      <text class="addr-edit">编辑</text>
+    </view>
+    <view class="flex-center" wx:else>
+      <text class="no-addr">+ 请选择收货地址</text>
+    </view>
+  </view>
+
+  <view class="card" wx:for="{{list}}" wx:for-item="item" wx:key="skuId">
+    <view class="flex-row goods-row">
+      <view class="goods-img-wrap"><t-image src="{{item.goodsImage}}" mode="aspectFill" width="100rpx" height="100rpx" shape="round" /></view>
+      <view class="flex-1 goods-info">
+        <text class="goods-name">{{item.goodsTitle}}</text>
+        <text class="goods-spec">{{item.specName}}</text>
+        <view class="flex-between">
+          <text class="price price-sm">¥{{item.price}}</text>
+          <text>×{{item.quantity}}</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <view class="card">
+    <view class="info-row"><text>商品金额</text><text>¥{{totalAmount}}</text></view>
+    <view class="info-row" wx:if="{{discountAmount > 0}}"><text>优惠</text><text class="discount">-¥{{discountAmount}}</text></view>
+    <view class="info-row"><text>运费</text><text class="freight">免运费</text></view>
+    <view class="info-row total-row"><text>实付金额</text><text class="price price-lg">¥{{payAmount}}</text></view>
+  </view>
+
+  <view class="card">
+    <view class="info-row"><text>订单备注</text><text class="placeholder">选填</text></view>
+    <textarea class="remark-input" placeholder="选填：给卖家留言" value="{{remark}}" bindinput="onRemarkInput" />
+  </view>
+
+  <view class="bottom-bar">
+    <view class="flex-1"><text>共{{list.length}}件 实付</text><text class="price price-lg">¥{{payAmount}}</text></view>
+    <t-button theme="primary" shape="round" size="large" bindtap="submit" loading="{{submitting}}">提交订单</t-button>
+  </view>
+</view>

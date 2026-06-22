@@ -1,0 +1,146 @@
+@import '/styles/theme.wxss';
+@import '/styles/common.wxss';
+
+.page {
+  min-height: 100vh;
+  background: var(--t-bg);
+  padding-top: var(--s-md);
+}
+
+.card-title {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: var(--t-text);
+  margin-bottom: var(--s-md);
+}
+
+/* 推广码 */
+.code-card {
+  margin-top: 0;
+}
+
+.code-box {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--t-bg);
+  border-radius: var(--r-sm);
+  padding: var(--s-sm) var(--s-md);
+  margin-bottom: var(--s-sm);
+}
+
+.code-value {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: var(--t-accent);
+  letter-spacing: 4rpx;
+}
+
+.copy-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12rpx 28rpx;
+  background: var(--t-primary);
+  border-radius: var(--r-round);
+}
+
+.copy-text {
+  font-size: var(--f-caption);
+  color: #fff;
+}
+
+.code-tip {
+  font-size: var(--f-small);
+  color: var(--t-text-hint);
+}
+
+/* 小程序码 */
+.qrcode-card {
+  margin-top: var(--s-sm);
+}
+
+.qrcode-wrap {
+  width: 360rpx;
+  height: 360rpx;
+  margin: 0 auto var(--s-md);
+  background: var(--t-bg);
+  border-radius: var(--r-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.qrcode-img {
+  width: 100%;
+  height: 100%;
+}
+
+.qrcode-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.placeholder-icon {
+  font-size: 64rpx;
+}
+
+.placeholder-text {
+  font-size: var(--f-caption);
+  color: var(--t-text-hint);
+  margin-top: var(--s-sm);
+}
+
+.qrcode-actions {
+  display: flex;
+  justify-content: center;
+}
+
+/* 短链接 */
+.link-card {
+  margin-top: var(--s-sm);
+}
+
+.link-box {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--t-bg);
+  border-radius: var(--r-sm);
+  padding: var(--s-sm) var(--s-md);
+}
+
+.link-value {
+  flex: 1;
+  font-size: var(--f-caption);
+  color: var(--t-text-secondary);
+  margin-right: var(--s-md);
+}
+
+/* 小程序路径 */
+.path-card {
+  margin-top: var(--s-sm);
+}
+
+.path-box {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--t-bg);
+  border-radius: var(--r-sm);
+  padding: var(--s-sm) var(--s-md);
+  margin-bottom: var(--s-sm);
+}
+
+.path-value {
+  flex: 1;
+  font-size: var(--f-caption);
+  color: var(--t-text-secondary);
+  margin-right: var(--s-md);
+  word-break: break-all;
+}
+
+.safe-bottom {
+  height: 40rpx;
+}

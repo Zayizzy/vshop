@@ -1,0 +1,22 @@
+@import './styles/theme.wxss';
+@import './styles/common.wxss';
+
+page {
+  background-color: #F5F7F5;
+  font-family: -apple-system, 'PingFang SC', 'Helvetica Neue', sans-serif;
+  font-size: 26rpx;
+  color: #333;
+  line-height: 1.6;
+  --page-bg: #F5F7F5;
+  --card-bg: #FFFFFF;
+  --primary: #07C160;
+  --primary-light: #E8F8EE;
+  --accent: #FF6B35;
+  --accent-light: #FFF3E0;
+  --text: #333333;
+  --text-2: #666666;
+  --text-3: #999999;
+  --text-4: #CCCCCC;
+  --border: #E5EBE5;
+  --divider: #F0F0F0;
+}

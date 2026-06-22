@@ -1,0 +1,108 @@
+<view class="page-mine">
+  <!-- 个人头部 -->
+  <view class="profile-header" style="padding-top:{{statusBarHeight + 20}}rpx">
+    <view class="profile-row" bindtap="goEditProfile">
+      <view class="profile-avatar-wrap">
+        <text class="profile-avatar-text">{{userInfo.nickName ? userInfo.nickName.charAt(0) : '👤'}}</text>
+      </view>
+      <view class="profile-info">
+        <text class="profile-name">{{userInfo.nickName || '点击登录'}}</text>
+        <text class="profile-location" wx:if="{{userInfo.location}}">{{userInfo.location}}</text>
+      </view>
+      <text class="arrow-white">›</text>
+    </view>
+  </view>
+
+  <!-- 订单统计 -->
+  <view class="order-stat-bar">
+    <view class="stat-item" bindtap="goOrdersByStatus" data-status="pending">
+      <text class="stat-num">{{orderStats.pending || 0}}</text>
+      <text class="stat-label">待付款</text>
+    </view>
+    <view class="stat-divider" />
+    <view class="stat-item" bindtap="goOrdersByStatus" data-status="shipping">
+      <text class="stat-num">{{orderStats.shipping || 0}}</text>
+      <text class="stat-label">待发货</text>
+    </view>
+    <view class="stat-divider" />
+    <view class="stat-item" bindtap="goOrdersByStatus" data-status="receiving">
+      <text class="stat-num">{{orderStats.receiving || 0}}</text>
+      <text class="stat-label">待收货</text>
+    </view>
+  </view>
+
+  <view class="order-entry" bindtap="goAllOrders">
+    <text>全部订单</text>
+    <view class="entry-right">
+      <text class="order-arrow">查看全部</text>
+      <text class="arrow-gray">›</text>
+    </view>
+  </view>
+
+  <!-- 功能菜单 -->
+  <view class="menu-card">
+    <view class="menu-item" bindtap="goAddress">
+      <text class="menu-emoji">📍</text>
+      <text class="menu-title">收货地址</text>
+      <text class="arrow-gray">›</text>
+    </view>
+    <view class="menu-item" bindtap="goCoupon">
+      <text class="menu-emoji">🎫</text>
+      <text class="menu-title">优惠券</text>
+      <view class="menu-right">
+        <text class="menu-hint" wx:if="{{couponCount > 0}}">{{couponCount}}张可用</text>
+        <text class="arrow-gray">›</text>
+      </view>
+    </view>
+    <view class="menu-item" bindtap="goCollection">
+      <text class="menu-emoji">⭐</text>
+      <text class="menu-title">我的收藏</text>
+      <text class="arrow-gray">›</text>
+    </view>
+  </view>
+
+  <!-- KOC 分销卡片 -->
+  <view class="koc-card" bindtap="goKoc">
+    <view class="koc-card-top">
+      <text class="koc-title">KOC分销员工作台</text>
+      <view class="koc-enter-btn">
+        <text>{{kocInfo.isKoc ? '进入' : '申请'}}</text>
+        <text class="arrow-white-sm">›</text>
+      </view>
+    </view>
+    <block wx:if="{{kocInfo.isKoc}}">
+      <text class="koc-desc">等级 {{kocInfo.level || 'Lv.1'}} · 累计收益 ¥{{kocInfo.totalEarnings || '0.00'}}</text>
+      <view class="koc-stats">
+        <view class="koc-stat-item">
+          <text class="koc-stat-num">{{kocInfo.weeklyViews || 0}}</text>
+          <text class="koc-stat-label">本周浏览</text>
+        </view>
+        <view class="koc-stat-item">
+          <text class="koc-stat-num">{{kocInfo.weeklyOrders || 0}}</text>
+          <text class="koc-stat-label">本周订单</text>
+        </view>
+        <view class="koc-stat-item">
+          <text class="koc-stat-num">¥{{kocInfo.weeklyCommission || '0.00'}}</text>
+          <text class="koc-stat-label">预计佣金</text>
+        </view>
+      </view>
+    </block>
+    <text wx:else class="koc-desc">立即加入，赚取分销收益</text>
+  </view>
+
+  <!-- 底部菜单 -->
+  <view class="menu-card">
+    <view class="menu-item" bindtap="goService">
+      <text class="menu-emoji">💬</text>
+      <text class="menu-title">联系客服</text>
+      <text class="arrow-gray">›</text>
+    </view>
+    <view class="menu-item" bindtap="goAbout">
+      <text class="menu-emoji">ℹ️</text>
+      <text class="menu-title">关于鲜到家</text>
+      <text class="arrow-gray">›</text>
+    </view>
+  </view>
+
+  <view class="safe-bottom" />
+</view>

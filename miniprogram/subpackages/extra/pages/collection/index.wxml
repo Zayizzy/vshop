@@ -1,0 +1,16 @@
+<view class="page">
+  <view class="goods-grid" wx:if="{{list.length > 0}}">
+    <goods-card
+      wx:for="{{list}}"
+      wx:key="id"
+      item="{{item}}"
+      show-sold="{{false}}"
+      bindtap="goDetail"
+    >
+      <view slot="action" class="uncollect-btn" catchtap="uncollect" data-id="{{item.id}}">取消收藏</view>
+    </goods-card>
+  </view>
+  <empty wx:elif="{{!loading}}" icon="⭐" description="暂无收藏" />
+  <view class="safe-bottom" />
+</view>
+

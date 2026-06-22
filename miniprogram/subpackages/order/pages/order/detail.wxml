@@ -1,0 +1,60 @@
+<view class="page">
+  <view class="delivery-hint" wx:if="{{order.status === 0}}">
+    <text>预计{{order.deliveryDate}}送达 · 20:00前下单次日达</text>
+  </view>
+
+  <view class="address-card card" wx:if="{{order.receiverName}}">
+    <view class="flex-row">
+      <text class="addr-icon">📍</text>
+      <view class="flex-1">
+        <text class="addr-name">{{order.receiverName}} {{order.receiverPhone}}</text>
+        <text class="addr-detail">{{order.receiverFullAddress}}</text>
+      </view>
+    </view>
+  </view>
+
+  <block wx:for="{{order.packages}}" wx:for-item="pkg" wx:for-index="pkgIdx" wx:key="packageIndex">
+    <view class="card">
+      <view class="package-header flex-between">
+        <text class="package-title">包裹 {{pkg.packageIndex + 1}} / {{order.packages.length}} · {{pkg.supplierName}}</text>
+        <t-tag theme="{{pkg.statusTheme}}" size="small">{{pkg.statusText}}</t-tag>
+      </view>
+
+      <view class="goods-item flex-row" wx:for="{{pkg.items}}" wx:for-item="item" wx:key="id">
+        <t-image src="{{item.goodsImage}}" mode="aspectFill" width="80rpx" height="80rpx" shape="round" />
+        <view class="flex-1 goods-item-info">
+          <text class="goods-item-title">{{item.goodsTitle}}</text>
+          <text class="goods-item-spec">{{item.specName}}</text>
+          <view class="flex-between">
+            <text class="price price-sm">¥{{item.price}}</text>
+            <text class="goods-item-qty">×{{item.quantity}}</text>
+          </view>
+        </view>
+      </view>
+
+      <view class="pkg-footer" wx:if="{{pkg.expressNo}}">
+        <text class="express-text">{{pkg.expressCompany}} {{pkg.expressNo}}</text>
+        <t-button theme="primary" variant="outline" size="small" bindtap="viewLogistics" data-order-id="{{order.id}}" data-pkg-idx="{{pkg.packageIndex}}">查看物流</t-button>
+      </view>
+      <view class="pkg-footer" wx:if="{{pkg.status === 0 && order.status >= 1}}">
+        <t-button theme="default" variant="outline" size="small" bindtap="applyAfterSale" data-order-id="{{order.id}}" data-pkg-idx="{{pkg.packageIndex}}" data-item-id="{{pkg.items[0].id}}">申请售后</t-button>
+      </view>
+    </view>
+  </block>
+
+  <view class="card">
+    <view class="info-row"><text>商品金额</text><text>¥{{order.totalAmount}}</text></view>
+    <view class="info-row" wx:if="{{order.discountAmount}}"><text>优惠</text><text class="discount">-¥{{order.discountAmount}}</text></view>
+    <view class="info-row"><text>运费</text><text class="freight-free">免运费</text></view>
+    <view class="info-row total-row"><text>实付金额</text><text class="price price-lg">¥{{order.payAmount}}</text></view>
+  </view>
+
+  <view class="card order-info">
+    <text class="info-text">订单号：{{order.orderNo}}</text>
+    <text class="info-text">下单时间：{{order.createdAt}}</text>
+    <text class="info-text" wx:if="{{order.payTime}}">支付时间：{{order.payTime}}</text>
+    <text class="info-text" wx:if="{{order.remark}}">备注：{{order.remark}}</text>
+  </view>
+
+  <view class="safe-bottom" />
+</view>

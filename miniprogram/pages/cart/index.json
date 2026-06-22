@@ -1,0 +1,11 @@
+{
+  "usingComponents": {
+    "t-stepper": "tdesign-miniprogram/stepper/stepper",
+    "t-progress": "tdesign-miniprogram/progress/progress",
+    "t-swipe-cell": "tdesign-miniprogram/swipe-cell/swipe-cell",
+    "t-empty": "tdesign-miniprogram/empty/empty",
+    "t-image": "tdesign-miniprogram/image/image"
+  },
+  "navigationBarTitleText": "",
+  "navigationStyle": "custom"
+}

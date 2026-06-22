@@ -1,0 +1,18 @@
+<view class="page">
+  <view class="card">
+    <view class="status-bar" style="color:{{statusColor}};">{{statusText}}</view>
+    <view class="info-row"><text>售后类型</text><text>{{typeText}}</text></view>
+    <view class="info-row"><text>退款金额</text><text class="price price-sm">¥{{aftersale.refundAmount}}</text></view>
+    <view class="info-row"><text>售后原因</text><text>{{aftersale.reason}}</text></view>
+    <view class="info-row" wx:if="{{aftersale.description}}"><text>问题描述</text><text>{{aftersale.description}}</text></view>
+    <view class="images-row" wx:if="{{aftersale.evidenceImages && aftersale.evidenceImages.length}}">
+      <image wx:for="{{aftersale.evidenceImages}}" wx:key="index" src="{{item}}" mode="aspectFill" class="evidence-img" lazy-load />
+    </view>
+    <view class="info-row" wx:if="{{aftersale.refundNo}}"><text>退款单号</text><text>{{aftersale.refundNo}}</text></view>
+    <view class="info-row"><text>申请时间</text><text>{{aftersale.createdAt}}</text></view>
+  </view>
+
+  <view class="cancel-btn-wrap" wx:if="{{canCancel}}">
+    <button class="btn-outline" bindtap="cancelAfterSale">取消申请</button>
+  </view>
+</view>

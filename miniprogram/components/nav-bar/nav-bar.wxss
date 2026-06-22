@@ -1,0 +1,30 @@
+.c-navbar {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  padding-bottom: 8rpx;
+}
+.c-navbar-back {
+  position: absolute;
+  left: 24rpx;
+  bottom: 12rpx;
+  font-size: 48rpx;
+  line-height: 1;
+  width: 56rpx;
+  text-align: center;
+}
+.c-navbar-title {
+  font-size: 34rpx;
+  font-weight: 600;
+  max-width: 60%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.c-navbar-right {
+  position: absolute;
+  right: 24rpx;
+  bottom: 12rpx;
+}

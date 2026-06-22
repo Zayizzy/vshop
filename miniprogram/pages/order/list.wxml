@@ -1,0 +1,78 @@
+<view class="page">
+  <!-- 状态标签 -->
+  <t-tabs value="{{activeTab}}" bind:change="onTabChange" space-evenly>
+    <t-tab-panel wx:for="{{statusTabs}}" wx:key="key" value="{{item.key}}" label="{{item.label}}" />
+  </t-tabs>
+
+  <!-- 空状态 -->
+  <t-empty wx:if="{{orders.length === 0 && !loading}}" icon="order" description="暂无相关订单" />
+
+  <!-- 订单列表 -->
+  <view class="order-list">
+    <block wx:for="{{orders}}" wx:key="id">
+      <view class="order-card" bindtap="goDetail" data-id="{{item.id}}">
+        <!-- 头部 -->
+        <view class="order-header">
+          <text class="order-sn">订单号：{{item.orderSn}}</text>
+          <t-tag
+            theme="{{item.status === 'shipping' ? 'warning' : (item.status === 'done' ? 'success' : (item.status === 'receiving' ? 'primary' : 'default'))}}"
+            size="small" variant="light"
+          >{{getStatusBadge(item.status).text}}</t-tag>
+        </view>
+
+        <!-- 包裹 -->
+        <block wx:for="{{item.packages}}" wx:for-item="pkg" wx:for-index="pkgIdx" wx:key="supplierId">
+          <view class="package-section">
+            <view class="package-label">
+              <text>{{pkg.supplierName}}</text>
+              <text wx:if="{{pkg.logisticsType}}" class="logistics-badge">{{pkg.logisticsType}}</text>
+            </view>
+
+            <view class="goods-item" wx:for="{{pkg.items}}" wx:for-item="goods" wx:key="id">
+              <t-image src="{{goods.coverImage}}" width="100rpx" height="100rpx" mode="aspectFill" shape="round" />
+              <view class="goods-info">
+                <text class="goods-title text-ellipsis-2">{{goods.title}}</text>
+                <text class="goods-spec" wx:if="{{goods.specName}}">{{goods.specName}}</text>
+              </view>
+              <view class="goods-right">
+                <text class="goods-price">¥{{goods.price}}</text>
+                <text class="goods-qty">x{{goods.quantity}}</text>
+              </view>
+            </view>
+          </view>
+        </block>
+
+        <!-- 底部 -->
+        <view class="order-footer">
+          <text class="order-total">共{{item.totalCount}}件 合计</text>
+          <text class="order-price">¥{{item.totalAmount}}</text>
+        </view>
+
+        <!-- 操作按钮 -->
+        <view class="order-actions" wx:if="{{item.status !== 'done' && item.status !== 'pending'}}">
+          <t-button theme="default" variant="outline" size="small" catch:tap="goLogistics" data-id="{{item.id}}">查看物流</t-button>
+          <t-button wx:if="{{item.status === 'receiving'}}" theme="primary" size="small" catch:tap="confirmReceive" data-id="{{item.id}}">确认收货</t-button>
+        </view>
+
+        <view class="order-actions" wx:if="{{item.status === 'pending'}}">
+          <t-button theme="default" variant="outline" size="small">取消订单</t-button>
+          <t-button theme="primary" size="small">去付款</t-button>
+        </view>
+
+        <view class="order-actions" wx:if="{{item.status === 'done'}}">
+          <t-button theme="primary" variant="outline" size="small" catch:tap="rebuy" data-id="{{item.id}}">再次购买</t-button>
+        </view>
+      </view>
+    </block>
+  </view>
+
+  <!-- 加载动画 -->
+  <view class="loading-more" wx:if="{{loading}}">
+    <view class="loading-dot" />
+    <view class="loading-dot" />
+    <view class="loading-dot" />
+  </view>
+
+  <view class="no-more" wx:if="{{!hasMore && orders.length > 0}}">— 没有更多了 —</view>
+  <view class="safe-bottom" />
+</view>

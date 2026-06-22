@@ -1,0 +1,5 @@
+<view class="c-price {{size === 'lg' ? 'price-lg' : (size === 'sm' ? 'price-sm' : '')}}">
+  <text class="c-price-symbol" wx:if="{{showSymbol}}">¥</text>
+  <text class="c-price-value">{{priceText}}</text>
+  <text class="price-old" wx:if="{{oldText}}">¥{{oldText}}</text>
+</view>

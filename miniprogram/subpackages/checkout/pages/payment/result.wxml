@@ -1,0 +1,13 @@
+<view class="page">
+  <view class="result-wrap">
+    <text class="result-icon">{{resultIcon}}</text>
+    <text class="result-text">{{resultText}}</text>
+    <text class="result-desc">{{resultDesc}}</text>
+  </view>
+
+  <view class="btn-group">
+    <button class="btn-primary" bindtap="retryPay" wx:if="{{showPayBtn}}">重新支付</button>
+    <button class="btn-primary" bindtap="goOrder" wx:if="{{status === 'success'}}">查看订单</button>
+    <button class="btn-secondary" bindtap="goHome">返回首页</button>
+  </view>
+</view>

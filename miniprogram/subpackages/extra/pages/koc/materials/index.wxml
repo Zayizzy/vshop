@@ -1,0 +1,20 @@
+<view class="page">
+  <view class="tabs">
+    <text class="tab-item {{activeTab==='all'?'active':''}}" bindtap="switchTab" data-tab="all">全部</text>
+    <text class="tab-item {{activeTab==='text'?'active':''}}" bindtap="switchTab" data-tab="text">文案</text>
+    <text class="tab-item {{activeTab==='image'?'active':''}}" bindtap="switchTab" data-tab="image">图片</text>
+  </view>
+
+  <view class="card" wx:for="{{materials}}" wx:key="id">
+    <view class="card-header">
+      <text class="type-tag">{{item.type}}</text>
+      <text class="card-title">{{item.title}}</text>
+    </view>
+    <text class="card-content" wx:if="{{item.content}}">{{item.content}}</text>
+    <t-image wx:if="{{item.image}}" src="{{item.image}}" width="100%" height="360rpx" mode="aspectFill" class="card-image" bindtap="previewImage" data-url="{{item.image}}" />
+    <view class="card-actions">
+      <text wx:if="{{item.content}}" class="action-btn" bindtap="copyText" data-text="{{item.content}}" data-id="{{item.id}}">{{item.copied ? '已复制' : '复制文案'}}</text>
+      <text wx:if="{{item.image}}" class="action-btn" bindtap="saveImage" data-url="{{item.image}}">保存图片</text>
+    </view>
+  </view>
+</view>

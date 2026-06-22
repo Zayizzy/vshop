@@ -1,0 +1,81 @@
+<view class="page">
+  <!-- 导航栏 -->
+  <view class="nav-bar">
+    <view class="nav-city" bindtap="switchCity">
+      <text class="icon-loc">📍</text>
+      <text class="city-text">{{city}}</text>
+      <text class="icon-arrow-down">▾</text>
+    </view>
+    <view class="nav-search" bindtap="goSearch">
+      <t-search
+        placeholder="搜索果蔬商品"
+        shape="round"
+        focus="{{false}}"
+        disabled
+        custom-style="padding:0;background:transparent"
+      />
+    </view>
+  </view>
+
+  <!-- 截单倒计时 -->
+  <view class="cutoff-bar">
+    <text class="icon-time">⏰</text>
+    <text class="cutoff-text">今日截单倒计时 {{cutoffCountdown}}</text>
+    <text class="cutoff-date">预计{{nextDay}}送达</text>
+  </view>
+
+  <!-- Banner轮播 -->
+  <swiper class="banner" autoplay circular interval="3000" duration="500">
+    <block wx:for="{{banners}}" wx:key="index">
+      <swiper-item>
+        <view class="banner-item" style="background-color:{{item.color}}" data-link="{{item.link}}" bindtap="onBannerTap">
+          <view class="banner-text">
+            <text class="banner-title">{{item.title}}</text>
+          </view>
+          <view class="banner-dots">
+            <view wx:for="{{banners}}" wx:key="index" wx:for-index="di" class="dot {{di === index ? 'dot-active' : ''}}" />
+          </view>
+        </view>
+      </swiper-item>
+    </block>
+  </swiper>
+
+  <!-- 分类入口 -->
+  <view class="category-grid">
+    <view class="cate-item" wx:for="{{categories}}" wx:key="index" bindtap="goCategory" data-id="{{item.id}}">
+      <view class="cate-icon" style="background-color:{{item.bgColor || '#E8F8EE'}}">
+        <text class="cate-emoji">{{item.emoji || '🍎'}}</text>
+      </view>
+      <text class="cate-name">{{item.name}}</text>
+    </view>
+  </view>
+
+  <!-- 今日推荐 -->
+  <view class="section-header">
+    <text class="section-title">今日推荐</text>
+    <view class="section-more" bindtap="goMore">
+      <text>更多</text>
+      <text class="icon-arrow">›</text>
+    </view>
+  </view>
+
+  <!-- 商品网格 -->
+  <view class="goods-grid" wx:if="{{recommendList.length > 0}}">
+    <goods-card
+      wx:for="{{recommendList}}"
+      wx:key="id"
+      item="{{item}}"
+      img-bg="{{item.imgBg || '#E8F8EE'}}"
+      bindtap="goDetail"
+    />
+  </view>
+
+  <!-- 加载中占位 -->
+  <view class="list-loading" wx:if="{{loading && recommendList.length === 0}}">加载中...</view>
+
+  <!-- 空状态 -->
+  <empty wx:if="{{!loading && recommendList.length === 0}}" icon="🛒" description="暂无推荐商品" />
+
+  <view class="no-more" wx:if="{{!hasMore && recommendList.length > 0}}">— 没有更多了 —</view>
+  <view class="safe-bottom" />
+</view>

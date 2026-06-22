@@ -1,0 +1,25 @@
+.page { min-height: 100vh; background: #F5F7F5; }
+
+.service-header { text-align: center; padding: 48rpx 32rpx 32rpx; background: linear-gradient(135deg, #07C160, #05A050); }
+.header-icon { font-size: 64rpx; display: block; }
+.header-title { font-size: 36rpx; font-weight: 700; color: #FFFFFF; display: block; margin-top: 16rpx; }
+.header-desc { font-size: 24rpx; color: rgba(255,255,255,0.7); display: block; margin-top: 8rpx; }
+
+.contact-card { margin: -20rpx 20rpx 20rpx; background: #FFFFFF; border-radius: 16rpx; overflow: hidden; box-shadow: 0 4rpx 16rpx rgba(0,0,0,0.06); }
+.contact-item { display: flex; align-items: center; padding: 32rpx; gap: 16rpx; }
+.contact-item:active { background: #F5F7F5; }
+.contact-icon { font-size: 40rpx; }
+.contact-info { flex: 1; }
+.contact-label { font-size: 28rpx; font-weight: 500; color: #333; display: block; }
+.contact-value { font-size: 24rpx; color: #999; display: block; margin-top: 4rpx; }
+.contact-divider { height: 1rpx; background: #F0F0F0; margin: 0 32rpx; }
+.arrow { font-size: 28rpx; color: #CCC; }
+.copy-text { font-size: 24rpx; color: #07C160; }
+
+.faq-section { padding: 0 20rpx 40rpx; }
+.section-title { font-size: 30rpx; font-weight: 700; color: #333; padding: 24rpx 0 16rpx; }
+.faq-item { background: #FFFFFF; border-radius: 12rpx; margin-bottom: 12rpx; overflow: hidden; }
+.faq-q { display: flex; justify-content: space-between; align-items: center; padding: 28rpx 24rpx; font-size: 26rpx; color: #333; gap: 16rpx; }
+.faq-arrow { font-size: 28rpx; color: #CCC; transition: transform 0.3s; flex-shrink: 0; }
+.faq-arrow.open { transform: rotate(90deg); color: #07C160; }
+.faq-a { padding: 0 24rpx 28rpx; font-size: 24rpx; color: #666; line-height: 1.8; }

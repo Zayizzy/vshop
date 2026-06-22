@@ -1,0 +1,106 @@
+<view class="page">
+  <!-- 加载骨架屏 -->
+  <view class="loading-skeleton" wx:if="{{loading}}">
+    <view class="skeleton-carousel"></view>
+    <view class="skeleton-card">
+      <view class="skeleton-line skeleton-title"></view>
+      <view class="skeleton-line skeleton-price"></view>
+      <view class="skeleton-line skeleton-tags"></view>
+      <view class="skeleton-line skeleton-text"></view>
+      <view class="skeleton-line skeleton-text short"></view>
+      <view class="skeleton-line skeleton-text medium"></view>
+    </view>
+  </view>
+
+  <!-- 自定义导航栏 -->
+  <nav-bar title="商品详情" show-back="{{true}}" bindback="goBack" wx:if="{{!loading}}" />
+
+  <!-- 图片轮播区 -->
+  <view class="carousel-area" wx:if="{{!loading}}">
+    <swiper class="carousel-swiper" indicator-dots="{{true}}" indicator-color="rgba(255,255,255,0.5)" indicator-active-color="#07C160" autoplay="{{true}}" interval="4000" circular="{{true}}">
+      <block wx:for="{{images}}" wx:key="index">
+        <swiper-item>
+          <t-image class="carousel-image" src="{{item}}" mode="aspectFill" width="100%" height="520rpx" />
+        </swiper-item>
+      </block>
+    </swiper>
+  </view>
+
+  <!-- 商品信息卡片 -->
+  <view class="info-card" wx:if="{{!loading}}">
+    <!-- 标题行 -->
+    <text class="info-title">{{goods.name}}</text>
+
+    <!-- 价格行 -->
+    <view class="info-price-row">
+      <text class="info-price-symbol">¥</text>
+      <text class="info-price">{{goods.price}}</text>
+      <!-- 划线价：折前价 originalPrice，仅当有折扣时显示 -->
+      <text class="info-market-price" wx:if="{{goods.originalPrice && goods.originalPrice > goods.price}}">¥{{goods.originalPrice}}</text>
+      <text class="info-discount" wx:if="{{goods.discountRate}}">{{goods.discountRate * 10}}折</text>
+    </view>
+
+    <!-- 标签行 -->
+    <view class="info-tags">
+      <t-tag theme="warning" variant="light" size="small" wx:if="{{goods.delivery == 'nextDay'}}">次日达</t-tag>
+      <t-tag theme="success" variant="light" size="small" wx:if="{{goods.origin}}">产地直采</t-tag>
+      <t-tag theme="default" variant="light" size="small">已售{{goods.sales || 0}}件</t-tag>
+    </view>
+
+    <!-- 仓库信息 -->
+    <view class="info-row">
+      <text class="info-label">发货仓库</text>
+      <text class="info-value">{{goods.supplier || '鲜到家成都仓'}}</text>
+    </view>
+
+    <!-- SKU 选择区 -->
+    <view class="sku-section">
+      <text class="section-title">规格选择</text>
+      <view class="sku-options">
+        <text
+          wx:for="{{skus}}"
+          wx:key="id"
+          class="sku-btn {{selectedSkuId === item.id ? 'sku-selected' : 'sku-default'}}"
+          data-id="{{item.id}}"
+          bindtap="selectSku"
+        >{{item.name}}</text>
+      </view>
+    </view>
+
+    <!-- 产地溯源 -->
+    <view class="origin-section">
+      <text class="section-title">产地溯源</text>
+      <text class="origin-desc">{{goods.originDesc || '本产品来自优质产地，通过严格品控筛选，从田间到餐桌全程可追溯，确保新鲜安全。'}}</text>
+    </view>
+  </view>
+
+  <!-- 商品详情 -->
+  <view class="detail-section" wx:if="{{!loading}}">
+    <text class="detail-section-title">商品详情</text>
+    <view class="detail-content">
+      <rich-text nodes="{{goods.detail || '暂无商品详情'}}"></rich-text>
+    </view>
+  </view>
+
+  <!-- 底部安全距离占位 -->
+  <view class="bottom-placeholder" wx:if="{{!loading}}"></view>
+
+  <!-- 底部固定操作栏 -->
+  <view class="bottom-bar safe-area-bottom" wx:if="{{!loading}}">
+    <view class="bottom-icons">
+      <view class="bottom-icon" bindtap="toggleCollect">
+        <text class="iconfont">{{collected ? '⭐' : '☆'}}</text>
+        <text class="icon-label">收藏</text>
+      </view>
+      <view class="bottom-icon" bindtap="goCart">
+        <text class="iconfont">🛒</text>
+        <text class="icon-label">购物车</text>
+        <view class="cart-badge" wx:if="{{cartCount > 0}}">{{cartCount > 99 ? '99+' : cartCount}}</view>
+      </view>
+    </view>
+    <view class="bottom-actions">
+      <t-button t-class="btn-buy" shape="round" catch:tap="buyNow">立即购买</t-button>
+      <t-button t-class="btn-cart" shape="round" catch:tap="addToCart">加入购物车</t-button>
+    </view>
+  </view>
+</view>

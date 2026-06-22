@@ -1,0 +1,49 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Build output
+dist/
+vshop-server/dist/
+
+# Environment files
+.env
+.env.local
+.env.production
+.env.*.local
+
+# Database
+vshop-server/prisma/dev.db
+vshop-server/prisma/dev.db-journal
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+
+# Uploads (user-generated content)
+vshop-server/public/uploads/
+
+# Miniprogram npm build artifacts
+miniprogram/miniprogram_npm/
+
+# Coverage
+coverage/
+
+# WeChat miniprogram private config (machine-specific)
+project.private.config.json
+
+# Temporary files
+*.tmp
+.cache/

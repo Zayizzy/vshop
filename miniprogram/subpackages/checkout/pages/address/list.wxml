@@ -1,0 +1,16 @@
+<view class="page">
+  <view class="addr-item card" wx:for="{{addresses}}" wx:key="id" bindtap="selectAddr" data-id="{{item.id}}">
+    <view class="flex-between">
+      <text class="addr-name">{{item.name}} {{item.phone}}</text>
+      <view class="flex-row">
+        <text class="default-tag" wx:if="{{item.isDefault}}">默认</text>
+        <text class="edit-btn" bindtap="edit" data-id="{{item.id}}">编辑</text>
+      </view>
+    </view>
+    <text class="addr-text">{{item.province}}{{item.city}}{{item.district}} {{item.detail}}</text>
+  </view>
+
+  <view class="add-btn-wrap">
+    <button class="btn-primary" bindtap="add">新增收货地址</button>
+  </view>
+</view>

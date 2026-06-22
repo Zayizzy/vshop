@@ -1,0 +1,92 @@
+<view class="page">
+  <!-- 选品列表模式 -->
+  <block wx:if="{{mode === 'list'}}">
+    <view class="search-row">
+      <t-search
+        value="{{keyword}}"
+        placeholder="搜索要推广的商品"
+        bind:change="onSearchInput"
+        bind:submit="onSearch"
+      />
+    </view>
+    <view class="tip-bar">
+      <text class="tip-icon">💡</text>
+      <text class="tip-text">选择商品生成专属推广链接，分享出去就能赚佣金</text>
+    </view>
+    <view class="goods-grid">
+      <view class="goods-card" wx:for="{{goodsList}}" wx:key="id" bindtap="selectGood" data-id="{{item.id}}">
+        <view class="card-img">
+          <t-image src="{{item.image}}" width="100%" height="240rpx" mode="aspectFill" />
+          <t-tag
+            wx:if="{{item.tag}}"
+            style="position:absolute;left:12rpx;top:12rpx"
+            size="small"
+            theme="{{item.tag === '爆款' ? 'danger' : 'success'}}"
+            variant="light"
+          >{{item.tag}}</t-tag>
+        </view>
+        <view class="card-body">
+          <text class="goods-name">{{item.name}}</text>
+          <view class="goods-footer">
+            <view class="price-block">
+              <text class="price-symbol">¥</text>
+              <text class="price-value">{{item.price}}</text>
+            </view>
+            <text class="commission">佣金 ¥{{item.commission}}</text>
+          </view>
+        </view>
+      </view>
+    </view>
+  </block>
+
+  <!-- 分享模式 -->
+  <block wx:if="{{mode === 'share' && selectedGood}}">
+    <view class="share-header">
+      <view class="back-btn" bindtap="backToList">
+        <text>← 返回</text>
+      </view>
+      <text class="share-title">生成推广素材</text>
+    </view>
+
+    <!-- 分享预览卡片 -->
+    <view class="share-preview">
+      <view class="preview-card">
+        <view class="preview-img">
+          <t-image src="{{selectedGood.image}}" width="100%" height="360rpx" mode="aspectFill" />
+        </view>
+        <view class="preview-body">
+          <text class="preview-name">{{selectedGood.name}}</text>
+          <view class="preview-price">
+            <text class="preview-symbol">¥</text>
+            <text class="preview-value">{{selectedGood.price}}</text>
+            <t-tag theme="warning" size="small" variant="light">预计佣金 ¥{{selectedGood.commission}}</t-tag>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 操作区 -->
+    <view class="share-actions">
+      <view class="action-card">
+        <text class="action-title">📋 推广文案（已含链接）</text>
+        <view class="copy-box" bindtap="copyText">
+          <text class="copy-content">🔥 {{selectedGood.name}}\n💰 ¥{{selectedGood.price}} | 产地直采次日达\n🛒 点击购买 👇</text>
+          <text class="copy-btn-text">复制</text>
+        </view>
+      </view>
+
+      <view class="action-card">
+        <text class="action-title">🔗 推广链接</text>
+        <view class="copy-box" bindtap="copyLink">
+          <text class="copy-content link">{{shareLink}}</text>
+          <text class="copy-btn-text">复制</text>
+        </view>
+      </view>
+
+      <view class="action-buttons">
+        <t-button theme="primary" size="large" shape="round" block open-type="share">分享给微信好友</t-button>
+        <t-button theme="default" variant="outline" size="large" shape="round" block bindtap="copyText">复制推广文案</t-button>
+      </view>
+    </view>
+  </block>
+</view>

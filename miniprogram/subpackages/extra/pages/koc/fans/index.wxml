@@ -1,0 +1,35 @@
+<view class="page">
+  <view class="stats-header">
+    <view class="stat-block">
+      <text class="stat-num">{{totalFans}}</text>
+      <text class="stat-label">累计粉丝</text>
+    </view>
+    <view class="stat-divider-v" />
+    <view class="stat-block">
+      <text class="stat-num new">+{{newFansToday}}</text>
+      <text class="stat-label">今日新增</text>
+    </view>
+  </view>
+
+  <view class="fan-list" wx:if="{{fans.length > 0}}">
+    <view class="fan-item" wx:for="{{fans}}" wx:key="id">
+      <view class="fan-avatar">
+        <text class="avatar-text">{{item.nickname.charAt(0)}}</text>
+      </view>
+      <view class="fan-info">
+        <text class="fan-name">{{item.nickname}}</text>
+        <text class="fan-date">{{item.joinDate}} 加入</text>
+      </view>
+      <view class="fan-stats">
+        <text class="fan-orders">{{item.orderCount}}单</text>
+        <text class="fan-amount">¥{{item.totalAmount}}</text>
+      </view>
+    </view>
+  </view>
+
+  <t-empty wx:else icon="user" description="暂无粉丝" />
+  <view class="tip-card">
+    <text class="tip-title">💡 涨粉小贴士</text>
+    <text class="tip-text">分享推广链接到朋友圈和微信群，好友通过你的链接进入小程序即成为你的粉丝。每单成交都能获得佣金！</text>
+  </view>
+</view>

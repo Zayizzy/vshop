@@ -1,0 +1,53 @@
+<view class="page-category">
+  <!-- 左侧分类栏 -->
+  <scroll-view class="sidebar" scroll-y enhanced show-scrollbar="{{false}}">
+    <view
+      class="sidebar-item {{activeCategoryId === item.id ? 'active' : ''}}"
+      wx:for="{{categories}}"
+      wx:key="id"
+      data-id="{{item.id}}"
+      bindtap="switchCategory"
+    >
+      <text class="sidebar-text">{{item.name}}</text>
+    </view>
+  </scroll-view>
+
+  <!-- 右侧内容区 -->
+  <scroll-view class="content" scroll-y enhanced show-scrollbar="{{false}}">
+    <!-- 促销横幅 -->
+    <view class="promo-banner" wx:if="{{promoBanner}}">
+      <view class="promo-text">
+        <text class="promo-title">{{promoBanner.title}}</text>
+        <text class="promo-desc">{{promoBanner.desc}}</text>
+      </view>
+      <image class="promo-img" src="{{promoBanner.image}}" mode="aspectFill" />
+    </view>
+
+    <!-- 子分类与商品 -->
+    <block wx:for="{{subCategories}}" wx:key="id" wx:for-item="sub">
+      <view class="sub-section">
+        <view class="sub-title">{{sub.name}}</view>
+        <view class="goods-grid">
+          <goods-card
+            wx:for="{{goodsMap[sub.id]}}"
+            wx:key="id"
+            wx:for-item="goods"
+            item="{{goods}}"
+            img-height="200rpx"
+            img-bg="{{goods.bgColor}}"
+            show-sold="{{false}}"
+            bindtap="goDetail"
+          />
+        </view>
+      </view>
+    </block>
+
+    <!-- 空状态 -->
+    <view class="empty-state" wx:if="{{subCategories.length === 0 && !loading}}">
+      <text class="empty-emoji">🛒</text>
+      <text class="empty-text">暂无商品</text>
+    </view>
+
+    <view class="safe-bottom" />
+  </scroll-view>
+</view>

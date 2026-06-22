@@ -1,0 +1,26 @@
+<view class="page">
+  <t-search value="{{keyword}}" placeholder="搜索果蔬商品" bind:change="onInput" bind:submit="onSearch" focus />
+
+  <view class="sort-row" wx:if="{{list.length}}">
+    <text class="sort-item {{sort==='default'?'active':''}}" bindtap="setSort" data-sort="default">综合</text>
+    <text class="sort-item {{sort==='sales'?'active':''}}" bindtap="setSort" data-sort="sales">销量</text>
+    <text class="sort-item {{sort==='price_asc'?'active':''}}" bindtap="setSort" data-sort="price_asc">价格↑</text>
+    <text class="sort-item {{sort==='price_desc'?'active':''}}" bindtap="setSort" data-sort="price_desc">价格↓</text>
+  </view>
+
+  <view class="goods-grid">
+    <goods-card
+      wx:for="{{list}}"
+      wx:key="id"
+      item="{{item}}"
+      img-bg="{{item.imgBg}}"
+      show-market-price="{{false}}"
+      bindtap="goDetail"
+    />
+  </view>
+
+  <view wx:if="{{!list.length && keyword}}">
+    <t-empty icon="search" description="暂无搜索结果" />
+    <view class="empty-hint">换个关键词试试</view>
+  </view>
+</view>

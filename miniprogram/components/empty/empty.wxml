@@ -1,0 +1,5 @@
+<view class="c-empty">
+  <view class="c-empty-icon">{{icon}}</view>
+  <view class="c-empty-desc">{{description}}</view>
+  <view class="c-empty-action"><slot name="action" /></view>
+</view>

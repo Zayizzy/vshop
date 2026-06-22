@@ -1,0 +1,23 @@
+.c-price {
+  display: inline-flex;
+  align-items: baseline;
+  color: #FF6B35;
+  font-weight: 700;
+  line-height: 1;
+}
+.c-price-symbol {
+  font-size: 0.55em;
+  font-weight: 600;
+  margin-right: 2rpx;
+}
+.c-price-value {
+  font-size: inherit;
+}
+.c-price .price-old {
+  font-size: 0.6em;
+  font-weight: 400;
+  color: #C8C8C8;
+  text-decoration: line-through;
+  margin-left: 10rpx;
+  align-self: baseline;
+}

@@ -1,0 +1,86 @@
+.page {
+  background: #F5F7F5;
+  min-height: 100vh;
+}
+
+/* Sort Row */
+.sort-row {
+  display: flex;
+  padding: 16rpx 24rpx;
+  gap: 48rpx;
+  background: #fff;
+  border-bottom: 1rpx solid #F0F0F0;
+}
+.sort-item {
+  font-size: 26rpx;
+  color: #999;
+}
+.sort-item.active {
+  color: #07C160;
+  font-weight: 600;
+}
+
+/* Goods Grid */
+.goods-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16rpx;
+  padding: 16rpx;
+}
+.goods-card {
+  width: calc((100% - 16rpx) / 2);
+  background: #fff;
+  border-radius: 16rpx;
+  overflow: hidden;
+  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.04);
+}
+.goods-img-wrap {
+  width: 100%;
+  height: 280rpx;
+  background: #F5F5F5;
+}
+.goods-info {
+  padding: 16rpx;
+}
+.goods-title {
+  font-size: 26rpx;
+  color: #333;
+  line-height: 1.4;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+.goods-desc {
+  font-size: 22rpx;
+  color: #999;
+  display: block;
+  margin: 8rpx 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.goods-price-row {
+  display: flex;
+  align-items: baseline;
+}
+.price {
+  font-size: 28rpx;
+  font-weight: bold;
+  color: #FF6B35;
+}
+.goods-sales {
+  font-size: 20rpx;
+  color: #CCC;
+  margin-left: auto;
+}
+
+/* Empty Hint */
+.empty-hint {
+  text-align: center;
+  font-size: 24rpx;
+  color: #999;
+  margin-top: 16rpx;
+  padding-bottom: 40rpx;
+}

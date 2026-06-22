@@ -1,0 +1,26 @@
+<view class="page">
+  <view class="card express-card">
+    <view class="flex-row">
+      <view class="express-icon">📦</view>
+      <view class="flex-1">
+        <text class="express-company">{{logistics.expressCompany}}</text>
+        <text class="express-no">{{logistics.expressNo}}</text>
+      </view>
+      <text class="copy-btn" bindtap="copyNo">复制</text>
+    </view>
+  </view>
+
+  <view class="card">
+    <view class="status-badge">{{logistics.statusText}}</view>
+    <view class="timeline">
+      <view class="timeline-item {{item.isLatest ? 'latest' : ''}}" wx:for="{{logistics.tracks}}" wx:key="index">
+        <view class="timeline-dot {{item.isLatest ? 'active' : ''}}"></view>
+        <view class="timeline-content">
+          <text class="timeline-desc">{{item.description}}</text>
+          <text class="timeline-loc" wx:if="{{item.location}}">{{item.location}}</text>
+          <text class="timeline-time">{{item.time}}</text>
+        </view>
+      </view>
+    </view>
+  </view>
+</view>

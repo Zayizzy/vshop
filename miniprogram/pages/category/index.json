@@ -1,0 +1,7 @@
+{
+  "usingComponents": {
+    "t-tag": "tdesign-miniprogram/tag/tag",
+    "t-image": "tdesign-miniprogram/image/image"
+  },
+  "navigationBarTitleText": "商品分类"
+}

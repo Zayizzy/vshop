@@ -1,0 +1,72 @@
+/* 通用组件样式 */
+
+.flex-row { display: flex; flex-direction: row; align-items: center; }
+.flex-col { display: flex; flex-direction: column; }
+.flex-1 { flex: 1; }
+.flex-between { display: flex; justify-content: space-between; align-items: center; }
+.flex-center { display: flex; justify-content: center; align-items: center; }
+
+.card {
+  background: var(--t-card);
+  border-radius: var(--r-lg);
+  margin: 0 var(--s-sm) var(--s-sm);
+  padding: var(--s-md);
+  box-shadow: var(--shadow-sm);
+}
+
+.badge {
+  display: inline-flex;
+  padding: 4rpx 14rpx;
+  border-radius: var(--r-xs);
+  font-size: var(--f-small);
+  font-weight: 500;
+}
+.badge-green { background: var(--t-primary-bg); color: var(--t-primary); }
+.badge-orange { background: var(--t-accent-bg); color: var(--t-accent); }
+.badge-red { background: var(--t-accent); color: #fff; }
+.badge-gray { background: #F5F5F5; color: var(--t-text-hint); }
+
+.price {
+  color: var(--t-accent);
+  font-weight: 600;
+}
+.price-lg { font-size: var(--f-price); }
+.price-sm { font-size: 28rpx; }
+.price-old { font-size: var(--f-small); color: var(--t-text-disabled); text-decoration: line-through; }
+
+.btn-primary {
+  display: flex; align-items: center; justify-content: center;
+  height: 88rpx; line-height: 88rpx;
+  background: var(--t-primary);
+  color: #fff; font-size: 30rpx; font-weight: 500;
+  border-radius: var(--r-xl); border: none;
+}
+.btn-primary[disabled] { background: #A0D9B0; }
+
+.btn-secondary {
+  display: flex; align-items: center; justify-content: center;
+  height: 88rpx; line-height: 88rpx;
+  background: #fff; color: var(--t-primary);
+  font-size: 30rpx; font-weight: 500;
+  border-radius: var(--r-xl);
+  border: 2rpx solid var(--t-primary);
+}
+
+.btn-outline {
+  padding: 12rpx 32rpx;
+  border: 2rpx solid var(--t-border);
+  border-radius: 40rpx;
+  font-size: var(--f-caption);
+  color: var(--t-text-secondary);
+  background: #fff;
+}
+
+.section-title {
+  display: flex; justify-content: space-between; align-items: center;
+  margin: var(--s-sm) var(--s-sm) var(--s-xs);
+}
+.section-title text:first-child { font-size: var(--f-h2); font-weight: 500; color: var(--t-text); }
+.section-title text:last-child { font-size: var(--f-caption); color: var(--t-primary); }
+
+.text-ellipsis { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.text-ellipsis-2 { overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }

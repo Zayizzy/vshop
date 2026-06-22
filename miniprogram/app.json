@@ -1,0 +1,108 @@
+{
+  "pages": [
+    "pages/home/index",
+    "pages/category/index",
+    "pages/cart/index",
+    "pages/order/list",
+    "pages/mine/index",
+    "pages/goods/detail",
+    "pages/search/result"
+  ],
+  "subPackages": [
+    {
+      "root": "subpackages/checkout",
+      "pages": [
+        "pages/checkout/index",
+        "pages/address/list",
+        "pages/address/edit",
+        "pages/payment/result"
+      ]
+    },
+    {
+      "root": "subpackages/order",
+      "pages": [
+        "pages/order/detail",
+        "pages/order/logistics",
+        "pages/aftersale/apply",
+        "pages/aftersale/detail",
+        "pages/aftersale/list"
+      ]
+    },
+    {
+      "root": "subpackages/koc",
+      "pages": [
+        "pages/koc/register/index",
+        "pages/koc/status/index",
+        "pages/koc/dashboard/index",
+        "pages/koc/orders/index",
+        "pages/koc/tools/index",
+        "pages/koc/poster/index",
+        "pages/koc/share/index",
+        "pages/koc/earnings/index",
+        "pages/koc/withdraw/index"
+      ]
+    },
+    {
+      "root": "subpackages/extra",
+      "pages": [
+        "pages/koc/materials/index",
+        "pages/koc/fans/index",
+        "pages/koc/ranking/index",
+        "pages/coupon/list",
+        "pages/collection/index",
+        "pages/service/index",
+        "pages/settings/index"
+      ]
+    }
+  ],
+  "preloadRule": {
+    "pages/cart/index": {
+      "network": "all",
+      "packages": ["subpackages/checkout"]
+    },
+    "pages/mine/index": {
+      "network": "all",
+      "packages": ["subpackages/koc"]
+    },
+    "pages/order/list": {
+      "network": "all",
+      "packages": ["subpackages/order"]
+    },
+    "pages/goods/detail": {
+      "network": "all",
+      "packages": ["subpackages/checkout"]
+    }
+  },
+  "window": {
+    "backgroundTextStyle": "light",
+    "navigationBarBackgroundColor": "#FFFFFF",
+    "navigationBarTitleText": "鲜到家 · 果蔬",
+    "navigationBarTextStyle": "black",
+    "backgroundColor": "#F5F7F5"
+  },
+  "tabBar": {
+    "color": "#999999",
+    "selectedColor": "#07C160",
+    "backgroundColor": "#FFFFFF",
+    "borderStyle": "black",
+    "list": [
+      { "pagePath": "pages/home/index",     "text": "首页",   "iconPath": "assets/icons/home.png",     "selectedIconPath": "assets/icons/home-active.png" },
+      { "pagePath": "pages/category/index", "text": "分类",   "iconPath": "assets/icons/category.png", "selectedIconPath": "assets/icons/category-active.png" },
+      { "pagePath": "pages/cart/index",     "text": "购物车", "iconPath": "assets/icons/cart.png",     "selectedIconPath": "assets/icons/cart-active.png" },
+      { "pagePath": "pages/order/list",     "text": "订单",   "iconPath": "assets/icons/order.png",    "selectedIconPath": "assets/icons/order-active.png" },
+      { "pagePath": "pages/mine/index",     "text": "我的",   "iconPath": "assets/icons/mine.png",     "selectedIconPath": "assets/icons/mine-active.png" }
+    ]
+  },
+  "usingComponents": {
+    "t-button": "tdesign-miniprogram/button/button",
+    "t-tag": "tdesign-miniprogram/tag/tag",
+    "t-image": "tdesign-miniprogram/image/image",
+    "t-toast": "tdesign-miniprogram/toast/toast",
+    "price": "/components/price/price",
+    "empty": "/components/empty/empty",
+    "nav-bar": "/components/nav-bar/nav-bar",
+    "goods-card": "/components/goods-card/goods-card"
+  },
+  "sitemapLocation": "sitemap.json",
+  "lazyCodeLoading": "requiredComponents"
+}

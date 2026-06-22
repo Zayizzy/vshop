@@ -1,0 +1,287 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model User {
+  id        String   @id @default(cuid())
+  openid    String   @unique
+  nickname  String?
+  avatar    String?
+  phone     String?
+  location  String?
+  isKoc        Boolean   @default(false)
+  kocApprovedAt DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  addresses Address[]
+  orders    Order[]
+  cartItems CartItem[]
+  coupons   UserCoupon[]
+  kocProfile KocProfile?
+}
+
+model Address {
+  id        String   @id @default(cuid())
+  userId    String
+  name      String
+  phone     String
+  province  String
+  city      String
+  district  String
+  detail    String
+  isDefault Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user   User     @relation(fields: [userId], references: [id])
+  orders Order[]
+}
+
+model Category {
+  id     String  @id @default(cuid())
+  name   String
+  icon   String?
+  sort   Int     @default(0)
+  status String  @default("active")
+
+  subCategories SubCategory[]
+}
+
+model SubCategory {
+  id         String   @id @default(cuid())
+  categoryId String
+  name       String
+  sort       Int      @default(0)
+
+  category Category @relation(fields: [categoryId], references: [id])
+  goods    Good[]
+}
+
+model Good {
+  id            String   @id @default(cuid())
+  subCategoryId String?
+  name          String
+  description   String?
+  detail        String?
+  sales         Int      @default(0)
+  status        String   @default("active")
+  // 商品级折扣率（0~1，如 0.8 = 8折）。null 表示无折扣。
+  // 展示与下单均按 price × discountRate 计算折后价。
+  discountRate  Float?
+  // 是否为今日推荐商品（首页"今日推荐"展示）
+  isRecommended Boolean  @default(false)
+  // 推荐排序（越小越靠前）
+  recommendSort Int      @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  subCategory SubCategory?  @relation(fields: [subCategoryId], references: [id])
+  skus        Sku[]
+  images      GoodImage[]
+  suppliers   GoodSupplier[]
+  favorites   Favorite[]
+}
+
+model GoodImage {
+  id      String @id @default(cuid())
+  goodId  String
+  url     String
+  sort    Int    @default(0)
+
+  good Good @relation(fields: [goodId], references: [id])
+}
+
+model Sku {
+  id           String  @id @default(cuid())
+  goodId       String
+  name         String
+  // 金额以「分」为单位（Int），避免浮点累计误差。Service 层转「元」对外
+  price        Int
+  marketPrice  Int?
+  stock        Int     @default(0)
+
+  good         Good           @relation(fields: [goodId], references: [id])
+  suppliers    GoodSupplier[]
+  cartItems    CartItem[]
+  orderItems   OrderItem[]
+}
+
+model Supplier {
+  id              String  @id @default(cuid())
+  name            String
+  contactName     String?
+  contactPhone    String?
+  deliveryRegions String? // JSON array of cities
+  fulfillRate     Float   @default(100)
+  status          String  @default("active")
+  createdAt       DateTime @default(now())
+
+  goodSuppliers GoodSupplier[]
+  orders        Order[]
+}
+
+model GoodSupplier {
+  id         String  @id @default(cuid())
+  goodId     String
+  supplierId String
+  skuId      String
+  // 金额以「分」为单位（Int）
+  price      Int
+  stock      Int     @default(0)
+  freight    Int     @default(0)
+  status     String  @default("active")
+
+  good     Good     @relation(fields: [goodId], references: [id])
+  supplier Supplier @relation(fields: [supplierId], references: [id])
+  sku      Sku      @relation(fields: [skuId], references: [id])
+}
+
+model CartItem {
+  id       String @id @default(cuid())
+  userId   String
+  skuId    String
+  quantity Int    @default(1)
+
+  user User @relation(fields: [userId], references: [id])
+  sku  Sku  @relation(fields: [skuId], references: [id])
+}
+
+model Order {
+  id            String   @id @default(cuid())
+  orderSn       String   @unique
+  userId        String
+  addressId     String?
+  supplierId    String?
+  status        String   @default("pending") // pending, shipping, receiving, done
+  // 金额以「分」为单位（Int）
+  totalAmount   Int
+  discountAmount Int     @default(0)
+  freightAmount Int      @default(0)
+  payAmount     Int
+  remark        String?
+  kocId         String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  user      User       @relation(fields: [userId], references: [id])
+  address   Address?   @relation(fields: [addressId], references: [id])
+  supplier  Supplier?  @relation(fields: [supplierId], references: [id])
+  items     OrderItem[]
+  packages  OrderPackage[]
+  payment   Payment?
+}
+
+model OrderItem {
+  id        String @id @default(cuid())
+  orderId   String
+  skuId     String
+  goodTitle String
+  specName  String?
+  image     String?
+  // 单价以「分」为单位（Int）
+  price     Int
+  quantity  Int
+
+  order Order @relation(fields: [orderId], references: [id])
+  sku   Sku   @relation(fields: [skuId], references: [id])
+}
+
+model OrderPackage {
+  id            String  @id @default(cuid())
+  orderId       String
+  supplierId    String?
+  supplierName  String
+  status        Int     @default(0) // 0待发货 1已打单 2已发货 3运输中 4派送中 5已签收
+  expressCompany String?
+  expressNo     String?
+
+  order Order @relation(fields: [orderId], references: [id])
+}
+
+model Payment {
+  id           String   @id @default(cuid())
+  orderId      String   @unique
+  // 金额以「分」为单位（Int）
+  amount       Int
+  status       String   @default("pending")
+  payTime      DateTime?
+  createdAt    DateTime @default(now())
+
+  order Order @relation(fields: [orderId], references: [id])
+}
+
+model Favorite {
+  id      String   @id @default(cuid())
+  userId  String
+  goodId  String
+  createdAt DateTime @default(now())
+
+  good Good @relation(fields: [goodId], references: [id])
+
+  @@unique([userId, goodId])
+}
+
+model Coupon {
+  id            String   @id @default(cuid())
+  name          String
+  type          String   // cash | discount
+  // 现金券面额（分）。type=cash 时使用
+  value         Int?
+  // 折扣率（0~1，如 0.85）。type=discount 时使用，非金额故仍 Float
+  discountValue Float?
+  // 满减门槛（分）
+  minAmount     Int      @default(0)
+  scopeType     String   @default("all")
+  totalCount    Int
+  usedCount     Int      @default(0)
+  expireTime    DateTime
+  // active | disabled。disabled 后不再发放，已发放的不影响使用
+  status        String   @default("active")
+  userCoupons   UserCoupon[]
+}
+
+model UserCoupon {
+  id       String   @id @default(cuid())
+  userId   String
+  couponId String
+  status   String   @default("usable") // usable, used, expired
+  usedAt   DateTime?
+  createdAt DateTime @default(now())
+
+  user   User   @relation(fields: [userId], references: [id])
+  coupon Coupon @relation(fields: [couponId], references: [id])
+}
+
+model ChannelReport {
+  id        String   @id @default(cuid())
+  source    String   // koc | card
+  kocId     String?
+  batchId   String?
+  createdAt DateTime @default(now())
+}
+
+// KOC（分销员）申请资料 + 审核状态 + 佣金配置
+// status: pending(审核中) | approved(已通过) | rejected(已驳回) | disabled(后台停用)
+model KocProfile {
+  id              String   @id @default(cuid())
+  userId          String   @unique
+  realName        String
+  phone           String
+  socialAccount   String?
+  introduction    String?
+  status          String   @default("pending")
+  rejectReason    String?
+  // 佣金率 0~1，null 表示用系统默认阶梯（按 orderCount 0.05/0.07/0.1）
+  commissionRate  Float?
+  reviewedAt      DateTime?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id])
+}

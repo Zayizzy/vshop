@@ -1,0 +1,15 @@
+<view class="c-card" bindtap="onTap">
+  <view class="c-card-img-wrap" style="background-color:{{imgBg}};">
+    <image class="c-card-img" src="{{resolved.image}}" mode="aspectFill" style="height:{{imgHeight}};" lazy-load />
+    <view class="c-card-tag" wx:if="{{resolved.tag}}">{{resolved.tag}}</view>
+  </view>
+  <view class="c-card-body">
+    <text class="c-card-name text-ellipsis-2">{{resolved.name}}</text>
+    <text class="c-card-desc" wx:if="{{resolved.desc || resolved.specName}}">{{resolved.desc}}{{resolved.desc && resolved.specName ? ' · ' : ''}}{{resolved.specName}}</text>
+    <view class="c-card-footer">
+      <price value="{{resolved.price}}" old-value="{{showMarketPrice ? resolved.oldPrice : null}}" size="sm" />
+      <text class="c-card-sold" wx:if="{{showSold && resolved.sold}}">已售{{resolved.sold}}</text>
+      <view class="c-card-action"><slot name="action" /></view>
+    </view>
+  </view>
+</view>

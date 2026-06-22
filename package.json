@@ -1,0 +1,8 @@
+{
+  "name": "vshop",
+  "version": "1.0.0",
+  "description": "鲜到家 - 生鲜商城小程序",
+  "dependencies": {
+    "tdesign-miniprogram": "^1.8.0"
+  }
+}

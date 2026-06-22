@@ -1,0 +1,57 @@
+<view class="page">
+  <!-- 余额展示 -->
+  <view class="balance-card">
+    <text class="balance-label">可提现余额</text>
+    <text class="balance-value">¥{{balance}}</text>
+    <text class="balance-tip">满 ¥{{minAmount}} 即可提现</text>
+  </view>
+
+  <!-- 提现表单 -->
+  <view class="card form-card">
+    <view class="form-label">提现金额</view>
+    <view class="amount-input-row">
+      <text class="currency">¥</text>
+      <input
+        class="amount-input"
+        type="digit"
+        placeholder="请输入提现金额"
+        value="{{amount}}"
+        bindinput="onAmountInput"
+        focus="{{inputFocus}}"
+      />
+    </view>
+    <view class="quick-actions">
+      <view class="quick-btn" bindtap="withdrawAll">全部提现</view>
+    </view>
+    <button class="btn-primary submit-btn" bindtap="submit" disabled="{{!canSubmit || submiting}}">
+      {{submiting ? '提交中...' : '确认提现'}}
+    </button>
+  </view>
+
+  <!-- 提现记录 -->
+  <view class="card record-card">
+    <view class="card-header">
+      <text class="card-title">提现记录</text>
+    </view>
+    <view class="record-list" wx:if="{{records.length > 0}}">
+      <view class="record-item" wx:for="{{records}}" wx:key="id">
+        <view class="record-info">
+          <text class="record-amount">-¥{{item.amount}}</text>
+          <text class="record-time">{{item.createTime}}</text>
+        </view>
+        <view class="record-status {{item.statusClass}}">
+          <text>{{item.statusText}}</text>
+        </view>
+      </view>
+    </view>
+    <view class="record-empty" wx:elif="{{recordsLoaded}}">
+      <text class="empty-text">暂无提现记录</text>
+    </view>
+    <view class="loading-center" wx:if="{{!recordsLoaded}}">
+      <view class="spinner"></view>
+      <text class="loading-text">加载中...</text>
+    </view>
+  </view>
+
+  <view class="safe-bottom"></view>
+</view>

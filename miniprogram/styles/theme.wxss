@@ -1,0 +1,47 @@
+/* 设计 Token - 鲜活田园风 · 简约现代调性 */
+page {
+  /* 品牌色 */
+  --t-primary: #07C160;
+  --t-primary-bg: #E8F8EE;
+  --t-accent: #FF6B35;          /* 价格/促销强调，克制使用 */
+  --t-accent-bg: #FFF3E0;
+
+  /* 中性 */
+  --t-bg: #F5F7F5;
+  --t-card: #FFFFFF;
+  --t-text: #1A1A1A;            /* 主文字加深，提升层次 */
+  --t-text-secondary: #555555;
+  --t-text-hint: #999999;
+  --t-text-disabled: #C8C8C8;
+  --t-border: #ECEFEc;
+  --t-divider: #F2F2F2;
+  --t-danger: #E24B4A;
+
+  /* 圆角层级（简约现代：偏大圆角） */
+  --r-xs: 6rpx;
+  --r-sm: 10rpx;
+  --r-md: 16rpx;
+  --r-lg: 20rpx;
+  --r-xl: 28rpx;
+  --r-round: 48rpx;
+
+  /* 间距 */
+  --s-xs: 8rpx;
+  --s-sm: 16rpx;
+  --s-md: 24rpx;
+  --s-lg: 32rpx;
+  --s-xl: 40rpx;
+
+  /* 字号 */
+  --f-title: 38rpx;
+  --f-h2: 32rpx;
+  --f-body: 28rpx;
+  --f-caption: 24rpx;
+  --f-small: 22rpx;
+  --f-price: 44rpx;
+
+  /* 阴影层级（柔和、低饱和） */
+  --shadow-sm: 0 2rpx 8rpx rgba(20, 40, 30, 0.04);
+  --shadow-md: 0 4rpx 20rpx rgba(20, 40, 30, 0.06);
+  --shadow-lg: 0 8rpx 32rpx rgba(20, 40, 30, 0.08);
+}

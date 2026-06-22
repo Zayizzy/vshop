@@ -1,0 +1,237 @@
+/* KOC 商品推广分享页 */
+
+.page {
+  min-height: 100vh;
+  background: #F5F7F5;
+}
+
+/* ===== 顶部提示 ===== */
+.tip-bar {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  margin: 8rpx 20rpx 16rpx;
+  padding: 16rpx 20rpx;
+  background: #FFF3E0;
+  border-radius: 12rpx;
+  font-size: 24rpx;
+  color: #E65100;
+}
+
+.tip-icon {
+  flex-shrink: 0;
+  font-size: 28rpx;
+}
+
+.tip-text {
+  opacity: 0.85;
+  line-height: 1.5;
+}
+
+/* ===== 商品网格 ===== */
+.goods-grid {
+  display: flex;
+  flex-wrap: wrap;
+  padding: 0 16rpx;
+  gap: 14rpx;
+}
+
+.goods-card {
+  width: calc((100% - 14rpx) / 2);
+  background: #FFFFFF;
+  border-radius: 16rpx;
+  overflow: hidden;
+  box-shadow: 0 2rpx 12rpx rgba(0,0,0,0.04);
+  transition: transform 0.15s;
+}
+
+.goods-card:active {
+  transform: scale(0.97);
+}
+
+.card-img {
+  position: relative;
+  width: 100%;
+  height: 240rpx;
+  overflow: hidden;
+  background: #E8F8EE;
+}
+
+.card-body {
+  padding: 14rpx 16rpx 20rpx;
+}
+
+.goods-name {
+  font-size: 26rpx;
+  font-weight: 500;
+  color: #333;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  min-height: 72rpx;
+}
+
+.goods-footer {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-top: 12rpx;
+}
+
+.price-block {
+  display: flex;
+  align-items: baseline;
+}
+
+.price-symbol {
+  font-size: 22rpx;
+  font-weight: 700;
+  color: #FF6B35;
+}
+
+.price-value {
+  font-size: 32rpx;
+  font-weight: 700;
+  color: #FF6B35;
+}
+
+.commission {
+  font-size: 22rpx;
+  color: #07C160;
+  font-weight: 500;
+}
+
+/* ===== 分享模式 ===== */
+.share-header {
+  display: flex;
+  align-items: center;
+  background: #FFFFFF;
+  padding: 16rpx 24rpx;
+  border-bottom: 1rpx solid #F0F0F0;
+}
+
+.back-btn {
+  font-size: 28rpx;
+  color: #07C160;
+  flex-shrink: 0;
+}
+
+.share-title {
+  flex: 1;
+  text-align: center;
+  font-size: 30rpx;
+  font-weight: 600;
+  color: #333;
+  margin-right: 80rpx;
+}
+
+/* ===== 分享预览卡片 ===== */
+.share-preview {
+  padding: 24rpx 20rpx;
+}
+
+.preview-card {
+  background: #FFFFFF;
+  border-radius: 16rpx;
+  overflow: hidden;
+  box-shadow: 0 4rpx 24rpx rgba(0,0,0,0.08);
+}
+
+.preview-img {
+  width: 100%;
+  height: 360rpx;
+  position: relative;
+}
+
+.preview-body {
+  padding: 24rpx;
+}
+
+.preview-name {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #333;
+  display: block;
+}
+
+.preview-price {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  margin-top: 16rpx;
+}
+
+.preview-symbol {
+  font-size: 28rpx;
+  font-weight: 700;
+  color: #FF6B35;
+}
+
+.preview-value {
+  font-size: 44rpx;
+  font-weight: 700;
+  color: #FF6B35;
+  line-height: 1;
+}
+
+/* ===== 操作区 ===== */
+.share-actions {
+  padding: 0 20rpx 40rpx;
+}
+
+.action-card {
+  background: #FFFFFF;
+  border-radius: 16rpx;
+  padding: 24rpx;
+  margin-bottom: 16rpx;
+}
+
+.action-title {
+  font-size: 26rpx;
+  font-weight: 600;
+  color: #333;
+  display: block;
+  margin-bottom: 16rpx;
+}
+
+.copy-box {
+  display: flex;
+  align-items: flex-start;
+  background: #F5F7F5;
+  border-radius: 12rpx;
+  padding: 20rpx;
+  gap: 16rpx;
+}
+
+.copy-box:active {
+  background: #E8F5E9;
+}
+
+.copy-content {
+  flex: 1;
+  font-size: 24rpx;
+  color: #666;
+  line-height: 1.7;
+  word-break: break-all;
+}
+
+.copy-content.link {
+  font-size: 22rpx;
+  color: #07C160;
+}
+
+.copy-btn-text {
+  font-size: 24rpx;
+  color: #07C160;
+  flex-shrink: 0;
+  padding: 4rpx 0;
+}
+
+.action-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+  margin-top: 8rpx;
+}

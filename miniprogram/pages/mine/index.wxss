@@ -1,0 +1,252 @@
+/* mine/index.wxss — 本地图标版 */
+
+.page-mine {
+  min-height: 100vh;
+  background: #F5F7F5;
+}
+
+/* ===== 个人头部 ===== */
+.profile-header {
+  background: linear-gradient(135deg, #07C160 0%, #05A050 100%);
+  padding: 48rpx 32rpx 60rpx;
+}
+
+.profile-row {
+  display: flex;
+  align-items: center;
+  gap: 24rpx;
+}
+
+.profile-avatar-wrap {
+  width: 96rpx;
+  height: 96rpx;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.profile-avatar-text {
+  font-size: 40rpx;
+  color: #FFFFFF;
+  font-weight: 600;
+}
+
+.profile-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.profile-name {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #FFFFFF;
+  display: block;
+}
+
+.profile-location {
+  font-size: 22rpx;
+  color: rgba(255,255,255,0.7);
+  display: block;
+  margin-top: 6rpx;
+}
+
+/* ===== 右箭头 ===== */
+.arrow-white {
+  font-size: 36rpx;
+  color: rgba(255,255,255,0.6);
+  font-weight: 200;
+  line-height: 1;
+}
+
+.arrow-white-sm {
+  font-size: 24rpx;
+  color: #FFFFFF;
+  font-weight: 200;
+  line-height: 1;
+}
+
+.arrow-gray {
+  font-size: 28rpx;
+  color: #CCCCCC;
+  font-weight: 200;
+  line-height: 1;
+}
+
+/* ===== 订单统计卡片 ===== */
+.order-stat-bar {
+  margin: -20rpx 20rpx 0;
+  background: #FFFFFF;
+  border-radius: 16rpx;
+  padding: 32rpx 0;
+  display: flex;
+  justify-content: space-around;
+  text-align: center;
+  box-shadow: 0 4rpx 16rpx rgba(0,0,0,0.06);
+}
+
+.stat-item {
+  flex: 1;
+}
+
+.stat-num {
+  font-size: 40rpx;
+  font-weight: 700;
+  color: #333333;
+}
+
+.stat-label {
+  font-size: 22rpx;
+  color: #999999;
+  margin-top: 6rpx;
+  display: block;
+}
+
+.stat-divider {
+  width: 2rpx;
+  background: #F0F0F0;
+  align-self: center;
+  height: 48rpx;
+}
+
+/* ===== 全部订单入口 ===== */
+.order-entry {
+  background: #FFFFFF;
+  margin: 0 20rpx 16rpx;
+  border-radius: 0 0 16rpx 16rpx;
+  padding: 24rpx 32rpx;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 26rpx;
+  color: #333333;
+  box-shadow: 0 2rpx 8rpx rgba(0,0,0,0.03);
+}
+
+.entry-right {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+}
+
+.order-arrow {
+  font-size: 24rpx;
+  color: #CCCCCC;
+}
+
+/* ===== 功能菜单卡片 ===== */
+.menu-card {
+  margin: 0 20rpx 16rpx;
+  background: #FFFFFF;
+  border-radius: 16rpx;
+  overflow: hidden;
+}
+
+.menu-item {
+  display: flex;
+  align-items: center;
+  padding: 28rpx 32rpx;
+  border-bottom: 1rpx solid #F5F5F5;
+  gap: 20rpx;
+}
+
+.menu-item:last-child {
+  border-bottom: none;
+}
+
+.menu-item:active {
+  background: #F5F7F5;
+}
+
+.menu-emoji {
+  font-size: 32rpx;
+  flex-shrink: 0;
+}
+
+.menu-title {
+  flex: 1;
+  font-size: 28rpx;
+  color: #333333;
+}
+
+.menu-right {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+}
+
+.menu-hint {
+  font-size: 24rpx;
+  color: #FF6B35;
+}
+
+/* ===== KOC 分销卡片 ===== */
+.koc-card {
+  margin: 0 20rpx 16rpx;
+  border-radius: 16rpx;
+  background: linear-gradient(135deg, #FF6B35 0%, #E8591F 100%);
+  padding: 32rpx;
+}
+
+.koc-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20rpx;
+}
+
+.koc-title {
+  font-size: 30rpx;
+  font-weight: 600;
+  color: #FFFFFF;
+}
+
+.koc-enter-btn {
+  display: flex;
+  align-items: center;
+  gap: 4rpx;
+  padding: 8rpx 20rpx;
+  background: rgba(255,255,255,0.2);
+  border-radius: 24rpx;
+  font-size: 24rpx;
+  color: #FFFFFF;
+}
+
+.koc-desc {
+  font-size: 22rpx;
+  color: rgba(255,255,255,0.85);
+  display: block;
+  margin-bottom: 24rpx;
+}
+
+.koc-stats {
+  display: flex;
+  justify-content: space-around;
+  padding: 24rpx 0 0;
+  border-top: 1rpx solid rgba(255,255,255,0.2);
+}
+
+.koc-stat-item {
+  text-align: center;
+}
+
+.koc-stat-num {
+  font-size: 32rpx;
+  font-weight: 700;
+  color: #FFFFFF;
+  display: block;
+}
+
+.koc-stat-label {
+  font-size: 20rpx;
+  color: rgba(255,255,255,0.7);
+  margin-top: 4rpx;
+  display: block;
+}
+
+/* ===== 通用 ===== */
+.safe-bottom {
+  height: 40rpx;
+}

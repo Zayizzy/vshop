@@ -1,0 +1,21 @@
+<view class="page">
+  <view class="poster-container" wx:if="{{!generating}}">
+    <view class="poster-preview">
+      <t-image src="{{posterUrl}}" width="600rpx" height="800rpx" mode="aspectFit" />
+    </view>
+    <view class="poster-tips">
+      <text>长按图片保存或分享给好友</text>
+      <text>扫码即可进入小程序购买</text>
+    </view>
+    <view class="poster-actions">
+      <t-button theme="primary" size="large" shape="round" block bindtap="savePoster">{{saved ? '已保存' : '保存到相册'}}</t-button>
+      <t-button theme="default" variant="outline" size="large" shape="round" block open-type="share">分享给好友</t-button>
+      <t-button theme="default" size="large" shape="round" block bindtap="generatePoster">重新生成</t-button>
+    </view>
+  </view>
+
+  <view class="loading-poster" wx:if="{{generating}}">
+    <view class="loading-spin" />
+    <text class="loading-text">正在生成专属海报...</text>
+  </view>
+</view>

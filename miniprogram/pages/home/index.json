@@ -1,0 +1,9 @@
+{
+  "usingComponents": {
+    "t-search": "tdesign-miniprogram/search/search",
+    "t-tag": "tdesign-miniprogram/tag/tag",
+    "t-image": "tdesign-miniprogram/image/image",
+    "t-skeleton": "tdesign-miniprogram/skeleton/skeleton"
+  },
+  "navigationBarTitleText": "鲜到家 · 果蔬"
+}

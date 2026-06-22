@@ -1,0 +1,270 @@
+{
+  "meta": {
+    "name": "生鲜商城小程序 · 鲜活田园风",
+    "version": "1.0",
+    "description": "微信小程序生鲜商城设计系统 · Style A 鲜活田园风 · 主商品果蔬",
+    "framework": "wechat-miniprogram",
+    "frameWidth": 375,
+    "frameHeight": 812
+  },
+
+  "styleGuide": {
+    "colorKeywords": ["fresh", "organic", "green", "warm", "appetite", "nature", "fruit", "vegetable"],
+    "typographyKeywords": ["rounded", "friendly", "clean", "modern chinese"],
+    "layoutKeywords": ["card grid", "rounded corners", "mobile commerce", "grocery"],
+    "moodKeywords": ["lively", "fresh", "warm", "approachable", "family friendly"]
+  },
+
+  "variables": [
+    { "name": "colorPrimary", "value": "#07C160", "group": "brand" },
+    { "name": "colorPrimaryBg", "value": "#E8F8EE", "group": "brand" },
+    { "name": "colorAccent", "value": "#FF6B35", "group": "brand" },
+    { "name": "colorAccentBg", "value": "#FFF3E0", "group": "brand" },
+    { "name": "colorBg", "value": "#F5F7F5", "group": "background" },
+    { "name": "colorCard", "value": "#FFFFFF", "group": "background" },
+    { "name": "colorText", "value": "#333333", "group": "text" },
+    { "name": "colorTextSecondary", "value": "#666666", "group": "text" },
+    { "name": "colorTextHint", "value": "#999999", "group": "text" },
+    { "name": "colorTextDisabled", "value": "#CCCCCC", "group": "text" },
+    { "name": "colorBorder", "value": "#E5EBE5", "group": "border" },
+    { "name": "colorDivider", "value": "#F0F0F0", "group": "border" },
+    { "name": "colorDanger", "value": "#E24B4A", "group": "semantic" },
+    { "name": "fontFamily", "value": "PingFang SC", "group": "typography" },
+    { "name": "fontSizeH1", "value": 18, "group": "typography" },
+    { "name": "fontSizeH2", "value": 15, "group": "typography" },
+    { "name": "fontSizeBody", "value": 13, "group": "typography" },
+    { "name": "fontSizeCaption", "value": 12, "group": "typography" },
+    { "name": "fontSizeSmall", "value": 11, "group": "typography" },
+    { "name": "fontSizePrice", "value": 20, "group": "typography" },
+    { "name": "fontWeightRegular", "value": 400, "group": "typography" },
+    { "name": "fontWeightMedium", "value": 500, "group": "typography" },
+    { "name": "radiusCard", "value": 12, "group": "radius" },
+    { "name": "radiusButton", "value": 24, "group": "radius" },
+    { "name": "radiusTag", "value": 4, "group": "radius" },
+    { "name": "radiusImage", "value": 8, "group": "radius" },
+    { "name": "radiusIconArea", "value": 12, "group": "radius" },
+    { "name": "spacingPageMargin", "value": 12, "group": "spacing" },
+    { "name": "spacingCardPadding", "value": 16, "group": "spacing" },
+    { "name": "spacingCardGap", "value": 10, "group": "spacing" },
+    { "name": "spacingSectionGap", "value": 12, "group": "spacing" },
+    { "name": "spacingItemGap", "value": 8, "group": "spacing" },
+    { "name": "spacingContentGap", "value": 12, "group": "spacing" }
+  ],
+
+  "components": {
+    "productCard": {
+      "width": "calc(50% - 5px)",
+      "radius": 12,
+      "bg": "white",
+      "imageHeight": 140,
+      "imageBg": "#E8F8EE",
+      "padding": 10,
+      "titleSize": 14,
+      "titleWeight": 500,
+      "titleColor": "#333333",
+      "descSize": 11,
+      "descColor": "#999999",
+      "priceSize": 18,
+      "priceWeight": 500,
+      "priceColor": "#FF6B35",
+      "salesSize": 12,
+      "salesColor": "#999999"
+    },
+    "primaryButton": {
+      "height": 44,
+      "radius": 24,
+      "bg": "#07C160",
+      "color": "#FFFFFF",
+      "fontSize": 15,
+      "fontWeight": 500
+    },
+    "secondaryButton": {
+      "height": 44,
+      "radius": 24,
+      "bg": "#FFFFFF",
+      "color": "#07C160",
+      "border": "1px solid #07C160",
+      "fontSize": 15,
+      "fontWeight": 500
+    },
+    "tag": {
+      "padding": "3px 8px",
+      "radius": 4,
+      "fontSize": 10,
+      "fontWeight": 500,
+      "variants": {
+        "nextDay": { "bg": "#FFF3E0", "color": "#FF6B35" },
+        "origin": { "bg": "#E8F8EE", "color": "#07C160" },
+        "hot": { "bg": "#FF6B35", "color": "#FFFFFF" },
+        "default": { "bg": "#F5F5F5", "color": "#999999" }
+      }
+    },
+    "navBar": {
+      "height": 44,
+      "bg": "white",
+      "titleSize": 16,
+      "titleWeight": 500,
+      "titleColor": "#333333"
+    },
+    "tabBar": {
+      "height": 50,
+      "bg": "white",
+      "color": "#999999",
+      "selectedColor": "#07C160",
+      "fontSize": 11
+    },
+    "searchBar": {
+      "height": 40,
+      "bg": "#F5F7F5",
+      "radius": 8,
+      "placeholderColor": "#CCCCCC"
+    },
+    "cutoffBanner": {
+      "bg": "#FFF3E0",
+      "color": "#FF6B35",
+      "radius": 8,
+      "padding": "8px 12px",
+      "fontSize": 12,
+      "fontWeight": 500
+    },
+    "sectionHeader": {
+      "titleSize": 15,
+      "titleWeight": 500,
+      "titleColor": "#333333",
+      "moreSize": 12,
+      "moreColor": "#07C160"
+    }
+  },
+
+  "pages": [
+    {
+      "name": "首页",
+      "route": "pages/home/index",
+      "type": "tab",
+      "sections": [
+        { "type": "navBar", "bg": "white", "content": "title+citySwitch+searchBar" },
+        { "type": "cutoffBanner", "content": "countdown+estimatedDelivery" },
+        { "type": "banner", "height": 120, "bg": "#E8F8EE", "radius": 12 },
+        { "type": "categoryIconGrid", "columns": 5, "iconSize": 44, "gap": 8 },
+        { "type": "sectionHeader", "title": "今日推荐" },
+        { "type": "productGrid2Col", "gap": 10, "items": "productCard[]" }
+      ]
+    },
+    {
+      "name": "分类页",
+      "route": "pages/category/index",
+      "type": "tab",
+      "sections": [
+        { "type": "splitView", "leftWidth": 90, "leftBg": "white",
+          "leftItems": ["水果", "蔬菜", "肉禽蛋", "海鲜水产", "乳品烘焙", "粮油调味", "速食冻品", "休闲零食"],
+          "activeStyle": "leftBorder3px solid #07C160 + color #07C160 bold" },
+        { "type": "subCategoryBanner", "bg": "#FFF3E0", "text": "应季鲜果 产地直采" },
+        { "type": "subCategorySection", "title": "瓜类", "items": "3col grid" },
+        { "type": "subCategorySection", "title": "浆果类", "items": "3col grid" },
+        { "type": "subCategorySection", "title": "柑橘类", "items": "3col grid" },
+        { "type": "subCategorySection", "title": "热带水果", "items": "3col grid" }
+      ]
+    },
+    {
+      "name": "商品详情",
+      "route": "pages/goods/detail",
+      "type": "subpage",
+      "sections": [
+        { "type": "navBar", "title": "商品详情" },
+        { "type": "imageCarousel", "height": 260, "bg": "#E8F8EE", "indicator": "dot" },
+        { "type": "infoCard",
+          "children": [
+            "title+price+subtitle row",
+            "tagRow (次日达/产地直采/销量)",
+            "warehouseRow (发货仓库 icon+name)",
+            "skuSelector (2-3 items, selected=green bg)",
+            "originTrace (产地溯源 text row)"
+          ]},
+        { "type": "sectionHeader", "title": "商品详情" },
+        { "type": "contentCard", "richText": true },
+        { "type": "bottomBar",
+          "children": [
+            "favButton+cartButton (icon+label)",
+            "buyNowButton (orange, rounded)",
+            "addToCartButton (green, rounded)"
+          ]}
+      ]
+    },
+    {
+      "name": "购物车",
+      "route": "pages/cart/index",
+      "type": "tab",
+      "sections": [
+        { "type": "navBar", "title": "购物车", "action": "管理" },
+        { "type": "splitHint", "bg": "#FFF3E0", "icon": "box", "text": "商品来自N个供应商，将分为N个包裹发货" },
+        { "type": "supplierGroup",
+          "children": [
+            "supplierHeader (checkbox+name+freeShippingHint)",
+            "productItem[] (checkbox+image+title+spec+price+quantity)"
+          ],
+          "repeat": true },
+        { "type": "freeShippingBar", "progress": true },
+        { "type": "recommendRow", "items": "2col small product cards" },
+        { "type": "bottomBar", "children": ["selectAll+total+checkoutButton"] }
+      ]
+    },
+    {
+      "name": "确认订单",
+      "route": "pages/checkout/index",
+      "type": "subpage",
+      "sections": [
+        { "type": "navBar", "title": "确认订单" },
+        { "type": "deliveryHint", "bg": "#FFF3E0" },
+        { "type": "addressCard", "icon": "pin", "content": "name+phone+fullAddress", "action": "edit" },
+        { "type": "packageCard",
+          "children": ["packageHeader(index+supplier)", "productItem[] (image+title+spec+price+qty)"],
+          "repeat": true },
+        { "type": "priceSummary",
+          "children": ["couponRow", "goodsAmount", "discount", "freight", "totalDivider+payAmount"] },
+        { "type": "remarkRow" },
+        { "type": "bottomBar", "children": ["total+submitButton(green)"] }
+      ]
+    },
+    {
+      "name": "订单列表",
+      "route": "pages/order/list",
+      "type": "tab",
+      "sections": [
+        { "type": "navBar", "title": "我的订单" },
+        { "type": "statusTabs", "items": ["全部","待付款","待发货","待收货","已完成"], "active": "underline green" },
+        { "type": "orderCard",
+          "children": [
+            "header (orderNo + statusBadge)",
+            "productList[] (image+title+spec+qty+packageLabel+logisticsBadge)",
+            "footer (total+actions)"
+          ],
+          "repeat": true }
+      ]
+    },
+    {
+      "name": "我的",
+      "route": "pages/mine/index",
+      "type": "tab",
+      "sections": [
+        { "type": "profileHeader", "bg": "#07C160", "children": ["avatar+name+location"] },
+        { "type": "orderStatBar", "items": "3 stats (pending/paid/received)" },
+        { "type": "orderEntry", "text": "全部订单" },
+        { "type": "menuList", "items": ["收货地址","优惠券","我的收藏"] },
+        { "type": "kocCard", "bg": "#FF6B35", "children": ["title+level+totalEarnings", "weeklyStats (views/orders/commission)", "enterButton"] },
+        { "type": "menuList", "items": ["联系客服","关于鲜到家"] }
+      ]
+    },
+    {
+      "name": "KOC工作台",
+      "route": "pages/koc/dashboard",
+      "type": "subpage",
+      "sections": [
+        { "type": "kocHeader", "bg": "#FF6B35", "children": ["balance+withdrawButton", "stats3col (frozen/orders/gmv)"] },
+        { "type": "dailyStatsCard", "items": "3col views/clicks/orders" },
+        { "type": "toolGrid2x2", "items": ["推广链接","推广码","海报生成","素材库"] },
+        { "type": "orderList", "title": "推广订单", "items": "order rows with commission" },
+        { "type": "shareButtons", "items": "3col (群/朋友圈/复制链接)" }
+      ]
+    }
+  ]
+}

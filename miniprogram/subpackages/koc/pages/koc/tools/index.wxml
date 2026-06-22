@@ -1,0 +1,54 @@
+<view class="page">
+  <!-- KOC 推广码 -->
+  <view class="card code-card">
+    <view class="card-title">我的推广码</view>
+    <view class="code-box">
+      <text class="code-value">{{kocCode}}</text>
+      <view class="copy-btn" bindtap="copyCode">
+        <text class="copy-text">复制</text>
+      </view>
+    </view>
+    <text class="code-tip">分享您的推广码给朋友，绑定推广关系</text>
+  </view>
+
+  <!-- 小程序码 -->
+  <view class="card qrcode-card">
+    <view class="card-title">推广小程序码</view>
+    <view class="qrcode-wrap">
+      <image class="qrcode-img" src="{{qrcodeUrl}}" mode="aspectFit" wx:if="{{qrcodeUrl}}"></image>
+      <view class="qrcode-placeholder" wx:else>
+        <text class="placeholder-icon">📱</text>
+        <text class="placeholder-text">加载中...</text>
+      </view>
+    </view>
+    <view class="qrcode-actions">
+      <button class="btn-outline" bindtap="saveQrcode">保存到相册</button>
+    </view>
+    <text class="code-tip">用户扫码后自动绑定为您的粉丝</text>
+  </view>
+
+  <!-- 短链接 -->
+  <view class="card link-card">
+    <view class="card-title">推广短链接</view>
+    <view class="link-box">
+      <text class="link-value text-ellipsis">{{shortLink || '暂无短链接'}}</text>
+      <view class="copy-btn" bindtap="copyLink" wx:if="{{shortLink}}">
+        <text class="copy-text">复制</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 小程序路径 -->
+  <view class="card path-card">
+    <view class="card-title">小程序推广路径</view>
+    <view class="path-box">
+      <text class="path-value">{{appPath}}</text>
+      <view class="copy-btn" bindtap="copyPath">
+        <text class="copy-text">复制</text>
+      </view>
+    </view>
+    <text class="code-tip">用于配置公众号菜单、模板消息等场景</text>
+  </view>
+
+  <view class="safe-bottom"></view>
+</view>

@@ -1,0 +1,397 @@
+/* ========== 购物车页 ========== */
+.page-cart {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background: #F5F7F5;
+}
+
+/* ========== 自定义导航栏 ========== */
+.cart-nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #FFFFFF;
+  box-sizing: border-box;
+}
+
+.nav-title {
+  font-size: 34rpx;
+  font-weight: 600;
+  color: #333333;
+}
+
+.nav-action {
+  position: absolute;
+  right: 16rpx;
+  bottom: 0;
+  height: 44px;
+  line-height: 44px;
+  font-size: 26rpx;
+  color: #666666;
+}
+
+/* ========== 滚动区 ========== */
+.cart-scroll {
+  flex: 1;
+}
+
+/* ========== 分包提示条 ========== */
+.split-hint {
+  display: flex;
+  align-items: center;
+  padding: 8rpx 12rpx;
+  margin: 0 12rpx 8rpx;
+  background: #FFF3E0;
+  border-radius: 8rpx;
+}
+
+.split-icon {
+  font-size: 28rpx;
+  margin-right: 8rpx;
+}
+
+.split-text {
+  font-size: 22rpx;
+  color: #FF6B35;
+  flex: 1;
+}
+
+/* ========== 供应商分组 ========== */
+.supplier-group {
+  background: #FFFFFF;
+  margin: 0 0 12rpx;
+}
+
+/* ========== 供应商头部 ========== */
+.supplier-header {
+  display: flex;
+  align-items: center;
+  padding: 12rpx;
+  border-bottom: 1rpx solid #F0F0F0;
+}
+
+.supplier-name {
+  font-size: 26rpx;
+  font-weight: 500;
+  color: #333333;
+  flex: 1;
+}
+
+.shipping-hint {
+  font-size: 22rpx;
+  color: #07C160;
+  background: #E8F8EE;
+  padding: 4rpx 12rpx;
+  border-radius: 20rpx;
+}
+
+/* ========== 复选框 ========== */
+.supplier-check,
+.item-check,
+.all-check {
+  width: 40rpx;
+  height: 40rpx;
+  border: 3rpx solid #E5EBE5;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 8rpx;
+  flex-shrink: 0;
+  box-sizing: border-box;
+}
+
+.supplier-check.checked,
+.item-check.checked,
+.all-check.checked {
+  border-color: #07C160;
+  background: #07C160;
+}
+
+.check-icon {
+  width: 24rpx;
+  height: 24rpx;
+}
+
+/* ========== 购物车商品行 ========== */
+.cart-item {
+  display: flex;
+  align-items: center;
+  padding: 12rpx;
+  border-bottom: 1rpx solid #F0F0F0;
+}
+
+.cart-item.disabled .item-title,
+.cart-item.disabled .item-spec,
+.cart-item.disabled .price {
+  opacity: 0.5;
+}
+
+.item-img {
+  width: 112rpx;
+  height: 112rpx;
+  border-radius: 8rpx;
+  background: #E8F8EE;
+  flex-shrink: 0;
+  margin-right: 12rpx;
+}
+
+.item-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.item-title {
+  font-size: 26rpx;
+  color: #333333;
+  line-height: 1.4;
+  margin-bottom: 6rpx;
+}
+
+.item-spec {
+  font-size: 22rpx;
+  color: #999999;
+  margin-bottom: 8rpx;
+}
+
+.item-bottom-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* ========== 价格样式 ========== */
+.price {
+  color: #FF6B35;
+  font-weight: 500;
+}
+
+.price-sm {
+  font-size: 28rpx;
+}
+
+/* ========== 数量控制器 (t-stepper) ========== */
+.item-bottom-row t-stepper {
+  margin-left: auto;
+}
+
+/* ========== 免邮进度条 (t-progress) ========== */
+.shipping-progress {
+  padding: 8rpx 12rpx 12rpx;
+}
+
+.progress-text {
+  font-size: 22rpx;
+  color: #FF6B35;
+  display: block;
+  margin-bottom: 8rpx;
+}
+
+/* ========== 猜你喜欢 ========== */
+.guess-section {
+  margin: 0 0 12rpx;
+  background: #FFFFFF;
+  padding: 12rpx;
+}
+
+.guess-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-bottom: 12rpx;
+}
+
+.guess-title {
+  font-size: 26rpx;
+  font-weight: 500;
+  color: #333333;
+  position: relative;
+  padding: 0 24rpx;
+}
+
+.guess-title::before,
+.guess-title::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  width: 40rpx;
+  height: 1rpx;
+  background: #E5EBE5;
+}
+
+.guess-title::before {
+  left: 0;
+  transform: translateX(-100%);
+}
+
+.guess-title::after {
+  right: 0;
+  transform: translateX(100%);
+}
+
+.guess-list {
+  display: flex;
+  gap: 12rpx;
+}
+
+.guess-card {
+  flex: 1;
+  background: #F5F7F5;
+  border-radius: 8rpx;
+  overflow: hidden;
+}
+
+.guess-img {
+  width: 100%;
+  height: 200rpx;
+}
+
+.guess-info {
+  padding: 8rpx;
+}
+
+.guess-name {
+  font-size: 22rpx;
+  color: #333333;
+  margin-bottom: 6rpx;
+  line-height: 1.3;
+}
+
+/* ========== 两行省略号 ========== */
+.text-ellipsis-2 {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+/* ========== 空状态 ========== */
+.empty-cart {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 32rpx 0;
+}
+
+.empty-icon {
+  width: 160rpx;
+  height: 160rpx;
+  opacity: 0.3;
+  margin-bottom: 16rpx;
+}
+
+.empty-text {
+  font-size: 30rpx;
+  color: #999999;
+  margin-bottom: 8rpx;
+}
+
+.empty-sub {
+  font-size: 24rpx;
+  color: #CCCCCC;
+  margin-bottom: 24rpx;
+}
+
+/* ========== 描边按钮 ========== */
+.btn-outline {
+  padding: 12rpx 32rpx;
+  border: 2rpx solid #E5EBE5;
+  border-radius: 40rpx;
+  font-size: 24rpx;
+  color: #666666;
+  background: #FFFFFF;
+}
+
+/* ========== 底部结算栏 ========== */
+.bottom-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 12rpx;
+  background: #FFFFFF;
+  border-top: 1rpx solid #F0F0F0;
+  z-index: 100;
+  box-sizing: border-box;
+}
+
+.bottom-left {
+  display: flex;
+  align-items: center;
+}
+
+.all-check {
+  margin-right: 8rpx;
+}
+
+.all-text {
+  font-size: 26rpx;
+  color: #333333;
+}
+
+.bottom-right {
+  display: flex;
+  align-items: center;
+}
+
+.total-row {
+  display: flex;
+  align-items: baseline;
+  margin-right: 12rpx;
+}
+
+.total-label {
+  font-size: 24rpx;
+  color: #666666;
+}
+
+.total-price {
+  font-size: 36rpx;
+  font-weight: 600;
+  color: #FF6B35;
+}
+
+.btn-checkout {
+  padding: 16rpx 40rpx;
+  background: #07C160;
+  color: #FFFFFF;
+  font-size: 28rpx;
+  font-weight: 500;
+  border-radius: 40rpx;
+}
+
+.btn-checkout.disabled {
+  background: #A0D9B0;
+}
+
+/* 管理态删除按钮 */
+.manage-bar .btn-delete {
+  padding: 16rpx 40rpx;
+  background: #FF6B35;
+  color: #FFFFFF;
+  font-size: 28rpx;
+  font-weight: 500;
+  border-radius: 40rpx;
+}
+
+.manage-bar .btn-delete.disabled {
+  background: #FFCCB5;
+}
+
+/* ========== 底部安全区 ========== */
+.safe-bottom {
+  height: 140rpx;
+}

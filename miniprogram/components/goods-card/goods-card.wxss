@@ -1,0 +1,74 @@
+.c-card {
+  background: #fff;
+  border-radius: 20rpx;
+  overflow: hidden;
+  box-sizing: border-box;
+  width: 100%;
+  box-shadow: 0 2rpx 12rpx rgba(20, 40, 30, 0.05);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.c-card:active {
+  transform: scale(0.98);
+  box-shadow: 0 1rpx 6rpx rgba(20, 40, 30, 0.06);
+}
+.c-card-img-wrap {
+  position: relative;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+.c-card-img {
+  width: 100%;
+  display: block;
+  transition: transform 0.3s ease;
+}
+.c-card:active .c-card-img {
+  transform: scale(1.03);
+}
+.c-card-tag {
+  position: absolute;
+  left: 16rpx;
+  top: 16rpx;
+  padding: 4rpx 14rpx;
+  border-radius: 100rpx;
+  font-size: 20rpx;
+  font-weight: 500;
+  color: #fff;
+  background: rgba(255, 107, 53, 0.92);
+  backdrop-filter: blur(4rpx);
+}
+.c-card-body {
+  padding: 20rpx 20rpx 22rpx;
+}
+.c-card-name {
+  font-size: 28rpx;
+  color: #1A1A1A;
+  line-height: 1.45;
+  min-height: 82rpx;
+  font-weight: 500;
+}
+.c-card-desc {
+  display: block;
+  margin-top: 8rpx;
+  font-size: 22rpx;
+  color: #999;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.c-card-footer {
+  display: flex;
+  align-items: baseline;
+  margin-top: 14rpx;
+  gap: 10rpx;
+}
+.c-card-sold {
+  font-size: 20rpx;
+  color: #C8C8C8;
+  margin-left: auto;
+}
+.c-card-action {
+  margin-left: auto;
+}

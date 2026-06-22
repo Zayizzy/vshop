@@ -1,0 +1,9 @@
+@import '/styles/theme.wxss';
+@import '/styles/common.wxss';
+
+.status-bar { font-size: var(--f-h2); font-weight: 500; margin-bottom: var(--s-lg); }
+.info-row { display: flex; justify-content: space-between; padding: 12rpx 0; font-size: var(--f-body); color: var(--t-text-secondary); }
+.images-row { display: flex; gap: 8rpx; padding: 12rpx 0; flex-wrap: wrap; }
+.evidence-img { width: 140rpx; height: 140rpx; border-radius: var(--r-sm); }
+.cancel-btn-wrap { padding: var(--s-lg) var(--s-md); }
+.cancel-btn-wrap button { background: #fff; color: var(--t-text-secondary); }

@@ -1,0 +1,12 @@
+.page { min-height: 100vh; background: #F5F7F5; padding-top: 16rpx; }
+
+.menu-card { margin: 0 20rpx 16rpx; background: #FFFFFF; border-radius: 16rpx; overflow: hidden; }
+.menu-item { display: flex; align-items: center; padding: 32rpx 24rpx; gap: 16rpx; }
+.menu-item:active { background: #F5F7F5; }
+.menu-emoji { font-size: 32rpx; flex-shrink: 0; }
+.menu-title { flex: 1; font-size: 28rpx; color: #333; }
+.menu-value { font-size: 24rpx; color: #999; }
+.arrow-gray { font-size: 28rpx; color: #CCC; }
+.menu-divider { height: 1rpx; background: #F0F0F0; margin: 0 24rpx; }
+
+.footer-text { text-align: center; padding: 48rpx 0; font-size: 22rpx; color: #CCC; }

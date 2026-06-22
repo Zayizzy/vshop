@@ -1,0 +1,128 @@
+<wxs module="util">
+  var toFixed = function(num, digits) {
+    if (!num && num !== 0) return '0';
+    return Number(num).toFixed(digits || 1);
+  };
+  var percent = function(part, total) {
+    if (!total || total === 0) return 0;
+    return (part / total) * 100;
+  };
+  module.exports = { toFixed: toFixed, percent: percent };
+</wxs>
+
+<view class="page-cart" style="padding-top: {{navHeight}}px;">
+  <!-- 自定义导航栏 -->
+  <nav-bar title="购物车">
+    <view slot="right" class="nav-action" bindtap="toggleManage">{{isManaging ? '完成' : '管理'}}</view>
+  </nav-bar>
+
+  <!-- 可滚动内容区 -->
+  <scroll-view
+    class="cart-scroll"
+    scroll-y
+    enhanced
+    show-scrollbar="{{false}}"
+    style="height: calc(100vh - {{navHeight}}px - {{hasItems ? 120 : 0}}rpx);"
+  >
+    <!-- 分包提示条 -->
+    <view class="split-hint" wx:if="{{supplierGroups.length > 1}}">
+      <text class="split-icon">📦</text>
+      <text class="split-text">商品来自{{supplierGroups.length}}个供应商，将分为{{supplierGroups.length}}个包裹发货</text>
+    </view>
+
+    <!-- 供应商分组 -->
+    <block wx:for="{{supplierGroups}}" wx:key="supplierId" wx:for-item="group" wx:for-index="gIdx">
+      <view class="supplier-group">
+        <!-- 供应商头部 -->
+        <view class="supplier-header">
+          <view class="supplier-check {{group.checked ? 'checked' : ''}}" data-index="{{gIdx}}" bindtap="toggleSupplier" data-type="supplier"></view>
+          <text class="supplier-name">{{group.supplierName}}</text>
+          <text class="shipping-hint" wx:if="{{group.freeShipping}}">满{{group.freeShippingThreshold}}免邮</text>
+        </view>
+
+        <!-- 商品行 -->
+        <view
+          class="cart-item {{item.selected ? '' : 'disabled'}}"
+          wx:for="{{group.items}}"
+          wx:key="id"
+          wx:for-item="item"
+          wx:for-index="iIdx"
+        >
+          <view class="item-check {{item.selected ? 'checked' : ''}}" data-gidx="{{gIdx}}" data-iidx="{{iIdx}}" bindtap="toggleSelect"></view>
+          <t-image t-class="item-img" src="{{item.image}}" width="112rpx" height="112rpx" mode="aspectFill" shape="round" lazy-load />
+          <view class="item-info">
+            <text class="item-title text-ellipsis-2">{{item.title}}</text>
+            <text class="item-spec">{{item.spec}}</text>
+            <view class="item-bottom-row">
+              <text class="price price-sm">¥{{item.price}}</text>
+              <!-- 数量控制器 -->
+              <t-stepper value="{{item.quantity}}" min="1" max="99" data-gidx="{{gIdx}}" data-iidx="{{iIdx}}" bind:change="onQtyChange" />
+            </view>
+          </view>
+        </view>
+
+        <!-- 免邮进度条 -->
+        <view class="shipping-progress" wx:if="{{group.freeShipping && group.totalAmount < group.freeShippingThreshold}}">
+          <text class="progress-text">再买 ¥{{util.toFixed(group.freeShippingThreshold - group.totalAmount)}} 本站免邮</text>
+          <t-progress percentage="{{group.shippingPercent}}" color="#07C160" track-color="#F0F0F0" stroke-width="8rpx" />
+        </view>
+      </view>
+    </block>
+
+    <!-- 猜你喜欢 -->
+    <view class="guess-section" wx:if="{{recommendList.length > 0}}">
+      <view class="guess-header">
+        <text class="guess-title">猜你喜欢</text>
+      </view>
+      <view class="guess-list">
+        <view class="guess-card" wx:for="{{recommendList}}" wx:key="id" wx:for-item="rec" data-id="{{rec.id}}" bindtap="goDetail">
+          <image class="guess-img" src="{{rec.image}}" mode="aspectFill" lazy-load />
+          <view class="guess-info">
+            <text class="guess-name text-ellipsis-2">{{rec.title}}</text>
+            <text class="price price-sm">¥{{rec.price}}</text>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 空购物车 -->
+    <t-empty icon="cart" description="购物车是空的" wx:if="{{supplierGroups.length === 0 && !loading}}">
+      <view class="btn-outline" slot="action" bindtap="goHome">去逛逛</view>
+    </t-empty>
+
+    <view class="safe-bottom" wx:if="{{supplierGroups.length > 0}}" />
+  </scroll-view>
+
+  <!-- 底部结算栏 -->
+  <view class="bottom-bar" wx:if="{{supplierGroups.length > 0 && !isManaging}}" style="height: 120rpx;">
+    <view class="bottom-left">
+      <view class="all-check {{allSelected ? 'checked' : ''}}" bindtap="toggleAll"></view>
+      <text class="all-text">全选</text>
+    </view>
+    <view class="bottom-right" wx:if="{{selectedCount > 0}}">
+      <view class="total-row">
+        <text class="total-label">合计：</text>
+        <text class="total-price">¥{{util.toFixed(totalPrice)}}</text>
+      </view>
+      <t-button theme="primary" size="large" shape="round" bind:tap="checkout">去结算({{selectedCount}})</t-button>
+    </view>
+    <view class="bottom-right" wx:else>
+      <view class="total-row">
+        <text class="total-label">合计：</text>
+        <text class="total-price">¥0.00</text>
+      </view>
+      <t-button theme="primary" size="large" shape="round" disabled bind:tap="checkout">去结算</t-button>
+    </view>
+  </view>
+
+  <!-- 管理态底部栏 -->
+  <view class="bottom-bar manage-bar" wx:if="{{supplierGroups.length > 0 && isManaging}}" style="height: 120rpx;">
+    <view class="bottom-left">
+      <view class="all-check {{allSelected ? 'checked' : ''}}" bindtap="toggleAll"></view>
+      <text class="all-text">全选</text>
+    </view>
+    <view class="bottom-right">
+      <t-button theme="danger" variant="outline" size="large" disabled="{{selectedCount === 0}}" bind:tap="deleteSelected">删除{{selectedCount > 0 ? '(' + selectedCount + ')' : ''}}</t-button>
+    </view>
+  </view>
+</view>

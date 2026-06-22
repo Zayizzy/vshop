@@ -1,0 +1,25 @@
+<view class="page">
+  <view class="menu-card">
+    <view class="menu-item" bindtap="clearCache">
+      <text class="menu-emoji">🗑️</text>
+      <text class="menu-title">清除缓存</text>
+      <text class="menu-value">{{cacheSize}}</text>
+    </view>
+  </view>
+
+  <view class="menu-card">
+    <view class="menu-item" bindtap="showAgreement">
+      <text class="menu-emoji">📄</text>
+      <text class="menu-title">用户协议与隐私政策</text>
+      <text class="arrow-gray">›</text>
+    </view>
+    <view class="menu-divider" />
+    <view class="menu-item" bindtap="showAbout">
+      <text class="menu-emoji">ℹ️</text>
+      <text class="menu-title">关于鲜到家</text>
+      <text class="menu-value">{{version}}</text>
+    </view>
+  </view>
+
+  <text class="footer-text">鲜到家 · 新鲜果蔬直达您家</text>
+</view>

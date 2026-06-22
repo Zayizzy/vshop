@@ -1,0 +1,35 @@
+.page { background: #F5F7F5; min-height: 100vh; padding-bottom: 40rpx; }
+
+.delivery-hint { margin: 0 20rpx 16rpx; padding: 16rpx; background: #FFF3E0; border-radius: 12rpx; font-size: 24rpx; color: #FF6B35; }
+
+.card { margin: 0 20rpx 16rpx; border-radius: 16rpx; background: #fff; padding: 24rpx; box-shadow: 0 2rpx 12rpx rgba(0,0,0,.04); }
+
+.addr-icon { font-size: 32rpx; margin-right: 16rpx; }
+.addr-name { font-size: 28rpx; font-weight: bold; color: #333; margin-right: 16rpx; }
+.addr-detail { font-size: 24rpx; color: #999; display: block; margin-top: 4rpx; }
+
+.package-header { margin-bottom: 16rpx; padding-bottom: 12rpx; border-bottom: 1rpx dashed #ddd; }
+.package-title { font-size: 26rpx; font-weight: bold; color: #333; }
+
+.goods-item { gap: 16rpx; margin-bottom: 16rpx; }
+.goods-item t-image { flex-shrink: 0; border-radius: 8rpx; overflow: hidden; }
+.goods-item-info { font-size: 24rpx; }
+.goods-item-title { font-size: 26rpx; font-weight: 500; color: #333; }
+.goods-item-spec { font-size: 22rpx; color: #999; display: block; margin: 4rpx 0; }
+.goods-item-qty { font-size: 24rpx; color: #999; }
+
+.price { color: #FF6B35; font-weight: bold; }
+.price-sm { font-size: 26rpx; }
+.price-lg { font-size: 36rpx; }
+
+.pkg-footer { display: flex; justify-content: space-between; align-items: center; padding-top: 12rpx; border-top: 1rpx solid #eee; }
+.express-text { font-size: 24rpx; color: #666; }
+
+.info-row { display: flex; justify-content: space-between; padding: 8rpx 0; font-size: 26rpx; color: #666; }
+.total-row { padding-top: 12rpx; border-top: 1rpx solid #eee; font-weight: 500; color: #333; }
+.discount { color: #FF6B35; }
+.freight-free { color: #07C160; }
+
+.order-info { font-size: 24rpx; }
+.info-text { display: block; color: #999; font-size: 22rpx; line-height: 2; }
+.safe-bottom { height: 40rpx; }

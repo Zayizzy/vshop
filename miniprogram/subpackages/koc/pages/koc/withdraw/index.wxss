@@ -1,0 +1,197 @@
+@import '/styles/theme.wxss';
+@import '/styles/common.wxss';
+
+.page {
+  min-height: 100vh;
+  background: var(--t-bg);
+}
+
+/* 余额卡片 */
+.balance-card {
+  background: linear-gradient(135deg, var(--t-accent), #FF8C63);
+  padding: var(--s-xl) var(--s-lg);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  color: #fff;
+}
+
+.balance-label {
+  font-size: var(--f-caption);
+  opacity: 0.85;
+}
+
+.balance-value {
+  font-size: 56rpx;
+  font-weight: 700;
+  margin: var(--s-sm) 0;
+}
+
+.balance-tip {
+  font-size: var(--f-small);
+  opacity: 0.75;
+}
+
+/* 提现表单 */
+.form-card {
+  margin-top: var(--s-sm);
+}
+
+.form-label {
+  font-size: 28rpx;
+  font-weight: 500;
+  color: var(--t-text);
+  margin-bottom: var(--s-md);
+}
+
+.amount-input-row {
+  display: flex;
+  align-items: center;
+  background: var(--t-bg);
+  border-radius: var(--r-sm);
+  padding: var(--s-sm) var(--s-md);
+  margin-bottom: var(--s-md);
+}
+
+.currency {
+  font-size: 40rpx;
+  font-weight: 600;
+  color: var(--t-accent);
+  margin-right: var(--s-sm);
+}
+
+.amount-input {
+  flex: 1;
+  height: 72rpx;
+  font-size: 40rpx;
+  font-weight: 600;
+  color: var(--t-accent);
+}
+
+.quick-actions {
+  margin-bottom: var(--s-lg);
+}
+
+.quick-btn {
+  display: inline-block;
+  padding: 12rpx 32rpx;
+  border: 2rpx solid var(--t-accent);
+  border-radius: var(--r-round);
+  font-size: var(--f-caption);
+  color: var(--t-accent);
+  background: #fff;
+}
+
+.submit-btn {
+  width: 100%;
+}
+
+/* 提现记录 */
+.record-card {
+  margin-top: var(--s-sm);
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--s-sm);
+}
+
+.card-title {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: var(--t-text);
+}
+
+.record-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--s-md) 0;
+  border-bottom: 1rpx solid var(--t-divider);
+}
+
+.record-item:last-child {
+  border-bottom: none;
+}
+
+.record-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.record-amount {
+  font-size: 30rpx;
+  font-weight: 500;
+  color: var(--t-text);
+}
+
+.record-time {
+  font-size: var(--f-small);
+  color: var(--t-text-hint);
+  margin-top: 4rpx;
+}
+
+.record-status {
+  padding: 6rpx 20rpx;
+  border-radius: 20rpx;
+  font-size: var(--f-small);
+}
+
+.record-status.pending {
+  background: #FFF3E0;
+  color: var(--t-accent);
+}
+
+.record-status.success {
+  background: var(--t-primary-bg);
+  color: var(--t-primary);
+}
+
+.record-status.failed {
+  background: #FFEBEE;
+  color: var(--t-danger);
+}
+
+/* 空状态 */
+.record-empty {
+  text-align: center;
+  padding: var(--s-xl) 0;
+}
+
+.empty-text {
+  font-size: var(--f-caption);
+  color: var(--t-text-hint);
+}
+
+.loading-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: var(--s-xl) 0;
+}
+
+.spinner {
+  width: 48rpx;
+  height: 48rpx;
+  border: 4rpx solid var(--t-border);
+  border-top-color: var(--t-primary);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.loading-text {
+  margin-top: var(--s-md);
+  font-size: var(--f-caption);
+  color: var(--t-text-hint);
+}
+
+.safe-bottom {
+  height: 40rpx;
+}

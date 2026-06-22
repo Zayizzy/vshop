@@ -1,0 +1,25 @@
+<view class="page">
+  <view class="my-card">
+    <view class="my-rank">
+      <text class="my-rank-num">{{myRank.rank}}</text>
+      <text class="my-rank-label">我的排名</text>
+    </view>
+    <view class="my-info">
+      <text class="my-name">{{myRank.nickname}}</text>
+      <text class="my-detail">{{myRank.orders}}单 · ¥{{myRank.earnings}}</text>
+    </view>
+  </view>
+
+  <view class="podium">
+    <text class="section-title">🏆 排行榜 TOP8</text>
+    <view class="rank-item {{getRankClass(item.rank)}}" wx:for="{{list}}" wx:key="rank">
+      <view class="rank-badge">{{item.rankBadge}}</view>
+      <view class="rank-avatar"><text>{{item.initial}}</text></view>
+      <view class="rank-info">
+        <text class="rank-name">{{item.nickname}}</text>
+        <text class="rank-detail">{{item.orders}}单</text>
+      </view>
+      <text class="rank-earnings">¥{{item.earnings}}</text>
+    </view>
+  </view>
+</view>

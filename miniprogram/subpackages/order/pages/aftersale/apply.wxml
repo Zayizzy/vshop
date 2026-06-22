@@ -1,0 +1,40 @@
+<view class="page">
+  <view class="card">
+    <view class="type-select">
+      <view class="type-item {{type===1?'active':''}}" bindtap="setType" data-type="1">仅退款</view>
+      <view class="type-item {{type===2?'active':''}}" bindtap="setType" data-type="2">退货退款</view>
+    </view>
+
+    <view class="form-group">
+      <text class="label">退款金额</text>
+      <text class="price price-lg">¥{{refundAmount}}</text>
+    </view>
+
+    <view class="form-group">
+      <text class="label">售后原因</text>
+      <picker bindchange="selectReason" value="{{reasonIndex}}" range="{{reasons}}">
+        <view class="picker-val">{{reason || '请选择原因'}} <text class="arrow">▼</text></view>
+      </picker>
+    </view>
+
+    <view class="form-group">
+      <text class="label">问题描述</text>
+      <textarea class="textarea" value="{{description}}" placeholder="请详细描述遇到的问题（选填）" bindinput="setDesc" maxlength="200" />
+    </view>
+
+    <view class="form-group">
+      <text class="label">凭证图片 (选填)</text>
+      <view class="image-upload">
+        <view class="img-item" wx:for="{{images}}" wx:key="index">
+          <image src="{{item}}" mode="aspectFill" lazy-load />
+          <view class="img-delete" bindtap="removeImage" data-index="{{index}}">×</view>
+        </view>
+        <view class="upload-btn" bindtap="chooseImage" wx:if="{{images.length < 6}}">+</view>
+      </view>
+    </view>
+  </view>
+
+  <view class="submit-wrap">
+    <button class="btn-primary" bindtap="submit" loading="{{submitting}}">提交申请</button>
+  </view>
+</view>

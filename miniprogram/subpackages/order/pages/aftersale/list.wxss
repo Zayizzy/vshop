@@ -1,0 +1,12 @@
+@import '/styles/theme.wxss';
+@import '/styles/common.wxss';
+
+.tabs { display: flex; padding: var(--s-sm) var(--s-md); background: #fff; gap: var(--s-lg); }
+.tab { font-size: var(--f-body); color: var(--t-text-secondary); position: relative; }
+.tab.active { color: var(--t-primary); font-weight: 500; }
+.list { margin-top: var(--s-sm); }
+.item-title { font-size: var(--f-body); color: var(--t-text); }
+.item-status { font-size: var(--f-caption); font-weight: 500; }
+.item-desc { font-size: var(--f-caption); color: var(--t-text-secondary); display: block; margin: 8rpx 0; }
+.item-time { font-size: var(--f-small); color: var(--t-text-hint); }
+.empty { text-align: center; padding: 120rpx 0; color: var(--t-text-hint); font-size: var(--f-body); }

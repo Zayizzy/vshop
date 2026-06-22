@@ -1,0 +1,119 @@
+@import '/styles/theme.wxss';
+@import '/styles/common.wxss';
+
+.page {
+  min-height: 100vh;
+  background: var(--t-bg);
+  padding-top: var(--s-md);
+}
+
+.form-card {
+  background: var(--t-card);
+  border-radius: var(--r-md);
+  margin: 0 var(--s-sm);
+  padding: var(--s-md) var(--s-lg);
+}
+
+.form-group {
+  padding: var(--s-md) 0;
+  border-bottom: 1rpx solid var(--t-divider);
+}
+
+.form-group:last-child {
+  border-bottom: none;
+}
+
+.form-label {
+  font-size: 28rpx;
+  color: var(--t-text);
+  font-weight: 500;
+  margin-bottom: var(--s-sm);
+}
+
+.form-input {
+  width: 100%;
+  height: 72rpx;
+  font-size: var(--f-body);
+  color: var(--t-text);
+  background: var(--t-bg);
+  border-radius: var(--r-sm);
+  padding: 0 var(--s-sm);
+  box-sizing: border-box;
+}
+
+.form-textarea {
+  width: 100%;
+  height: 160rpx;
+  font-size: var(--f-body);
+  color: var(--t-text);
+  background: var(--t-bg);
+  border-radius: var(--r-sm);
+  padding: var(--s-sm);
+  box-sizing: border-box;
+}
+
+.form-hint {
+  font-size: var(--f-small);
+  color: var(--t-text-hint);
+  margin-top: 8rpx;
+}
+
+.form-counter {
+  font-size: var(--f-small);
+  color: var(--t-text-hint);
+  text-align: right;
+  margin-top: 8rpx;
+}
+
+.phone-tip {
+  font-size: var(--f-small);
+  color: var(--t-primary);
+  margin-top: 8rpx;
+}
+
+.agreement-section {
+  padding: var(--s-xl) var(--s-lg);
+}
+
+.agreement-row {
+  display: flex;
+  align-items: center;
+}
+
+.checkbox {
+  width: 36rpx;
+  height: 36rpx;
+  border: 2rpx solid var(--t-border);
+  border-radius: 6rpx;
+  margin-right: var(--s-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.checkbox.checked {
+  background: var(--t-primary);
+  border-color: var(--t-primary);
+}
+
+.check-icon {
+  color: #fff;
+  font-size: 24rpx;
+  font-weight: 700;
+}
+
+.agreement-text {
+  font-size: var(--f-caption);
+  color: var(--t-text-secondary);
+}
+
+.agreement-link {
+  font-size: var(--f-caption);
+  color: var(--t-primary);
+}
+
+.btn-area {
+  padding: 0 var(--s-lg);
+  margin-top: var(--s-lg);
+}

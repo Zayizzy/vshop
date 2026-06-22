@@ -1,0 +1,271 @@
+import { Controller, Get, Post, Put, Delete, Body, Param, Query, Req } from '@nestjs/common';
+import { Request } from 'express';
+import { AdminService, requireKocManager } from './admin.service';
+import { Public } from '../../common/guards/public.decorator';
+import {
+  AdminLoginDto,
+  CreateCouponDto,
+  UpdateCouponDto,
+  CouponStatusDto,
+  GrantCouponDto,
+} from '../../common/dto';
+
+// 供应商后台鉴权暂沿用现有 x-supplier-id 头 + admin/123456，
+// 标 @Public 豁免全局 JWT Guard；后台独立 JWT 鉴权待后续单独实现。
+@Public()
+@Controller('api/admin')
+export class AdminController {
+  constructor(private readonly adminService: AdminService) {}
+
+  @Post('login')
+  async login(@Body() body: AdminLoginDto) {
+    const data = await this.adminService.login(body.username, body.password);
+    return { code: 0, message: 'success', data };
+  }
+
+  // ===== Categories =====
+  @Get('categories')
+  async getCategories() {
+    return { code: 0, message: 'success', data: await this.adminService.getCategories() };
+  }
+
+  @Post('categories')
+  async createCategory(@Body() body: { name: string; icon?: string }) {
+    return { code: 0, message: 'success', data: await this.adminService.createCategory(body) };
+  }
+
+  @Put('categories/:id')
+  async updateCategory(@Param('id') id: string, @Body() body: { name?: string; icon?: string; sort?: number }) {
+    return { code: 0, message: 'success', data: await this.adminService.updateCategory(id, body) };
+  }
+
+  @Delete('categories/:id')
+  async deleteCategory(@Param('id') id: string) {
+    return { code: 0, message: 'success', data: await this.adminService.deleteCategory(id) };
+  }
+
+  // Sub-categories
+  @Get('subcategories')
+  async getSubCategories(@Query('categoryId') categoryId?: string) {
+    return { code: 0, message: 'success', data: await this.adminService.getSubCategories(categoryId) };
+  }
+
+  @Post('subcategories')
+  async createSubCategory(@Body() body: { categoryId: string; name: string }) {
+    return { code: 0, message: 'success', data: await this.adminService.createSubCategory(body) };
+  }
+
+  @Put('subcategories/:id')
+  async updateSubCategory(@Param('id') id: string, @Body() body: { name?: string; sort?: number }) {
+    return { code: 0, message: 'success', data: await this.adminService.updateSubCategory(id, body) };
+  }
+
+  @Delete('subcategories/:id')
+  async deleteSubCategory(@Param('id') id: string) {
+    return { code: 0, message: 'success', data: await this.adminService.deleteSubCategory(id) };
+  }
+
+  // ===== Dashboard =====
+  @Get('dashboard')
+  async dashboard(@Req() req: Request) {
+    const supplierId = (req.headers['x-supplier-id'] as string) || 's1';
+    const data = await this.adminService.getDashboard(supplierId);
+    return { code: 0, message: 'success', data };
+  }
+
+  @Get('goods')
+  async getGoods(@Req() req: Request, @Query('status') status?: string) {
+    const supplierId = (req.headers['x-supplier-id'] as string) || 's1';
+    const data = await this.adminService.getGoods(supplierId, status);
+    return { code: 0, message: 'success', data };
+  }
+
+  @Post('goods')
+  async createGood(@Req() req: Request, @Body() body: any) {
+    const supplierId = (req.headers['x-supplier-id'] as string) || 's1';
+    const data = await this.adminService.createGood(supplierId, body);
+    return { code: 0, message: 'success', data };
+  }
+
+  @Put('goods/:id')
+  async updateGood(@Req() req: Request, @Param('id') id: string, @Body() body: any) {
+    const supplierId = (req.headers['x-supplier-id'] as string) || 's1';
+    const data = await this.adminService.updateGood(supplierId, id, body);
+    return { code: 0, message: 'success', data };
+  }
+
+  @Put('goods/:id/status')
+  async toggleGoodStatus(@Req() req: Request, @Param('id') id: string, @Body() body: { status: string }) {
+    const supplierId = (req.headers['x-supplier-id'] as string) || 's1';
+    const data = await this.adminService.updateGoodStatus(supplierId, id, body.status);
+    return { code: 0, message: 'success', data };
+  }
+
+  @Get('orders')
+  async getOrders(
+    @Req() req: Request,
+    @Query('status') status?: string,
+    @Query('keyword') keyword?: string,
+    @Query('page') page?: string,
+    @Query('pageSize') pageSize?: string,
+  ) {
+    const supplierId = (req.headers['x-supplier-id'] as string) || 's1';
+    const data = await this.adminService.getOrders(supplierId, {
+      status,
+      keyword,
+      page: Number(page) || 1,
+      pageSize: Number(pageSize) || 20,
+    });
+    return { code: 0, message: 'success', data };
+  }
+
+  @Get('orders/:id')
+  async getOrderDetail(@Req() req: Request, @Param('id') id: string) {
+    const supplierId = (req.headers['x-supplier-id'] as string) || 's1';
+    const data = await this.adminService.getOrderDetail(supplierId, id);
+    return { code: 0, message: 'success', data };
+  }
+
+  @Put('orders/:id/status')
+  async updateOrderStatus(
+    @Req() req: Request,
+    @Param('id') id: string,
+    @Body() body: { status: string; expressNo?: string; expressCompany?: string }
+  ) {
+    const supplierId = (req.headers['x-supplier-id'] as string) || 's1';
+    const data = await this.adminService.updateOrderStatus(supplierId, id, body);
+    return { code: 0, message: 'success', data };
+  }
+
+  @Get('settlement')
+  async getSettlement(@Req() req: Request) {
+    const supplierId = (req.headers['x-supplier-id'] as string) || 's1';
+    const data = await this.adminService.getSettlement(supplierId);
+    return { code: 0, message: 'success', data };
+  }
+
+  // ===== 优惠券管理 =====
+
+  @Get('coupons')
+  async listCoupons(
+    @Query('page') page?: string,
+    @Query('pageSize') pageSize?: string,
+    @Query('status') status?: string,
+  ) {
+    const data = await this.adminService.listCoupons({
+      page: Number(page) || 1,
+      pageSize: Number(pageSize) || 20,
+      status,
+    });
+    return { code: 0, message: 'success', data };
+  }
+
+  @Post('coupons')
+  async createCoupon(@Body() body: CreateCouponDto) {
+    const data = await this.adminService.createCoupon(body);
+    return { code: 0, message: 'success', data };
+  }
+
+  @Put('coupons/:id')
+  async updateCoupon(@Param('id') id: string, @Body() body: UpdateCouponDto) {
+    const data = await this.adminService.updateCoupon(id, body);
+    return { code: 0, message: 'success', data };
+  }
+
+  @Put('coupons/:id/status')
+  async updateCouponStatus(@Param('id') id: string, @Body() body: CouponStatusDto) {
+    const data = await this.adminService.updateCouponStatus(id, body.status);
+    return { code: 0, message: 'success', data };
+  }
+
+  @Post('coupons/grant')
+  async grantCoupon(@Body() body: GrantCouponDto) {
+    const data = await this.adminService.grantCoupon(body);
+    return { code: 0, message: 'success', data };
+  }
+
+  @Get('user-coupons')
+  async listUserCoupons(
+    @Query('page') page?: string,
+    @Query('pageSize') pageSize?: string,
+    @Query('couponId') couponId?: string,
+    @Query('status') status?: string,
+  ) {
+    const data = await this.adminService.listUserCoupons({
+      page: Number(page) || 1,
+      pageSize: Number(pageSize) || 20,
+      couponId,
+      status,
+    });
+    return { code: 0, message: 'success', data };
+  }
+
+  // ===== 客户管理 =====
+
+  @Get('users')
+  async getUsers(
+    @Query('page') page?: string,
+    @Query('pageSize') pageSize?: string,
+    @Query('keyword') keyword?: string,
+    @Query('status') status?: string,
+  ) {
+    const data = await this.adminService.getUsers({
+      page: Number(page) || 1,
+      pageSize: Number(pageSize) || 20,
+      keyword,
+      status,
+    });
+    return { code: 0, message: 'success', data };
+  }
+
+  @Get('users/stats')
+  async getUserStats() {
+    return { code: 0, message: 'success', data: await this.adminService.getUserStats() };
+  }
+
+  @Get('users/:id')
+  async getUserDetail(@Param('id') id: string) {
+    return { code: 0, message: 'success', data: await this.adminService.getUserDetail(id) };
+  }
+
+  // ===== KOC 管理（仅超管 x-admin-role=super）=====
+
+  @Get('koc/applications')
+  async getKocApplications(@Req() req: Request, @Query('status') status?: string) {
+    requireKocManager(req.headers['x-admin-role'] as string);
+    return { code: 0, message: 'success', data: await this.adminService.getKocApplications(status) };
+  }
+
+  @Put('koc/:id/audit')
+  async auditKocApplication(
+    @Req() req: Request,
+    @Param('id') id: string,
+    @Body() body: { action: 'approve' | 'reject'; rejectReason?: string; commissionRate?: number },
+  ) {
+    requireKocManager(req.headers['x-admin-role'] as string);
+    const data = await this.adminService.auditKocApplication(id, body.action, body.rejectReason, body.commissionRate);
+    return { code: 0, message: 'success', data };
+  }
+
+  @Put('koc/:id/commission')
+  async updateKocCommission(
+    @Req() req: Request,
+    @Param('id') id: string,
+    @Body() body: { commissionRate: number | null },
+  ) {
+    requireKocManager(req.headers['x-admin-role'] as string);
+    const data = await this.adminService.updateKocCommission(id, body.commissionRate);
+    return { code: 0, message: 'success', data };
+  }
+
+  @Put('users/:id/koc')
+  async toggleUserKoc(
+    @Req() req: Request,
+    @Param('id') id: string,
+    @Body() body: { enabled: boolean },
+  ) {
+    requireKocManager(req.headers['x-admin-role'] as string);
+    const data = await this.adminService.toggleUserKoc(id, body.enabled);
+    return { code: 0, message: 'success', data };
+  }
+}

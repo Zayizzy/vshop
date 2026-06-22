@@ -1,0 +1,14 @@
+@import '/styles/theme.wxss';
+@import '/styles/common.wxss';
+
+.addr-item { padding: var(--s-md); }
+.addr-name { font-size: 30rpx; font-weight: 500; color: var(--t-text); }
+.addr-text { font-size: var(--f-caption); color: var(--t-text-secondary); display: block; margin-top: 8rpx; line-height: 1.6; }
+.default-tag {
+  font-size: var(--f-small); color: var(--t-primary);
+  background: var(--t-primary-bg); padding: 2rpx 12rpx; border-radius: var(--r-xs);
+}
+.edit-btn { font-size: var(--f-caption); color: var(--t-text-hint); margin-left: var(--s-sm); }
+
+.add-btn-wrap { padding: var(--s-lg) var(--s-md); }
+.add-btn-wrap button { border-radius: var(--r-xl); }

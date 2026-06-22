@@ -1,0 +1,35 @@
+@import '/styles/theme.wxss';
+@import '/styles/common.wxss';
+
+.express-card { margin-top: var(--s-sm); }
+.express-icon { font-size: 48rpx; margin-right: var(--s-sm); }
+.express-company { font-size: 30rpx; font-weight: 500; color: var(--t-text); display: block; }
+.express-no { font-size: var(--f-caption); color: var(--t-text-hint); }
+.copy-btn { font-size: var(--f-caption); color: var(--t-primary); }
+
+.status-badge { font-size: var(--f-body); font-weight: 500; color: var(--t-primary); margin-bottom: var(--s-md); }
+
+.timeline { position: relative; padding-left: 40rpx; }
+.timeline-item { position: relative; padding-bottom: var(--s-lg); }
+.timeline-item.latest { padding-bottom: 0; }
+.timeline-dot {
+  position: absolute; left: -32rpx; top: 6rpx;
+  width: 16rpx; height: 16rpx; border-radius: 50%;
+  background: #E0E0E0; border: 2rpx solid #E0E0E0;
+}
+.timeline-dot.active {
+  background: var(--t-primary); border-color: var(--t-primary);
+  box-shadow: 0 0 0 4rpx var(--t-primary-bg);
+}
+.timeline-item:not(:last-child)::before {
+  content: '';
+  position: absolute; left: -25rpx; top: 26rpx;
+  width: 2rpx; height: calc(100% - 10rpx);
+  background: #E0E0E0;
+}
+
+.timeline-content { min-height: 60rpx; }
+.timeline-desc { font-size: var(--f-body); color: var(--t-text); display: block; }
+.timeline-item.latest .timeline-desc { color: var(--t-primary); font-weight: 500; }
+.timeline-loc { font-size: var(--f-caption); color: var(--t-text-secondary); display: block; margin-top: 4rpx; }
+.timeline-time { font-size: var(--f-small); color: var(--t-text-hint); display: block; margin-top: 2rpx; }
