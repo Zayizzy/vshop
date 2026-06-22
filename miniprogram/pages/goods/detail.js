@@ -7,6 +7,7 @@ Page({
     goodsId: '',
     goods: {},
     images: [],
+    detailImages: [],
     skus: [],
     selectedSkuId: '',
     selectedSku: null,
@@ -56,6 +57,7 @@ Page({
           detail: data.detail || ''
         },
         images: data.images || [],
+        detailImages: data.detailImages || [],
         skus: data.skus || [],
         selectedSkuId: data.skus && data.skus.length > 0 ? data.skus[0].id : '',
         selectedSku: data.skus && data.skus.length > 0 ? data.skus[0] : null,

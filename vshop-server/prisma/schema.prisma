@@ -84,11 +84,22 @@ model Good {
   subCategory SubCategory?  @relation(fields: [subCategoryId], references: [id])
   skus        Sku[]
   images      GoodImage[]
+  detailImages GoodDetailImage[]
   suppliers   GoodSupplier[]
   favorites   Favorite[]
 }
 
 model GoodImage {
+  id      String @id @default(cuid())
+  goodId  String
+  url     String
+  sort    Int    @default(0)
+
+  good Good @relation(fields: [goodId], references: [id])
+}
+
+// 商品详情图（详情页纵向铺图展示，按 sort 升序）
+model GoodDetailImage {
   id      String @id @default(cuid())
   goodId  String
   url     String

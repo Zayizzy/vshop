@@ -176,6 +176,7 @@ export class GoodsService {
       where: { id },
       include: {
         images: { orderBy: { sort: 'asc' } },
+        detailImages: { orderBy: { sort: 'asc' } },
         skus: { orderBy: { price: 'asc' } },
         suppliers: {
           include: {
@@ -217,6 +218,8 @@ export class GoodsService {
       supplier: firstSupplier?.supplier?.name ?? '',
       originDesc: good.description || '',
       images: good.images.map((img) => img.url),
+      // 详情图（详情页纵向铺图，按 sort 升序）
+      detailImages: good.detailImages.map((img) => img.url),
       skus: good.skus.map((sku) => ({
         id: sku.id,
         name: sku.name,

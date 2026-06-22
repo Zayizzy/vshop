@@ -119,6 +119,7 @@ export class AdminService {
       include: {
         skus: { take: 1 },
         images: { orderBy: { sort: 'asc' } },
+        detailImages: { orderBy: { sort: 'asc' } },
         suppliers: { where: { supplierId }, take: 1 },
         subCategory: true,
       },
@@ -146,6 +147,8 @@ export class AdminService {
         image: img?.url ?? '',
         // 多图 url 数组（按 sort 升序）
         images: g.images.map((i) => i.url),
+        // 详情图 url 数组（按 sort 升序）
+        detailImages: g.detailImages.map((i) => i.url),
         // 今日推荐
         isRecommended: g.isRecommended,
         recommendSort: g.recommendSort,
@@ -216,12 +219,24 @@ export class AdminService {
       });
     }
 
-    // 支持多图上传
+    // 支持多图上传（轮播图）
     const images = body.images || (body.image ? [body.image] : []);
     if (images.length > 0) {
       await Promise.all(
         images.map((url: string, i: number) =>
           this.prisma.goodImage.create({
+            data: { goodId: good.id, url, sort: i },
+          }),
+        ),
+      );
+    }
+
+    // 详情图（详情页纵向铺图）
+    const detailImages: string[] = body.detailImages || [];
+    if (detailImages.length > 0) {
+      await Promise.all(
+        detailImages.map((url: string, i: number) =>
+          this.prisma.goodDetailImage.create({
             data: { goodId: good.id, url, sort: i },
           }),
         ),
@@ -276,7 +291,7 @@ export class AdminService {
       }
     }
 
-    // Update images (支持多图)
+    // Update images (轮播图，支持多图)
     if (body.images !== undefined || body.image !== undefined) {
       const images: string[] = body.images || (body.image ? [body.image] : []);
       await this.prisma.goodImage.deleteMany({ where: { goodId: id } });
@@ -284,6 +299,19 @@ export class AdminService {
         await Promise.all(
           images.map((url: string, i: number) =>
             this.prisma.goodImage.create({ data: { goodId: id, url, sort: i } }),
+          ),
+        );
+      }
+    }
+
+    // Update detailImages (详情图，全量重建)
+    if (body.detailImages !== undefined) {
+      const detailImages: string[] = body.detailImages || [];
+      await this.prisma.goodDetailImage.deleteMany({ where: { goodId: id } });
+      if (detailImages.length > 0) {
+        await Promise.all(
+          detailImages.map((url: string, i: number) =>
+            this.prisma.goodDetailImage.create({ data: { goodId: id, url, sort: i } }),
           ),
         );
       }

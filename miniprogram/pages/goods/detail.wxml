@@ -78,7 +78,12 @@
   <view class="detail-section" wx:if="{{!loading}}">
     <text class="detail-section-title">商品详情</text>
     <view class="detail-content">
-      <rich-text nodes="{{goods.detail || '暂无商品详情'}}"></rich-text>
+      <!-- 详情图：按顺序纵向铺图展示 -->
+      <block wx:if="{{detailImages.length > 0}}">
+        <image class="detail-image" wx:for="{{detailImages}}" wx:key="index" src="{{item}}" mode="widthFix" />
+      </block>
+      <!-- 无详情图时回退富文本 -->
+      <rich-text wx:else nodes="{{goods.detail || '暂无商品详情'}}"></rich-text>
     </view>
   </view>
 

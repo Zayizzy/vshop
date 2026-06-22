@@ -47,3 +47,4 @@ project.private.config.json
 # Temporary files
 *.tmp
 .cache/
+node_modules
