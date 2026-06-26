@@ -1,0 +1,180 @@
+.page-chat {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background: #EDEFF2;
+}
+
+/* 导航栏 */
+.nav-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24rpx;
+  background: #FFFFFF;
+  box-shadow: 0 2rpx 8rpx rgba(0,0,0,0.04);
+  position: relative;
+  z-index: 2;
+}
+.nav-back {
+  font-size: 48rpx;
+  color: #333;
+  width: 60rpx;
+  line-height: 1;
+}
+.nav-title {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #222;
+  max-width: 380rpx;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.nav-faq {
+  font-size: 24rpx;
+  color: #07C160;
+  padding: 8rpx 0;
+}
+
+/* 标题条 */
+.session-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16rpx 24rpx;
+  background: #F5F7F5;
+}
+.session-tip {
+  font-size: 24rpx;
+  color: #888;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.session-call {
+  font-size: 24rpx;
+  color: #07C160;
+  margin-left: 16rpx;
+  flex-shrink: 0;
+}
+
+/* 消息流 */
+.thread {
+  flex: 1;
+  padding: 24rpx;
+  box-sizing: border-box;
+}
+.thread-bottom {
+  height: 20rpx;
+}
+.sys-tip {
+  text-align: center;
+  font-size: 24rpx;
+  color: #aaa;
+  padding: 24rpx 0;
+}
+
+.bubble-row {
+  display: flex;
+  gap: 16rpx;
+  margin-bottom: 28rpx;
+  align-items: flex-start;
+}
+.bubble-row.mine {
+  flex-direction: row-reverse;
+}
+.avatar {
+  width: 64rpx;
+  height: 64rpx;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26rpx;
+  color: #fff;
+  flex-shrink: 0;
+}
+.avatar-kefu {
+  background: #07C160;
+}
+.avatar-mine {
+  background: #8C9EFF;
+}
+.bubble-col {
+  display: flex;
+  flex-direction: column;
+  max-width: 70%;
+  gap: 6rpx;
+}
+.bubble-row.mine .bubble-col {
+  align-items: flex-end;
+}
+.bubble-name {
+  font-size: 22rpx;
+  color: #999;
+  padding: 0 8rpx;
+}
+.bubble {
+  padding: 18rpx 24rpx;
+  border-radius: 20rpx;
+  font-size: 28rpx;
+  line-height: 1.55;
+  word-break: break-word;
+  white-space: pre-wrap;
+}
+.bubble-kefu {
+  background: #FFFFFF;
+  color: #222;
+  border-top-left-radius: 6rpx;
+}
+.bubble-mine {
+  background: #07C160;
+  color: #FFFFFF;
+  border-top-right-radius: 6rpx;
+}
+.bubble-time {
+  font-size: 20rpx;
+  color: #bbb;
+  padding: 0 8rpx;
+}
+
+/* 输入栏 */
+.input-bar {
+  display: flex;
+  align-items: flex-end;
+  gap: 16rpx;
+  padding: 16rpx 24rpx;
+  background: #FFFFFF;
+  border-top: 1rpx solid #eee;
+}
+.input {
+  flex: 1;
+  min-height: 64rpx;
+  max-height: 200rpx;
+  padding: 16rpx 20rpx;
+  background: #F2F3F5;
+  border-radius: 32rpx;
+  font-size: 28rpx;
+  line-height: 1.4;
+  box-sizing: border-box;
+}
+.send-btn {
+  flex-shrink: 0;
+  height: 64rpx;
+  line-height: 64rpx;
+  padding: 0 32rpx;
+  background: #07C160;
+  color: #fff;
+  font-size: 28rpx;
+  border-radius: 32rpx;
+  margin: 0;
+}
+.send-btn.disabled {
+  background: #C8C8C8;
+  color: #fff;
+}
+.send-btn::after {
+  border: none;
+}

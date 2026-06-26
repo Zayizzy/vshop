@@ -36,11 +36,12 @@
         <text class="express-text">{{pkg.expressCompany}} {{pkg.expressNo}}</text>
         <t-button theme="primary" variant="outline" size="small" bindtap="viewLogistics" data-order-id="{{order.id}}" data-pkg-idx="{{pkg.packageIndex}}">查看物流</t-button>
       </view>
-      <view class="pkg-footer" wx:if="{{pkg.status === 0 && order.status >= 1}}">
-        <t-button theme="default" variant="outline" size="small" bindtap="applyAfterSale" data-order-id="{{order.id}}" data-pkg-idx="{{pkg.packageIndex}}" data-item-id="{{pkg.items[0].id}}">申请售后</t-button>
-      </view>
     </view>
   </block>
+
+  <view class="card" wx:if="{{order.status !== 'pending'}}">
+    <t-button theme="default" variant="outline" size="small" bindtap="applyAfterSale" data-order-id="{{order.id}}" data-item-id="{{order.applyItemId}}" data-amount="{{order.payAmount}}">申请售后 / 退货退款</t-button>
+  </view>
 
   <view class="card">
     <view class="info-row"><text>商品金额</text><text>¥{{order.totalAmount}}</text></view>

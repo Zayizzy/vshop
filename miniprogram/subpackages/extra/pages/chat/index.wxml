@@ -1,0 +1,55 @@
+<view class="page-chat">
+  <!-- 自定义导航栏 -->
+  <view class="nav-bar" style="height:{{navHeight}}px;padding-top:{{statusBarHeight}}px">
+    <view class="nav-back" bindtap="goBack">‹</view>
+    <text class="nav-title">{{title || '在线客服'}}</text>
+    <text class="nav-faq" bindtap="goFaq">常见问题</text>
+  </view>
+
+  <!-- 会话标题条 -->
+  <view class="session-bar">
+    <text class="session-tip">💬 在线留言，客服将在工作时段尽快回复</text>
+    <text class="session-call" bindtap="callService">📞 电话</text>
+  </view>
+
+  <!-- 消息流 -->
+  <scroll-view
+    class="thread"
+    scroll-y
+    scroll-into-view="{{scrollIntoView}}"
+    scroll-with-animation
+  >
+    <view class="sys-tip" wx:if="{{messages.length === 0 && !loading}}">暂无消息，向客服发送一条留言吧～</view>
+    <view
+      wx:for="{{messages}}"
+      wx:key="id"
+      id="msg-{{item.id}}"
+      class="bubble-row {{item.isMine ? 'mine' : ''}}"
+    >
+      <view class="avatar {{item.isMine ? 'avatar-mine' : 'avatar-kefu'}}">{{item.isMine ? '我' : '客'}}</view>
+      <view class="bubble-col">
+        <text class="bubble-name">{{item.isMine ? '我' : '客服'}}</text>
+        <view class="bubble {{item.isMine ? 'bubble-mine' : 'bubble-kefu'}}">{{item.content}}</view>
+        <text class="bubble-time">{{item.time}}</text>
+      </view>
+    </view>
+    <view class="sys-tip" wx:if="{{sessionClosed}}">— 会话已关闭 —</view>
+    <view class="thread-bottom"></view>
+  </scroll-view>
+
+  <!-- 输入栏 -->
+  <view class="input-bar safe-area-bottom">
+    <textarea
+      class="input"
+      value="{{inputContent}}"
+      bindinput="onInput"
+      placeholder="{{sessionClosed ? '会话已关闭' : '输入留言…'}}"
+      disabled="{{sessionClosed}}"
+      confirm-type="send"
+      bindconfirm="send"
+      auto-height
+      maxlength="500"
+    />
+    <button class="send-btn {{(!inputContent || sending || sessionClosed) ? 'disabled' : ''}}" bindtap="send" disabled="{{!inputContent || sending || sessionClosed}}">发送</button>
+  </view>
+</view>

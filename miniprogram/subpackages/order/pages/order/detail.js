@@ -14,6 +14,8 @@ Page({
         pkg.statusText = texts[pkg.status] || '--'
         pkg.statusTheme = themes[pkg.status] || 'default'
       })
+      // 售后申请关联首条明细（订单级入口），退款金额默认取订单实付
+      data.applyItemId = (data.items && data.items[0] && data.items[0].id) || ''
       this.setData({ order: data })
     }).catch(() => {
       this.setData({
@@ -67,7 +69,7 @@ Page({
     wx.navigateTo({ url: `/subpackages/order/pages/order/logistics?orderId=${orderId}&packageIndex=${pkgIdx}` })
   },
   applyAfterSale(e) {
-    const { orderId, pkgIdx, itemId } = e.currentTarget.dataset
-    wx.navigateTo({ url: `/subpackages/order/pages/aftersale/apply?orderId=${orderId}&packageIndex=${pkgIdx}&orderItemId=${itemId}` })
+    const { orderId, itemId, amount } = e.currentTarget.dataset
+    wx.navigateTo({ url: `/subpackages/order/pages/aftersale/apply?orderId=${orderId}&packageIndex=0&orderItemId=${itemId || ''}&amount=${amount || ''}` })
   }
 })

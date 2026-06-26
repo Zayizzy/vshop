@@ -120,6 +120,10 @@ Page({
     wx.navigateTo({ url: '/subpackages/extra/pages/collection/index' })
   },
 
+  goAftersale() {
+    wx.navigateTo({ url: '/subpackages/order/pages/aftersale/list' })
+  },
+
   goKoc() {
     if (this.data.kocInfo.isKoc) {
       wx.navigateTo({ url: '/subpackages/koc/pages/koc/dashboard/index' })
@@ -129,7 +133,7 @@ Page({
   },
 
   goService() {
-    wx.navigateTo({ url: '/subpackages/extra/pages/service/index' })
+    wx.navigateTo({ url: '/subpackages/extra/pages/chat/index' })
   },
 
   goAbout() {

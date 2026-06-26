@@ -11,6 +11,8 @@ import { ChannelModule } from './modules/channel/channel.module';
 import { KocModule } from './modules/koc/koc.module';
 import { AdminModule } from './modules/admin/admin.module';
 import { UploadModule } from './modules/upload/upload.module';
+import { SupportModule } from './modules/support/support.module';
+import { AftersaleModule } from './modules/aftersale/aftersale.module';
 
 @Module({
   imports: [
@@ -19,6 +21,8 @@ import { UploadModule } from './modules/upload/upload.module';
     HomeModule, CouponModule, ChannelModule, KocModule,
     AdminModule,
     UploadModule,
+    SupportModule,
+    AftersaleModule,
   ],
 })
 export class AppModule {}

@@ -25,11 +25,11 @@
     <view class="form-group">
       <text class="label">凭证图片 (选填)</text>
       <view class="image-upload">
-        <view class="img-item" wx:for="{{images}}" wx:key="index">
+        <view class="img-item" wx:for="{{displayImages}}" wx:key="index">
           <image src="{{item}}" mode="aspectFill" lazy-load />
           <view class="img-delete" bindtap="removeImage" data-index="{{index}}">×</view>
         </view>
-        <view class="upload-btn" bindtap="chooseImage" wx:if="{{images.length < 6}}">+</view>
+        <view class="upload-btn" bindtap="chooseImage" wx:if="{{images.length < 6}}">{{uploading ? '上传中' : '+'}}</view>
       </view>
     </view>
   </view>

@@ -51,7 +51,8 @@
         "pages/coupon/list",
         "pages/collection/index",
         "pages/service/index",
-        "pages/settings/index"
+        "pages/settings/index",
+        "pages/chat/index"
       ]
     }
   ],

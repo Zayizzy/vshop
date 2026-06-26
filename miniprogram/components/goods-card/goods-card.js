@@ -12,6 +12,8 @@
  * 点击触发 tap 事件，detail = { id }；页面用 bindtap 取 e.detail.id 跳转。
  * slot="action" 用于收藏页等场景放置操作按钮（取消收藏等）。
  */
+const { full: fullImg } = require('../../utils/image')
+
 Component({
   properties: {
     item: { type: Object, value: {} },
@@ -44,7 +46,7 @@ Component({
       return {
         id: i.id,
         name: i.name || i.title || '',
-        image: i.image || i.coverImage || '',
+        image: fullImg(i.image || i.coverImage || ''),
         price,
         // 划线价：有折扣时为 originalPrice，否则 null
         oldPrice: hasDiscount ? original : null,

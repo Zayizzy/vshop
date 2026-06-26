@@ -1,5 +1,6 @@
 const api = require('../../api/index')
 const { getNavInfo } = require('../../utils/nav')
+const { full: fullImg } = require('../../utils/image')
 
 Page({
   data: {
@@ -69,7 +70,7 @@ Page({
           title: item.name || item.title,
           spec: item.spec || item.specName || '',
           price: Number(item.price) || 0,
-          image: item.image || item.coverImage || '',
+          image: fullImg(item.image || item.coverImage || ''),
           quantity: item.quantity || 1,
           stock: item.stock || 0,
           selected: true
@@ -100,7 +101,7 @@ Page({
         id: item.id,
         title: item.title || item.name,
         price: item.price,
-        image: item.coverImage || item.image || item.picUrl || ''
+        image: fullImg(item.coverImage || item.image || item.picUrl || '')
       }))
       this.setData({ recommendList: list })
     }).catch(() => {

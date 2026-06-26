@@ -248,7 +248,7 @@ export class AdminService {
 
   async updateGood(supplierId: string, id: string, body: any) {
     const good = await this.prisma.good.findUnique({ where: { id } });
-    if (!good) throw new Error('商品不存在');
+    if (!good) throw new BadRequestException('商品不存在');
 
     // Update basic info
     const updateData: any = {};
@@ -325,6 +325,31 @@ export class AdminService {
     return { id, status };
   }
 
+  /**
+   * 删除商品：事务内清理关联数据（图片/详情图/供应商关系/收藏），
+   * 再删除 Sku（若被订单/购物车引用会触发外键约束，事务回滚并提示），
+   * 最后删除 Good 本身。
+   */
+  async deleteGood(supplierId: string, id: string) {
+    const good = await this.prisma.good.findUnique({ where: { id } });
+    if (!good) throw new BadRequestException('商品不存在');
+
+    try {
+      await this.prisma.$transaction([
+        this.prisma.goodImage.deleteMany({ where: { goodId: id } }),
+        this.prisma.goodDetailImage.deleteMany({ where: { goodId: id } }),
+        this.prisma.goodSupplier.deleteMany({ where: { goodId: id } }),
+        this.prisma.favorite.deleteMany({ where: { goodId: id } }),
+        this.prisma.sku.deleteMany({ where: { goodId: id } }),
+        this.prisma.good.delete({ where: { id } }),
+      ]);
+    } catch (e) {
+      // Sku 仍被 OrderItem / CartItem 引用时外键约束失败
+      throw new BadRequestException('该商品存在订单或购物车引用，无法删除，建议改为下架');
+    }
+    return { id };
+  }
+
   // ===== 订单管理 =====
 
   async getOrders(
@@ -391,7 +416,7 @@ export class AdminService {
         payment: true,
       },
     });
-    if (!order) throw new Error('订单不存在');
+    if (!order) throw new BadRequestException('订单不存在');
 
     return {
       id: order.id,
@@ -434,7 +459,7 @@ export class AdminService {
       where: { id },
       include: { packages: true },
     });
-    if (!order) throw new Error('订单不存在');
+    if (!order) throw new BadRequestException('订单不存在');
 
     const nextStatus = body.status;
     const data: any = { status: nextStatus };
@@ -967,6 +992,249 @@ export class AdminService {
     });
     return { commissionRate: updated.commissionRate };
   }
+
+  // ===== 客服会话管理 =====
+
+  /** 会话列表（含用户信息、最近消息、未读），最近活跃在前。 */
+  async getChatSessions(opts: { keyword?: string; closed?: string; page?: number; pageSize?: number }) {
+    const page = opts.page || 1;
+    const pageSize = opts.pageSize || 50;
+    const where: any = {};
+    if (opts.closed === 'open') where.closed = false;
+    if (opts.closed === 'closed') where.closed = true;
+    if (opts.keyword) {
+      where.OR = [
+        { title: { contains: opts.keyword } },
+        { lastMessage: { contains: opts.keyword } },
+        { user: { nickname: { contains: opts.keyword } } },
+      ];
+    }
+    const [total, list] = await Promise.all([
+      this.prisma.chatSession.count({ where }),
+      this.prisma.chatSession.findMany({
+        where,
+        include: {
+          user: { select: { id: true, nickname: true, phone: true, avatar: true } },
+        },
+        orderBy: { lastAt: 'desc' },
+        skip: (page - 1) * pageSize,
+        take: pageSize,
+      }),
+    ]);
+    return {
+      total,
+      page,
+      pageSize,
+      list: list.map((s) => ({
+        id: s.id,
+        userId: s.userId,
+        goodId: s.goodId,
+        title: s.title,
+        lastMessage: s.lastMessage,
+        lastAt: s.lastAt,
+        userUnread: s.userUnread,
+        adminUnread: s.adminUnread,
+        closed: s.closed,
+        createdAt: s.createdAt,
+        user: s.user,
+      })),
+    };
+  }
+
+  /** 管理台查看会话消息列表。 */
+  async getChatMessages(sessionId: string) {
+    const session = await this.prisma.chatSession.findUnique({
+      where: { id: sessionId },
+      include: { user: { select: { id: true, nickname: true, phone: true, avatar: true } } },
+    });
+    if (!session) throw new BadRequestException('会话不存在');
+    const messages = await this.prisma.chatMessage.findMany({
+      where: { sessionId },
+      orderBy: { createdAt: 'asc' },
+    });
+    return {
+      session: {
+        id: session.id,
+        title: session.title,
+        goodId: session.goodId,
+        closed: session.closed,
+        user: session.user,
+      },
+      messages: messages.map((m) => ({
+        id: m.id,
+        sender: m.sender,
+        content: m.content,
+        createdAt: m.createdAt,
+      })),
+    };
+  }
+
+  /** 客服回复：写消息 + 更新会话最近消息/时间 + userUnread++。 */
+  async replyChat(sessionId: string, content: string) {
+    const text = (content || '').trim();
+    if (!text) throw new BadRequestException('回复内容不能为空');
+    const session = await this.prisma.chatSession.findUnique({ where: { id: sessionId } });
+    if (!session) throw new BadRequestException('会话不存在');
+    const [msg] = await this.prisma.$transaction([
+      this.prisma.chatMessage.create({
+        data: { sessionId, sender: 'admin', content: text },
+      }),
+      this.prisma.chatSession.update({
+        where: { id: sessionId },
+        data: { lastMessage: text, lastAt: new Date(), userUnread: { increment: 1 } },
+      }),
+    ]);
+    return { id: msg.id, sender: 'admin', content: msg.content, createdAt: msg.createdAt };
+  }
+
+  /** 客服查看会话：清零 adminUnread。 */
+  async markChatRead(sessionId: string) {
+    const session = await this.prisma.chatSession.findUnique({ where: { id: sessionId } });
+    if (!session) throw new BadRequestException('会话不存在');
+    const updated = await this.prisma.chatSession.update({
+      where: { id: sessionId },
+      data: { adminUnread: 0 },
+    });
+    return { id: updated.id, adminUnread: updated.adminUnread };
+  }
+
+  /** 客服关闭/重开会话。 */
+  async toggleChatClosed(sessionId: string, closed: boolean) {
+    const session = await this.prisma.chatSession.findUnique({ where: { id: sessionId } });
+    if (!session) throw new BadRequestException('会话不存在');
+    const updated = await this.prisma.chatSession.update({
+      where: { id: sessionId },
+      data: { closed },
+    });
+    return { id: updated.id, closed: updated.closed };
+  }
+
+  // ===== 售后 / 退货管理 =====
+
+  /** 售后列表。status 可为数字或别名 pending/approved/rejected/refunded/done。 */
+  async listAftersales(params: { status?: string; type?: string; keyword?: string; page: number; pageSize: number }) {
+    const { status, type, keyword, page, pageSize } = params;
+    const where: any = {};
+    const statusIn = resolveAftersaleStatusFilter(status);
+    if (statusIn) where.status = { in: statusIn };
+    if (type) where.type = Number(type);
+    if (keyword && keyword.trim()) {
+      const kw = keyword.trim();
+      where.OR = [
+        { aftersaleSn: { contains: kw } },
+        { order: { orderSn: { contains: kw } } },
+        { user: { nickname: { contains: kw } } },
+        { user: { phone: { contains: kw } } },
+      ];
+    }
+
+    const [rows, total] = await Promise.all([
+      this.prisma.aftersale.findMany({
+        where,
+        orderBy: { createdAt: 'desc' },
+        skip: (page - 1) * pageSize,
+        take: pageSize,
+        include: {
+          user: { select: { id: true, nickname: true, phone: true } },
+          order: { select: { orderSn: true, items: { select: { id: true, goodTitle: true } } } },
+        },
+      }),
+      this.prisma.aftersale.count({ where }),
+    ]);
+
+    return {
+      list: rows.map((a) => this.formatAftersale(a)),
+      total,
+      page,
+      pageSize,
+      totalPages: Math.ceil(total / pageSize),
+    };
+  }
+
+  /** 售后详情：售后字段 + 订单/用户/明细 + 凭证图。 */
+  async getAftersaleDetail(id: string) {
+    const a = await this.prisma.aftersale.findUnique({
+      where: { id },
+      include: {
+        user: { select: { id: true, nickname: true, phone: true, avatar: true } },
+        order: {
+          select: {
+            orderSn: true,
+            status: true,
+            payAmount: true,
+            createdAt: true,
+            address: { select: { name: true, phone: true, province: true, city: true, district: true, detail: true } },
+            items: { select: { id: true, goodTitle: true, specName: true, image: true, price: true, quantity: true } },
+          },
+        },
+      },
+    });
+    if (!a) throw new BadRequestException('售后记录不存在');
+    return this.formatAftersale(a, true);
+  }
+
+  /** 审核：approve(0→1) / reject(0→2)，可写备注。 */
+  async auditAftersale(id: string, action: 'approve' | 'reject', remark?: string) {
+    const a = await this.prisma.aftersale.findUnique({ where: { id } });
+    if (!a) throw new BadRequestException('售后记录不存在');
+    if (a.status !== 0) throw new BadRequestException('当前状态不可审核');
+    const status = action === 'approve' ? 1 : 2;
+    const updated = await this.prisma.aftersale.update({
+      where: { id },
+      data: { status, adminRemark: remark || null },
+    });
+    return { id: updated.id, status: updated.status };
+  }
+
+  /** 确认退款：仅「已同意(1)」可操作 → 4 已退款，生成退款单号。
+   *  注：库存回退（退货入库）暂不在此自动处理，由后台按需手动调整。 */
+  async refundAftersale(id: string, remark?: string) {
+    const a = await this.prisma.aftersale.findUnique({ where: { id } });
+    if (!a) throw new BadRequestException('售后记录不存在');
+    if (a.status !== 1) throw new BadRequestException('仅「已同意」状态可确认退款');
+    const refundNo = `RF${Date.now()}${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
+    const updated = await this.prisma.aftersale.update({
+      where: { id },
+      data: { status: 4, refundNo, adminRemark: remark || a.adminRemark },
+    });
+    return { id: updated.id, status: updated.status, refundNo: updated.refundNo };
+  }
+
+  /** 售后格式化：分→元、解析 evidenceImages、补 goodsTitle/orderSn/user。 */
+  private formatAftersale(a: any, detail = false) {
+    const items = a.order?.items || [];
+    const matched = a.orderItemId ? items.find((i: any) => i.id === a.orderItemId) : null;
+    const base: any = {
+      id: a.id,
+      aftersaleSn: a.aftersaleSn,
+      orderId: a.orderId,
+      orderSn: a.order?.orderSn || '',
+      userId: a.userId,
+      user: a.user || null,
+      orderItemId: a.orderItemId,
+      goodsTitle: matched?.goodTitle || items[0]?.goodTitle || '',
+      type: a.type,
+      reason: a.reason,
+      description: a.description || '',
+      evidenceImages: parseAftersaleImages(a.evidenceImages),
+      refundAmount: centToYuan(a.refundAmount),
+      refundNo: a.refundNo || '',
+      adminRemark: a.adminRemark || '',
+      status: a.status,
+      createdAt: a.createdAt,
+    };
+    if (detail && a.order) {
+      base.order = {
+        orderSn: a.order.orderSn,
+        status: a.order.status,
+        payAmount: centToYuan(a.order.payAmount),
+        createdAt: a.order.createdAt,
+        address: a.order.address,
+        items: a.order.items.map((i: any) => ({ ...i, price: centToYuan(i.price) })),
+      };
+    }
+    return base;
+  }
 }
 
 /**
@@ -984,5 +1252,32 @@ function normalizeDiscountRate(rate: any): number | null {
     throw new BadRequestException('折扣率需在 0~1 之间（如 0.8 表示 8 折）');
   }
   return n;
+}
+
+/** 售后 status 过滤解析：别名 → 状态集合；数字 → 精确；未知/全部 → undefined。 */
+function resolveAftersaleStatusFilter(status?: string): number[] | undefined {
+  if (!status || status === 'all') return undefined;
+  const alias: Record<string, number[]> = {
+    pending: [0],
+    approved: [1],
+    rejected: [2],
+    refunded: [4],
+    done: [4, 5],
+  };
+  if (alias[status]) return alias[status];
+  const n = Number(status);
+  if (Number.isInteger(n) && n >= 0 && n <= 5) return [n];
+  return undefined;
+}
+
+/** evidenceImages 入库为 JSON 字符串，读取时还原为数组。 */
+function parseAftersaleImages(raw: any): string[] {
+  if (!raw) return [];
+  try {
+    const v = typeof raw === 'string' ? JSON.parse(raw) : raw;
+    return Array.isArray(v) ? v.filter((x) => typeof x === 'string') : [];
+  } catch {
+    return [];
+  }
 }
 

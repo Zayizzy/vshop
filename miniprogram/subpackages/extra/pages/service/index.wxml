@@ -5,6 +5,15 @@
     <text class="header-desc">服务时间：每日 8:00 - 22:00</text>
   </view>
 
+  <view class="online-card" bindtap="goChat">
+    <text class="online-icon">💬</text>
+    <view class="online-info">
+      <text class="online-title">在线客服咨询</text>
+      <text class="online-desc">留言咨询订单/商品问题，客服尽快回复</text>
+    </view>
+    <text class="online-arrow">›</text>
+  </view>
+
   <view class="contact-card">
     <view class="contact-item" bindtap="callService">
       <text class="contact-icon">📞</text>

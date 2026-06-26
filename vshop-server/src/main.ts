@@ -1,4 +1,5 @@
 import { NestFactory, Reflector } from '@nestjs/core';
+import * as express from 'express';
 import { AppModule } from './app.module';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { ValidationPipe } from '@nestjs/common';
@@ -11,6 +12,12 @@ import { PrismaService } from './prisma/prisma.service';
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
   app.enableCors();
+
+  // 提高 JSON / urlencoded body 大小上限，避免大商品详情富文本或大数组
+  // 触发默认 100kb 限制（PayloadTooLargeError: request entity too large）。
+  // 文件上传走 multipart（multer），不受此限制，见 upload.controller.ts。
+  app.use(express.json({ limit: '10mb' }));
+  app.use(express.urlencoded({ limit: '10mb', extended: true }));
 
   // 全局参数校验：未通过校验的字段直接返回 400
   app.useGlobalPipes(

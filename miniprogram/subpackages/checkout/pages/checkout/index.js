@@ -1,4 +1,5 @@
 const api = require('../../../../api/index')
+const { full: fullImg } = require('../../../../utils/image')
 
 Page({
   data: {
@@ -41,7 +42,7 @@ Page({
         skuId: options.skuId,
         goodsTitle: data.name,
         specName: sku ? sku.name : '',
-        goodsImage: (data.images || [])[0] || '',
+        goodsImage: fullImg((data.images || [])[0] || ''),
         price: Number(sku ? sku.price : data.price) || 0,
         quantity
       }
@@ -62,7 +63,7 @@ Page({
             skuId: item.skuId,
             goodsTitle: item.name || item.title,
             specName: item.spec || item.specName || '',
-            goodsImage: item.image || '',
+            goodsImage: fullImg(item.image || ''),
             price: Number(item.price) || 0,
             quantity: item.quantity || 1
           })

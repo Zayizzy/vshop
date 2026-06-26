@@ -136,6 +136,45 @@ export class OrderIdDto {
   orderId!: string;
 }
 
+// ===== 售后 / 退货退款 =====
+// 金额 refundAmount 以「元」传入，service 层 yuanToCent 转分存储。
+// type: 1=仅退款 2=退货退款。evidenceImages 为已上传的图片 URL 数组。
+
+export class CreateAftersaleDto {
+  @IsString()
+  orderId!: string;
+
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  packageIndex?: number;
+
+  @IsOptional()
+  @IsString()
+  orderItemId?: string;
+
+  @IsInt()
+  @IsIn([1, 2])
+  type!: number;
+
+  @IsString()
+  reason!: string;
+
+  @IsOptional()
+  @IsString()
+  description?: string;
+
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  evidenceImages?: string[];
+
+  // 退款金额（元），service 校验 >0 且 ≤ 订单实付
+  @IsNumber()
+  @Min(0)
+  refundAmount!: number;
+}
+
 // ===== 商品 =====
 
 export class ToggleFavoriteDto {

@@ -1,5 +1,6 @@
 const api = require('../../api/index')
 const { getNavInfo } = require('../../utils/nav')
+const { full: fullImg } = require('../../utils/image')
 
 Page({
   data: {
@@ -56,8 +57,8 @@ Page({
           originDesc: data.originDesc || '',
           detail: data.detail || ''
         },
-        images: data.images || [],
-        detailImages: data.detailImages || [],
+        images: (data.images || []).map(fullImg),
+        detailImages: (data.detailImages || []).map(fullImg),
         skus: data.skus || [],
         selectedSkuId: data.skus && data.skus.length > 0 ? data.skus[0].id : '',
         selectedSku: data.skus && data.skus.length > 0 ? data.skus[0] : null,
@@ -136,6 +137,13 @@ Page({
 
   goCart() {
     wx.switchTab({ url: '/pages/cart/index' })
+  },
+
+  goKefu() {
+    const title = encodeURIComponent(this.data.goods.name || '商品咨询')
+    wx.navigateTo({
+      url: `/subpackages/extra/pages/chat/index?goodId=${this.data.goodsId}&title=${title}`
+    })
   },
 
   goBack() {

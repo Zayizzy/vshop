@@ -1,4 +1,5 @@
 const api = require('../../api/index')
+const { full: fullImg } = require('../../utils/image')
 
 Page({
   data: {
@@ -54,7 +55,7 @@ Page({
           items: (o.items || []).map(i => ({
             id: i.id,
             title: i.goodTitle,
-            coverImage: i.image,
+            coverImage: fullImg(i.image),
             specName: i.specName,
             price: i.price,
             quantity: i.quantity

@@ -101,6 +101,13 @@ export class AdminController {
     return { code: 0, message: 'success', data };
   }
 
+  @Delete('goods/:id')
+  async deleteGood(@Req() req: Request, @Param('id') id: string) {
+    const supplierId = (req.headers['x-supplier-id'] as string) || 's1';
+    const data = await this.adminService.deleteGood(supplierId, id);
+    return { code: 0, message: 'success', data };
+  }
+
   @Get('orders')
   async getOrders(
     @Req() req: Request,
@@ -226,6 +233,89 @@ export class AdminController {
   @Get('users/:id')
   async getUserDetail(@Param('id') id: string) {
     return { code: 0, message: 'success', data: await this.adminService.getUserDetail(id) };
+  }
+
+  // ===== 客服会话管理 =====
+
+  @Get('chat/sessions')
+  async getChatSessions(
+    @Query('keyword') keyword?: string,
+    @Query('closed') closed?: string,
+    @Query('page') page?: string,
+    @Query('pageSize') pageSize?: string,
+  ) {
+    const data = await this.adminService.getChatSessions({
+      keyword,
+      closed,
+      page: Number(page) || 1,
+      pageSize: Number(pageSize) || 50,
+    });
+    return { code: 0, message: 'success', data };
+  }
+
+  @Get('chat/sessions/:id/messages')
+  async getChatMessages(@Param('id') id: string) {
+    return { code: 0, message: 'success', data: await this.adminService.getChatMessages(id) };
+  }
+
+  @Post('chat/sessions/:id/messages')
+  async replyChat(@Param('id') id: string, @Body() body: { content: string }) {
+    const data = await this.adminService.replyChat(id, body.content);
+    return { code: 0, message: 'success', data };
+  }
+
+  @Put('chat/sessions/:id/read')
+  async markChatRead(@Param('id') id: string) {
+    return { code: 0, message: 'success', data: await this.adminService.markChatRead(id) };
+  }
+
+  @Put('chat/sessions/:id/closed')
+  async toggleChatClosed(@Param('id') id: string, @Body() body: { closed: boolean }) {
+    const data = await this.adminService.toggleChatClosed(id, body.closed);
+    return { code: 0, message: 'success', data };
+  }
+
+  // ===== 售后 / 退货管理 =====
+
+  @Get('aftersales')
+  async listAftersales(
+    @Query('status') status?: string,
+    @Query('type') type?: string,
+    @Query('keyword') keyword?: string,
+    @Query('page') page?: string,
+    @Query('pageSize') pageSize?: string,
+  ) {
+    const data = await this.adminService.listAftersales({
+      status,
+      type,
+      keyword,
+      page: Number(page) || 1,
+      pageSize: Number(pageSize) || 20,
+    });
+    return { code: 0, message: 'success', data };
+  }
+
+  @Get('aftersales/:id')
+  async getAftersaleDetail(@Param('id') id: string) {
+    return { code: 0, message: 'success', data: await this.adminService.getAftersaleDetail(id) };
+  }
+
+  @Put('aftersales/:id/audit')
+  async auditAftersale(
+    @Param('id') id: string,
+    @Body() body: { action: 'approve' | 'reject'; remark?: string },
+  ) {
+    const data = await this.adminService.auditAftersale(id, body.action, body.remark);
+    return { code: 0, message: 'success', data };
+  }
+
+  @Put('aftersales/:id/refund')
+  async refundAftersale(
+    @Param('id') id: string,
+    @Body() body: { remark?: string },
+  ) {
+    const data = await this.adminService.refundAftersale(id, body.remark);
+    return { code: 0, message: 'success', data };
   }
 
   // ===== KOC 管理（仅超管 x-admin-role=super）=====

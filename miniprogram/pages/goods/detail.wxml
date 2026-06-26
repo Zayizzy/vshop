@@ -102,6 +102,10 @@
         <text class="icon-label">购物车</text>
         <view class="cart-badge" wx:if="{{cartCount > 0}}">{{cartCount > 99 ? '99+' : cartCount}}</view>
       </view>
+      <view class="bottom-icon" bindtap="goKefu">
+        <text class="iconfont">💬</text>
+        <text class="icon-label">客服</text>
+      </view>
     </view>
     <view class="bottom-actions">
       <t-button t-class="btn-buy" shape="round" catch:tap="buyNow">立即购买</t-button>

@@ -16,6 +16,9 @@ Page({
   callService() {
     wx.makePhoneCall({ phoneNumber: '13888888888' })
   },
+  goChat() {
+    wx.navigateTo({ url: '/subpackages/extra/pages/chat/index' })
+  },
   copyWechat() {
     wx.setClipboardData({ data: 'xiandaijia_kefu' })
     wx.showToast({ title: '微信号已复制', icon: 'success' })

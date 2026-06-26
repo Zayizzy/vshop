@@ -332,6 +332,57 @@ table .actions { display: flex; gap: 8px; flex-wrap: wrap; }
   .sidebar-overlay.active { display: block; }
 }
 @media (max-width: 480px) { .stat-grid { grid-template-columns: 1fr; } }
+
+/* ===== 客服消息 ===== */
+.chat-layout { display: flex; gap: 16px; height: calc(100vh - 140px); min-height: 480px; }
+.chat-sidebar { width: 300px; flex-shrink: 0; background: #fff; border-radius: var(--radius); box-shadow: 0 2px 8px rgba(0,0,0,0.06); display: flex; flex-direction: column; overflow: hidden; }
+.chat-sidebar-head { padding: 12px; border-bottom: 1px solid var(--border); }
+.chat-search { width: 100%; box-sizing: border-box; padding: 8px 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 13px; outline: none; }
+.chat-search:focus { border-color: var(--primary); }
+.chat-filter-row { display: flex; gap: 6px; margin-top: 10px; }
+.chat-filter-tab { flex: 1; padding: 6px 0; border: 1px solid var(--border); background: #fff; border-radius: 8px; font-size: 12px; cursor: pointer; color: var(--text-secondary); }
+.chat-filter-tab.active { background: var(--primary); color: #fff; border-color: var(--primary); font-weight: 600; }
+.chat-session-list { flex: 1; overflow-y: auto; }
+.chat-session-item { padding: 12px 14px; border-bottom: 1px solid var(--border); cursor: pointer; display: flex; flex-direction: column; gap: 4px; }
+.chat-session-item:hover { background: #F5F7F5; }
+.chat-session-item.active { background: rgba(7,193,96,0.08); }
+.chat-session-item.is-closed { opacity: 0.55; }
+.chat-session-top { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.chat-session-name { font-size: 14px; font-weight: 600; color: var(--text-primary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.chat-session-time { font-size: 11px; color: var(--text-secondary); flex-shrink: 0; }
+.chat-session-preview { font-size: 12px; color: var(--text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.chat-session-meta { display: flex; justify-content: space-between; align-items: center; }
+.chat-session-title-tag { font-size: 11px; color: #07C160; background: rgba(7,193,96,0.1); padding: 1px 6px; border-radius: 4px; max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.chat-unread-badge { background: #FF4D4F; color: #fff; font-size: 11px; min-width: 18px; height: 18px; border-radius: 9px; display: inline-flex; align-items: center; justify-content: center; padding: 0 5px; }
+.chat-main { flex: 1; background: #fff; border-radius: var(--radius); box-shadow: 0 2px 8px rgba(0,0,0,0.06); display: flex; flex-direction: column; overflow: hidden; }
+.chat-empty { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--text-secondary); gap: 12px; }
+.chat-empty-icon { font-size: 48px; }
+.chat-thread-wrap { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+.chat-thread-head { padding: 12px 16px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+.chat-thread-info { display: flex; flex-direction: column; gap: 2px; overflow: hidden; }
+.chat-thread-title { font-size: 15px; font-weight: 700; }
+.chat-thread-sub { font-size: 12px; color: var(--text-secondary); }
+.chat-thread { flex: 1; overflow-y: auto; padding: 16px; background: #F5F7F5; display: flex; flex-direction: column; gap: 10px; }
+.chat-bubble-row { display: flex; gap: 8px; align-items: flex-end; }
+.chat-bubble-row.admin { flex-direction: row-reverse; }
+.chat-bubble-avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--primary); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 13px; flex-shrink: 0; }
+.chat-bubble-avatar.user { background: #8C9EFF; }
+.chat-bubble-col { display: flex; flex-direction: column; gap: 3px; max-width: 70%; }
+.chat-bubble-row.admin .chat-bubble-col { align-items: flex-end; }
+.chat-bubble-name { font-size: 11px; color: var(--text-secondary); padding: 0 4px; }
+.chat-bubble { padding: 9px 13px; border-radius: 12px; font-size: 14px; line-height: 1.5; word-break: break-word; white-space: pre-wrap; }
+.chat-bubble.user { background: #fff; color: var(--text-primary); border-top-left-radius: 4px; }
+.chat-bubble.admin { background: var(--primary); color: #fff; border-top-right-radius: 4px; }
+.chat-bubble-time { font-size: 10px; color: var(--text-secondary); padding: 0 4px; }
+.chat-sys { text-align: center; font-size: 12px; color: var(--text-secondary); }
+.chat-input-bar { padding: 12px; border-top: 1px solid var(--border); display: flex; gap: 10px; align-items: flex-end; }
+.chat-reply-input { flex: 1; resize: none; max-height: 120px; padding: 9px 12px; border: 1px solid var(--border); border-radius: 10px; font-size: 14px; font-family: inherit; outline: none; }
+.chat-reply-input:focus { border-color: var(--primary); }
+@media (max-width: 768px) {
+  .chat-layout { flex-direction: column; height: auto; }
+  .chat-sidebar { width: 100%; max-height: 280px; }
+  .chat-main { min-height: 420px; }
+}
 </style>
 </head>
 <body>
@@ -391,6 +442,12 @@ table .actions { display: flex; gap: 8px; flex-wrap: wrap; }
       </div>
       <div class="nav-item" data-view="settlement" onclick="switchView('settlement', this)">
         <span class="nav-icon">&#x1F4B0;</span> &#x7ED3;&#x7B97;&#x7BA1;&#x7406;
+      </div>
+      <div class="nav-item" data-view="chat" onclick="switchView('chat', this)">
+        <span class="nav-icon">&#x1F4AC;</span> 客服消息
+      </div>
+      <div class="nav-item" data-view="aftersale" onclick="switchView('aftersale', this)">
+        <span class="nav-icon">↩️</span> 退货管理
       </div>
     </nav>
     <div class="sidebar-footer">
@@ -584,6 +641,76 @@ table .actions { display: flex; gap: 8px; flex-wrap: wrap; }
         </div>
       </div>
 
+      <!-- Aftersale / Return Management View -->
+      <div class="view" id="view-aftersale">
+        <div class="section-header">
+          <div class="section-header-left">
+            <h2>↩️ 退货管理</h2>
+            <span>审核售后申请、处理退货退款</span>
+          </div>
+        </div>
+        <div class="card" style="padding:0;overflow:hidden;">
+          <div class="filter-bar" style="margin:0;padding:16px 20px;border-bottom:1px solid var(--border);flex-wrap:wrap;gap:12px;">
+            <div class="filter-tabs">
+              <button class="filter-tab active" data-filter="all" onclick="filterAftersales('all', this)">全部</button>
+              <button class="filter-tab" data-filter="pending" onclick="filterAftersales('pending', this)">待审核</button>
+              <button class="filter-tab" data-filter="approved" onclick="filterAftersales('approved', this)">已同意</button>
+              <button class="filter-tab" data-filter="refunded" onclick="filterAftersales('refunded', this)">已退款</button>
+              <button class="filter-tab" data-filter="rejected" onclick="filterAftersales('rejected', this)">已拒绝</button>
+            </div>
+            <div style="display:flex;gap:8px;align-items:center;margin-left:auto;">
+              <input type="text" id="aftersaleKeyword" placeholder="搜索售后单号/订单号/客户" style="padding:8px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:13px;width:260px;" onkeydown="if(event.key==='Enter')searchAftersales()">
+              <button class="btn btn-primary btn-sm" onclick="searchAftersales()">搜索</button>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table class="product-table">
+              <thead><tr><th>售后单号</th><th>订单号</th><th>客户</th><th>类型</th><th>商品</th><th>退款金额</th><th>状态</th><th>申请时间</th><th style="text-align:right">操作</th></tr></thead>
+              <tbody id="aftersalesTable"></tbody>
+            </table>
+          </div>
+          <div class="empty-state" id="aftersalesEmpty" style="display:none;"><div class="empty-icon">↩️</div><p>暂无售后记录</p></div>
+          <div id="aftersalesPager" style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-top:1px solid var(--border);font-size:13px;color:var(--text-secondary);"></div>
+        </div>
+      </div>
+
+      <!-- Chat View -->
+      <div class="view" id="view-chat">
+        <div class="chat-layout">
+          <div class="chat-sidebar">
+            <div class="chat-sidebar-head">
+              <input class="chat-search" id="chatSearch" placeholder="搜索昵称/消息" oninput="onChatSearchInput()" />
+              <div class="chat-filter-row">
+                <button class="chat-filter-tab active" data-closed="open" onclick="setChatFilter('open', this)">进行中</button>
+                <button class="chat-filter-tab" data-closed="closed" onclick="setChatFilter('closed', this)">已关闭</button>
+                <button class="chat-filter-tab" data-closed="all" onclick="setChatFilter('all', this)">全部</button>
+              </div>
+            </div>
+            <div class="chat-session-list" id="chatSessionList"></div>
+          </div>
+          <div class="chat-main" id="chatMain">
+            <div class="chat-empty" id="chatEmpty">
+              <div class="chat-empty-icon">💬</div>
+              <p>选择左侧会话查看消息</p>
+            </div>
+            <div class="chat-thread-wrap" id="chatThreadWrap" style="display:none;">
+              <div class="chat-thread-head">
+                <div class="chat-thread-info">
+                  <span class="chat-thread-title" id="chatThreadTitle"></span>
+                  <span class="chat-thread-sub" id="chatThreadSub"></span>
+                </div>
+                <button class="btn btn-outline btn-sm" id="chatCloseBtn" onclick="toggleChatClosed()">关闭会话</button>
+              </div>
+              <div class="chat-thread" id="chatThread"></div>
+              <div class="chat-input-bar">
+                <textarea id="chatReplyInput" class="chat-reply-input" rows="1" placeholder="输入回复内容，Enter 发送，Shift+Enter 换行" onkeydown="onChatReplyKey(event)" oninput="autoGrow(this)"></textarea>
+                <button class="btn btn-primary" onclick="sendChatReply()">发送</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
     </div>
   </div>
 </div>
@@ -671,6 +798,20 @@ table .actions { display: flex; gap: 8px; flex-wrap: wrap; }
     <div class="modal-body" id="orderDetailBody"></div>
     <div class="modal-footer">
       <button class="btn btn-outline" onclick="closeModal('orderDetailModaOverlay')">&#x5173;&#x95ED;</button>
+    </div>
+  </div>
+</div>
+
+<!-- Aftersale Detail Modal -->
+<div class="modal-overlay" id="aftersaleDetailOverlay">
+  <div class="modal" style="width:680px;">
+    <div class="modal-header">
+      <h3>售后详情</h3>
+      <button class="modal-close" onclick="closeModal('aftersaleDetailOverlay')">&times;</button>
+    </div>
+    <div class="modal-body" id="aftersaleDetailBody"></div>
+    <div class="modal-footer" id="aftersaleDetailFooter">
+      <button class="btn btn-outline" onclick="closeModal('aftersaleDetailOverlay')">关闭</button>
     </div>
   </div>
 </div>
@@ -795,6 +936,16 @@ let customerFilter = 'all';
 function authHeaders() {
   return {
     'Content-Type': 'application/json',
+    'x-supplier-id': SUPPLIER_ID,
+    'x-admin-role': adminRole || '',
+    'Authorization': authToken ? 'Bearer ' + authToken : ''
+  };
+}
+
+// FormData 上传专用：不能带 Content-Type，由浏览器自动设置
+// multipart/form-data; boundary=...，否则 multer 解析不到文件字段。
+function uploadHeaders() {
+  return {
     'x-supplier-id': SUPPLIER_ID,
     'x-admin-role': adminRole || '',
     'Authorization': authToken ? 'Bearer ' + authToken : ''
@@ -940,7 +1091,9 @@ var titles = {
   orders: '📋 订单管理',
   customers: '👥 客户管理',
   koc: '🎯 KOC 管理',
-  settlement: '💰 结算管理'
+  settlement: '💰 结算管理',
+  chat: '💬 客服消息',
+  aftersale: '↩️ 退货管理'
 };
 
 function switchView(view, el) {
@@ -959,6 +1112,8 @@ function switchView(view, el) {
   else if (view === 'customers') loadCustomers();
   else if (view === 'koc') { if (isSuperAdmin()) loadKocApplications(); else { showToast('需超管权限', 'warning'); switchView('dashboard', document.querySelector('.nav-item[data-view="dashboard"]')); } }
   else if (view === 'settlement') loadSettlement();
+  else if (view === 'chat') loadChatView();
+  else if (view === 'aftersale') loadAftersales();
 }
 
 function toggleSidebar() {
@@ -1110,7 +1265,7 @@ function renderProducts() {
         '<td class="stock-cell ' + stockClass + '">' + stockText + '<span class="stock-unit">件</span></td>' +
         '<td class="sales-cell">' + salesHtml + '</td>' +
         '<td>' + statusBadge(p.status) + '</td>' +
-        '<td class="actions"><button class="btn btn-outline btn-sm" onclick="editProduct(\'' + p.id + '\')">编辑</button><button class="btn btn-sm ' + (isActive ? 'btn-outline' : 'btn-success') + '" onclick="toggleProductStatus(\'' + p.id + '\')">' + (isActive ? '下架' : '上架') + '</button></td>' +
+        '<td class="actions"><button class="btn btn-outline btn-sm" onclick="editProduct(\'' + p.id + '\')">编辑</button><button class="btn btn-sm ' + (isActive ? 'btn-outline' : 'btn-success') + '" onclick="toggleProductStatus(\'' + p.id + '\')">' + (isActive ? '下架' : '上架') + '</button><button class="btn btn-danger btn-sm" onclick="deleteProduct(\'' + p.id + '\')">删除</button></td>' +
       '</tr>';
     }).join('');
   }
@@ -1290,7 +1445,7 @@ function onDetailImageFilesChosen(input) {
   files.forEach(function(file) {
     var fd = new FormData();
     fd.append('files', file);
-    fetch(API_BASE + '/upload', { method: 'POST', headers: authHeaders(), body: fd })
+    fetch(API_BASE + '/upload', { method: 'POST', headers: uploadHeaders(), body: fd })
       .then(function(r) { return r.json(); })
       .then(function(res) {
         if (res && res.code === 0 && res.data && res.data.urls && res.data.urls.length) {
@@ -1336,7 +1491,7 @@ function onImageFilesChosen(input) {
   files.forEach(function(file) {
     var fd = new FormData();
     fd.append('files', file);
-    fetch(API_BASE + '/upload', { method: 'POST', headers: authHeaders(), body: fd })
+    fetch(API_BASE + '/upload', { method: 'POST', headers: uploadHeaders(), body: fd })
       .then(function(r) { return r.json(); })
       .then(function(res) {
         if (res && res.code === 0 && res.data && res.data.urls && res.data.urls.length) {
@@ -1445,6 +1600,21 @@ function toggleProductStatus(id) {
     p.status = newStatus;
     renderProducts();
     showToast(newStatus === 'active' ? '已上架（离线模式）' : '已下架（离线模式）', 'info');
+  });
+}
+
+function deleteProduct(id) {
+  var p = products.find(function(x) { return x.id === id; });
+  if (!p) return;
+  if (!confirm('确定删除商品「' + (p.name || '') + '」吗？删除后不可恢复。')) return;
+  apiDel('/goods/' + id).then(function(res) {
+    if (res && res.code && res.code !== 0) return showToast(res.message || '删除失败', 'error');
+    products = products.filter(function(x) { return x.id !== id; });
+    renderProducts();
+    renderProductStats();
+    showToast('商品已删除', 'success');
+  }).catch(function(e) {
+    showToast((e && e.message) || '删除失败', 'error');
   });
 }
 
@@ -2210,6 +2380,358 @@ var mockSettlements = [
   { id: 's3', period: '2026-05-01 ~ 2026-05-15', orderCount: 95, amount: 28500.00, status: '已结算', settleTime: '2026-05-18' },
   { id: 's4', period: '2026-04-16 ~ 2026-04-30', orderCount: 78, amount: 23400.00, status: '已结算', settleTime: '2026-05-03' }
 ];
+
+// ==============================
+// 客服消息
+// ==============================
+var chatSessions = [];
+var currentChatSessionId = null;
+var currentChatClosed = false;
+var chatFilterClosed = 'open';
+var chatKeyword = '';
+var chatPollTimer = null;
+
+function loadChatView() {
+  stopChatPoll();
+  loadChatSessions();
+}
+
+function setChatFilter(closed, el) {
+  chatFilterClosed = closed;
+  document.querySelectorAll('#view-chat .chat-filter-tab').forEach(function(t) { t.classList.remove('active'); });
+  if (el) el.classList.add('active');
+  loadChatSessions();
+}
+
+function onChatSearchInput() {
+  chatKeyword = (document.getElementById('chatSearch').value || '').trim();
+  loadChatSessions();
+}
+
+function loadChatSessions() {
+  var qs = '?closed=' + encodeURIComponent(chatFilterClosed) + '&pageSize=100';
+  if (chatKeyword) qs += '&keyword=' + encodeURIComponent(chatKeyword);
+  apiGet('/chat/sessions' + qs).then(function(res) {
+    if (res && res.code && res.code !== 0) return showToast(res.message || '加载失败', 'error');
+    chatSessions = (res && res.data && res.data.list) || [];
+    renderChatSessions();
+    // 当前会话仍在列表中则刷新消息；否则清空右侧
+    if (currentChatSessionId && chatSessions.some(function(s) { return s.id === currentChatSessionId; })) {
+      loadChatMessages(true);
+    } else if (currentChatSessionId) {
+      currentChatSessionId = null;
+      showChatEmpty();
+    }
+  }).catch(function() { showToast('加载会话失败', 'error'); });
+}
+
+function renderChatSessions() {
+  var box = document.getElementById('chatSessionList');
+  if (!chatSessions.length) {
+    box.innerHTML = '<div style="padding:32px;text-align:center;color:var(--text-secondary);font-size:13px;">暂无会话</div>';
+    return;
+  }
+  box.innerHTML = chatSessions.map(function(s) {
+    var name = (s.user && (s.user.nickname || s.user.phone)) || '匿名用户';
+    var preview = s.lastMessage ? escapeHtml(s.lastMessage) : '<span style="color:#bbb;">暂无消息</span>';
+    var time = fmtChatTime(s.lastAt || s.createdAt);
+    var unread = s.adminUnread > 0 ? '<span class="chat-unread-badge">' + (s.adminUnread > 99 ? '99+' : s.adminUnread) + '</span>' : '';
+    var tag = s.title ? '<span class="chat-session-title-tag">' + escapeHtml(s.title) + '</span>' : '';
+    return '<div class="chat-session-item' + (s.id === currentChatSessionId ? ' active' : '') + (s.closed ? ' is-closed' : '') + '" onclick="openChatSession(\'' + s.id + '\')">'
+      + '<div class="chat-session-top"><span class="chat-session-name">' + escapeHtml(name) + (s.closed ? ' · 已关闭' : '') + '</span><span class="chat-session-time">' + time + '</span></div>'
+      + '<div class="chat-session-preview">' + preview + '</div>'
+      + '<div class="chat-session-meta">' + tag + unread + '</div>'
+      + '</div>';
+  }).join('');
+}
+
+function openChatSession(id) {
+  currentChatSessionId = id;
+  renderChatSessions();
+  loadChatMessages(false);
+  startChatPoll();
+}
+
+function showChatEmpty() {
+  stopChatPoll();
+  document.getElementById('chatEmpty').style.display = 'flex';
+  document.getElementById('chatThreadWrap').style.display = 'none';
+}
+
+function loadChatMessages(silent) {
+  if (!currentChatSessionId) return;
+  apiGet('/chat/sessions/' + currentChatSessionId + '/messages').then(function(res) {
+    if (res && res.code && res.code !== 0) return showToast(res.message || '加载失败', 'error');
+    var d = (res && res.data) || {};
+    renderChatThread(d);
+    // 进入会话标记客服已读
+    apiPut('/chat/sessions/' + currentChatSessionId + '/read', {}).catch(function() {});
+  }).catch(function() { if (!silent) showToast('加载消息失败', 'error'); });
+}
+
+function renderChatThread(data) {
+  var s = data.session || {};
+  var msgs = data.messages || [];
+  currentChatClosed = !!s.closed;
+  document.getElementById('chatEmpty').style.display = 'none';
+  document.getElementById('chatThreadWrap').style.display = 'flex';
+  var name = (s.user && (s.user.nickname || s.user.phone)) || '匿名用户';
+  document.getElementById('chatThreadTitle').textContent = name + (s.title ? ' · ' + s.title : '');
+  document.getElementById('chatThreadSub').textContent = s.closed ? '会话已关闭' : '在线留言';
+  var closeBtn = document.getElementById('chatCloseBtn');
+  closeBtn.textContent = s.closed ? '重新开启' : '关闭会话';
+  var thread = document.getElementById('chatThread');
+  if (!msgs.length) {
+    thread.innerHTML = '<div class="chat-sys">暂无消息，等待用户留言</div>';
+  } else {
+    thread.innerHTML = msgs.map(function(m) {
+      var isAdmin = m.sender === 'admin';
+      var avatar = isAdmin ? '客' : (name.charAt(0) || 'U');
+      var who = isAdmin ? '客服' : name;
+      return '<div class="chat-bubble-row' + (isAdmin ? ' admin' : '') + '">'
+        + '<div class="chat-bubble-avatar' + (isAdmin ? '' : ' user') + '">' + escapeHtml(avatar) + '</div>'
+        + '<div class="chat-bubble-col">'
+        + '<span class="chat-bubble-name">' + escapeHtml(who) + '</span>'
+        + '<div class="chat-bubble ' + (isAdmin ? 'admin' : 'user') + '">' + escapeHtml(m.content) + '</div>'
+        + '<span class="chat-bubble-time">' + fmtChatTime(m.createdAt) + '</span>'
+        + '</div></div>';
+    }).join('');
+  }
+  thread.scrollTop = thread.scrollHeight;
+  // 关闭后禁用输入
+  var input = document.getElementById('chatReplyInput');
+  input.disabled = currentChatClosed;
+  input.placeholder = currentChatClosed ? '会话已关闭，重新开启后可回复' : '输入回复内容，Enter 发送，Shift+Enter 换行';
+}
+
+function onChatReplyKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    sendChatReply();
+  }
+}
+
+function autoGrow(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 120) + 'px';
+}
+
+function sendChatReply() {
+  if (!currentChatSessionId) return;
+  if (currentChatClosed) { showToast('会话已关闭，请先重新开启', 'warning'); return; }
+  var input = document.getElementById('chatReplyInput');
+  var content = (input.value || '').trim();
+  if (!content) return;
+  apiPost('/chat/sessions/' + currentChatSessionId + '/messages', { content: content }).then(function(res) {
+    if (res && res.code && res.code !== 0) return showToast(res.message || '发送失败', 'error');
+    input.value = '';
+    input.style.height = 'auto';
+    loadChatMessages(true);
+    loadChatSessions();
+  }).catch(function() { showToast('发送失败', 'error'); });
+}
+
+function toggleChatClosed() {
+  if (!currentChatSessionId) return;
+  var next = !currentChatClosed;
+  apiPut('/chat/sessions/' + currentChatSessionId + '/closed', { closed: next }).then(function(res) {
+    if (res && res.code && res.code !== 0) return showToast(res.message || '操作失败', 'error');
+    showToast(next ? '会话已关闭' : '会话已重新开启', 'success');
+    loadChatMessages(true);
+  }).catch(function() { showToast('操作失败', 'error'); });
+}
+
+function startChatPoll() {
+  stopChatPoll();
+  chatPollTimer = setInterval(function() {
+    if (currentChatSessionId) {
+      loadChatMessages(true);
+      loadChatSessions();
+    }
+  }, 5000);
+}
+
+function stopChatPoll() {
+  if (chatPollTimer) { clearInterval(chatPollTimer); chatPollTimer = null; }
+}
+
+function escapeHtml(s) {
+  if (s == null) return '';
+  return String(s).replace(/[&<>"']/g, function(c) {
+    return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+  });
+}
+
+function fmtChatTime(t) {
+  if (!t) return '';
+  var d = new Date(t);
+  if (isNaN(d.getTime())) return '';
+  var now = new Date();
+  var hm = ('0' + d.getHours()).slice(-2) + ':' + ('0' + d.getMinutes()).slice(-2);
+  if (d.toDateString() === now.toDateString()) return hm;
+  return (d.getMonth() + 1) + '-' + d.getDate() + ' ' + hm;
+}
+
+// ==============================
+// 退货管理
+// ==============================
+var aftersales = [];
+var aftersaleTotal = 0, aftersalePage = 1, aftersaleTotalPages = 1;
+var aftersaleFilter = 'all';
+var aftersaleKeyword = '';
+
+function loadAftersales() {
+  var qs = '?page=' + aftersalePage + '&pageSize=20';
+  if (aftersaleFilter && aftersaleFilter !== 'all') qs += '&status=' + encodeURIComponent(aftersaleFilter);
+  if (aftersaleKeyword) qs += '&keyword=' + encodeURIComponent(aftersaleKeyword);
+  apiGet('/aftersales' + qs).then(function(res) {
+    if (res && res.code && res.code !== 0) return showToast(res.message || '加载失败', 'error');
+    var d = (res && res.data) || {};
+    aftersales = d.list || [];
+    aftersaleTotal = d.total || 0;
+    aftersaleTotalPages = d.totalPages || 1;
+    renderAftersales();
+  }).catch(function() { showToast('加载售后列表失败', 'error'); });
+}
+
+function aftersaleStatusBadge(s) {
+  var m = {
+    0: { t: '待审核', c: '#FF6B35' },
+    1: { t: '已同意', c: '#07C160' },
+    2: { t: '已拒绝', c: '#E24B4A' },
+    3: { t: '退款中', c: '#FF6B35' },
+    4: { t: '已退款', c: '#07C160' },
+    5: { t: '已完成', c: '#999' }
+  };
+  var v = m[s] || { t: '--', c: '#999' };
+  return '<span style="color:' + v.c + ';font-weight:600;">' + v.t + '</span>';
+}
+
+function renderAftersales() {
+  var tbody = document.getElementById('aftersalesTable');
+  var empty = document.getElementById('aftersalesEmpty');
+  if (!aftersales.length) {
+    tbody.innerHTML = ''; empty.style.display = 'block';
+    document.getElementById('aftersalesPager').innerHTML = '';
+    return;
+  }
+  empty.style.display = 'none';
+  tbody.innerHTML = aftersales.map(function(a) {
+    var user = (a.user && (a.user.nickname || a.user.phone)) || '匿名用户';
+    var typeText = a.type === 2 ? '退货退款' : '仅退款';
+    var time = a.createdAt ? new Date(a.createdAt).toLocaleString('zh-CN') : '';
+    return '<tr>'
+      + '<td style="font-size:12px;">' + escapeHtml(a.aftersaleSn || '') + '</td>'
+      + '<td style="font-size:12px;">' + escapeHtml(a.orderSn || '') + '</td>'
+      + '<td>' + escapeHtml(user) + '</td>'
+      + '<td>' + typeText + '</td>'
+      + '<td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + escapeHtml(a.goodsTitle || '') + '</td>'
+      + '<td>¥' + (parseFloat(a.refundAmount || 0).toFixed(2)) + '</td>'
+      + '<td>' + aftersaleStatusBadge(a.status) + '</td>'
+      + '<td style="font-size:12px;">' + time + '</td>'
+      + '<td style="text-align:right;"><button class="btn btn-outline btn-sm" onclick="openAftersaleDetail(\'' + a.id + '\')">详情</button></td>'
+      + '</tr>';
+  }).join('');
+  renderAftersalesPager();
+}
+
+function renderAftersalesPager() {
+  var pager = document.getElementById('aftersalesPager');
+  if (aftersaleTotal === 0) { pager.innerHTML = ''; return; }
+  pager.innerHTML =
+    '<span>共 ' + aftersaleTotal + ' 条，第 ' + aftersalePage + '/' + aftersaleTotalPages + ' 页</span>' +
+    '<span style="display:flex;gap:8px;">' +
+      '<button class="btn btn-outline btn-sm" ' + (aftersalePage <= 1 ? 'disabled' : '') + ' onclick="aftersalePrev()">上一页</button>' +
+      '<button class="btn btn-outline btn-sm" ' + (aftersalePage >= aftersaleTotalPages ? 'disabled' : '') + ' onclick="aftersaleNext()">下一页</button>' +
+    '</span>';
+}
+function aftersalePrev() { if (aftersalePage > 1) { aftersalePage--; loadAftersales(); } }
+function aftersaleNext() { if (aftersalePage < aftersaleTotalPages) { aftersalePage++; loadAftersales(); } }
+
+function filterAftersales(filter, el) {
+  aftersaleFilter = filter; aftersalePage = 1;
+  document.querySelectorAll('#view-aftersale .filter-tab').forEach(function(t) { t.classList.remove('active'); });
+  el.classList.add('active');
+  loadAftersales();
+}
+function searchAftersales() {
+  aftersaleKeyword = (document.getElementById('aftersaleKeyword').value || '').trim();
+  aftersalePage = 1; loadAftersales();
+}
+
+function aftersaleInfoRow(label, val) {
+  return '<div><div style="color:var(--text-muted);">' + label + '</div><div style="margin-top:2px;">' + (val == null || val === '' ? '—' : val) + '</div></div>';
+}
+
+function openAftersaleDetail(id) {
+  apiGet('/aftersales/' + id).then(function(res) {
+    if (res && res.code && res.code !== 0) return showToast(res.message || '加载失败', 'error');
+    var a = (res && res.data) || {};
+    var body = document.getElementById('aftersaleDetailBody');
+    var user = (a.user && (a.user.nickname || a.user.phone)) || '匿名用户';
+    var typeText = a.type === 2 ? '退货退款' : '仅退款';
+    var imgs = (a.evidenceImages || []).map(function(u) {
+      return '<a href="' + escapeHtml(u) + '" target="_blank" style="display:inline-block;margin:4px 4px 0 0;"><img src="' + escapeHtml(u) + '" style="width:80px;height:80px;object-fit:cover;border-radius:6px;border:1px solid var(--border);"></a>';
+    }).join('') || '<span style="color:var(--text-muted);">无</span>';
+    var orderItems = (a.order && a.order.items) ? a.order.items.map(function(i) {
+      return '<div style="display:flex;gap:8px;padding:6px 0;border-bottom:1px dashed var(--border);">'
+        + '<img src="' + escapeHtml(i.image || '') + '" style="width:48px;height:48px;object-fit:cover;border-radius:6px;">'
+        + '<div><div>' + escapeHtml(i.goodTitle || '') + '</div><div style="font-size:12px;color:var(--text-muted);">' + escapeHtml(i.specName || '') + ' · ¥' + (parseFloat(i.price || 0).toFixed(2)) + ' × ' + (i.quantity || 1) + '</div></div>'
+        + '</div>';
+    }).join('') : '';
+    var addr = '';
+    if (a.order && a.order.address) {
+      var ad = a.order.address;
+      addr = escapeHtml(ad.name || '') + ' ' + escapeHtml(ad.phone || '') + '<br>' + escapeHtml((ad.province || '') + (ad.city || '') + (ad.district || '') + (ad.detail || ''));
+    }
+    body.innerHTML =
+      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px 24px;font-size:13px;">'
+      + aftersaleInfoRow('售后单号', a.aftersaleSn) + aftersaleInfoRow('状态', aftersaleStatusBadge(a.status))
+      + aftersaleInfoRow('售后类型', typeText) + aftersaleInfoRow('退款金额', '¥' + (parseFloat(a.refundAmount || 0).toFixed(2)))
+      + aftersaleInfoRow('订单号', a.orderSn) + aftersaleInfoRow('申请时间', a.createdAt ? new Date(a.createdAt).toLocaleString('zh-CN') : '')
+      + aftersaleInfoRow('退款单号', a.refundNo) + aftersaleInfoRow('客户', user)
+      + '</div>'
+      + '<div style="margin-top:16px;"><div style="font-weight:600;margin-bottom:6px;">售后原因</div><div>' + escapeHtml(a.reason || '') + '</div></div>'
+      + (a.description ? '<div style="margin-top:12px;"><div style="font-weight:600;margin-bottom:6px;">问题描述</div><div>' + escapeHtml(a.description) + '</div></div>' : '')
+      + '<div style="margin-top:12px;"><div style="font-weight:600;margin-bottom:6px;">凭证图片</div><div>' + imgs + '</div></div>'
+      + (a.adminRemark ? '<div style="margin-top:12px;"><div style="font-weight:600;margin-bottom:6px;">处理备注</div><div>' + escapeHtml(a.adminRemark) + '</div></div>' : '')
+      + (orderItems ? '<div style="margin-top:16px;"><div style="font-weight:600;margin-bottom:6px;">订单商品</div>' + orderItems + '</div>' : '')
+      + (addr ? '<div style="margin-top:12px;"><div style="font-weight:600;margin-bottom:6px;">收货地址</div><div style="font-size:13px;">' + addr + '</div></div>' : '');
+
+    var footer = document.getElementById('aftersaleDetailFooter');
+    var actions = '<button class="btn btn-outline" onclick="closeModal(\'aftersaleDetailOverlay\')">关闭</button>';
+    if (a.status === 0) {
+      actions += ' <button class="btn btn-success btn-sm" onclick="auditAftersale(\'' + a.id + '\',\'approve\')">通过</button>';
+      actions += ' <button class="btn btn-sm" style="background:#E24B4A;color:#fff;" onclick="auditAftersale(\'' + a.id + '\',\'reject\')">拒绝</button>';
+    } else if (a.status === 1) {
+      actions += ' <button class="btn btn-accent btn-sm" onclick="refundAftersale(\'' + a.id + '\')">确认退款</button>';
+    }
+    footer.innerHTML = actions;
+    openModal('aftersaleDetailOverlay');
+  }).catch(function() { showToast('加载详情失败', 'error'); });
+}
+
+function auditAftersale(id, action) {
+  var label = action === 'approve' ? '通过' : '拒绝';
+  var remark = window.prompt((action === 'approve' ? '通过该售后申请' : '拒绝该售后申请') + '，可填写备注（选填）：', '');
+  if (remark === null) return;
+  apiPut('/aftersales/' + id + '/audit', { action: action, remark: remark }).then(function(res) {
+    if (res && res.code && res.code !== 0) return showToast(res.message || '操作失败', 'error');
+    showToast('已' + label, 'success');
+    closeModal('aftersaleDetailOverlay');
+    loadAftersales();
+  }).catch(function() { showToast('操作失败', 'error'); });
+}
+
+function refundAftersale(id) {
+  if (!window.confirm('确认对该售后执行退款？将生成退款单号且不可撤销。')) return;
+  apiPut('/aftersales/' + id + '/refund', {}).then(function(res) {
+    if (res && res.code && res.code !== 0) return showToast(res.message || '操作失败', 'error');
+    showToast('退款已完成', 'success');
+    closeModal('aftersaleDetailOverlay');
+    loadAftersales();
+  }).catch(function() { showToast('操作失败', 'error'); });
+}
 
 // ==============================
 // Init on Load

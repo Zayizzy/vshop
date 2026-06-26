@@ -24,6 +24,8 @@ model User {
   cartItems CartItem[]
   coupons   UserCoupon[]
   kocProfile KocProfile?
+  chatSessions ChatSession[]
+  aftersales Aftersale[]
 }
 
 model Address {
@@ -186,6 +188,7 @@ model Order {
   items     OrderItem[]
   packages  OrderPackage[]
   payment   Payment?
+  aftersales Aftersale[]
 }
 
 model OrderItem {
@@ -295,4 +298,64 @@ model KocProfile {
   updatedAt       DateTime @updatedAt
 
   user User @relation(fields: [userId], references: [id])
+}
+
+// ===== 客服在线留言会话 =====
+model ChatSession {
+  id          String   @id @default(cuid())
+  userId      String
+  goodId      String?  // 商品页发起时携带，可为空
+  title       String?  // 会话标题（商品名或「客服咨询」）
+  lastMessage String?  // 最近一条消息内容（冗余，列表展示用）
+  lastAt      DateTime @default(now())  // 最近消息时间，列表排序用
+  // 未读计数：userUnread = 客服回了用户没看；adminUnread = 用户发了客服没看
+  userUnread  Int @default(0)
+  adminUnread Int @default(0)
+  closed      Boolean  @default(false) // 客服可关闭会话
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user     User          @relation(fields: [userId], references: [id])
+  messages ChatMessage[]
+}
+
+model ChatMessage {
+  id        String   @id @default(cuid())
+  sessionId String
+  sender    String   // "user" | "admin"
+  content   String
+  createdAt DateTime @default(now())
+
+  session ChatSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+}
+
+// ===== 订单售后 / 退货退款 =====
+// type: 1=仅退款 2=退货退款
+// status: 0待审核 1已同意 2已拒绝 3退款中 4已退款 5已完成
+// 金额以「分」为单位（Int），边界 yuanToCent / centToYuan 转换
+model Aftersale {
+  id             String   @id @default(cuid())
+  aftersaleSn    String   @unique
+  userId         String
+  orderId        String
+  orderItemId    String?
+  packageIndex   Int      @default(0)
+  type           Int
+  reason         String
+  description    String?
+  // 凭证图 URL 数组，以 JSON 字符串存储（SQLite 不支持标量列表）
+  evidenceImages String
+  refundAmount   Int
+  refundNo       String?
+  adminRemark    String?
+  status         Int      @default(0)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  user  User  @relation(fields: [userId], references: [id])
+  order Order @relation(fields: [orderId], references: [id])
+
+  @@index([userId])
+  @@index([orderId])
+  @@index([status])
 }
