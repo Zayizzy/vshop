@@ -544,7 +544,12 @@ table .actions { display: flex; gap: 8px; flex-wrap: wrap; }
             <button class="filter-tab" data-filter="done" onclick="filterOrders('done', this)">已完成</button>
             <button class="filter-tab" data-filter="cancelled" onclick="filterOrders('cancelled', this)">已取消</button>
           </div>
-          <div style="display:flex;gap:8px;align-items:center;margin-left:auto;">
+          <div style="display:flex;gap:8px;align-items:center;margin-left:auto;flex-wrap:wrap;">
+            <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--text-secondary);cursor:pointer;">
+              <input type="checkbox" id="dianjiaAutoSyncToggle" style="width:16px;height:16px;cursor:pointer;" onchange="toggleDianjiaAutoSync(this)">
+              <span>自动同步店管家</span>
+            </label>
+            <button class="btn btn-sm btn-outline" style="color:#07C160;border-color:#07C160;" onclick="syncAllOrdersToDianjia(false)">批量同步店管家</button>
             <input type="text" id="orderKeyword" placeholder="搜索订单号/收货人/手机" style="padding:8px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:13px;width:240px;" onkeydown="if(event.key==='Enter')searchOrders()">
             <button class="btn btn-primary btn-sm" onclick="searchOrders()">搜索</button>
           </div>
@@ -552,7 +557,7 @@ table .actions { display: flex; gap: 8px; flex-wrap: wrap; }
         <div class="card">
           <div class="table-wrap">
             <table>
-              <thead><tr><th>订单号</th><th>实付金额</th><th>件数</th><th>收货人</th><th>电话</th><th>状态</th><th>下单时间</th><th>操作</th></tr></thead>
+              <thead><tr><th>订单号</th><th>实付金额</th><th>件数</th><th>收货人</th><th>电话</th><th>状态</th><th>店管家</th><th>下单时间</th><th>操作</th></tr></thead>
               <tbody id="ordersTable"></tbody>
             </table>
           </div>
@@ -758,7 +763,16 @@ table .actions { display: flex; gap: 8px; flex-wrap: wrap; }
           <div id="productDetailImageAddBtn" class="product-image-add" onclick="document.getElementById('productDetailImageFile').click()">+</div>
         </div>
       </div>
-      <div class="form-row">
+      <!-- 多规格维度编辑区 -->
+      <div class="form-group">
+        <label>规格维度（可选）</label>
+        <div style="font-size:12px;color:var(--text-muted);margin-bottom:10px;">设置规格维度后，按组合独立定价；留空则单规格</div>
+        <div id="specDimensions" style="display:flex;flex-direction:column;gap:8px;"></div>
+        <button type="button" class="btn btn-outline btn-sm" onclick="addSpecDimension()" style="margin-top:8px;">+ 添加规格维度</button>
+        <div id="specMatrixWrap" style="margin-top:12px;"></div>
+      </div>
+      <!-- 单规格价格/库存（无规格维度时显示） -->
+      <div class="form-row" id="singleSpecRow">
         <div class="form-group">
           <label for="productPrice">价格 (¥)</label>
           <input type="number" id="productPrice" placeholder="例如：12.80" step="0.01" min="0.01">
@@ -1108,7 +1122,7 @@ function switchView(view, el) {
   if (view === 'dashboard') loadDashboard();
   else if (view === 'products') loadProducts();
   else if (view === 'categories') loadCategories();
-  else if (view === 'orders') loadOrders();
+  else if (view === 'orders') { loadOrders(); loadDianjiaAutoSync(); }
   else if (view === 'customers') loadCustomers();
   else if (view === 'koc') { if (isSuperAdmin()) loadKocApplications(); else { showToast('需超管权限', 'warning'); switchView('dashboard', document.querySelector('.nav-item[data-view="dashboard"]')); } }
   else if (view === 'settlement') loadSettlement();
@@ -1265,7 +1279,7 @@ function renderProducts() {
         '<td class="stock-cell ' + stockClass + '">' + stockText + '<span class="stock-unit">件</span></td>' +
         '<td class="sales-cell">' + salesHtml + '</td>' +
         '<td>' + statusBadge(p.status) + '</td>' +
-        '<td class="actions"><button class="btn btn-outline btn-sm" onclick="editProduct(\'' + p.id + '\')">编辑</button><button class="btn btn-sm ' + (isActive ? 'btn-outline' : 'btn-success') + '" onclick="toggleProductStatus(\'' + p.id + '\')">' + (isActive ? '下架' : '上架') + '</button><button class="btn btn-danger btn-sm" onclick="deleteProduct(\'' + p.id + '\')">删除</button></td>' +
+        '<td class="actions"><button class="btn btn-outline btn-sm" onclick="editProduct(\'' + p.id + '\')">编辑</button><button class="btn btn-sm btn-outline" style="color:#07C160;border-color:#07C160;" onclick="syncProductToDianjia(\'' + p.id + '\', this)">同步店管家</button><button class="btn btn-sm ' + (isActive ? 'btn-outline' : 'btn-success') + '" onclick="toggleProductStatus(\'' + p.id + '\')">' + (isActive ? '下架' : '上架') + '</button><button class="btn btn-danger btn-sm" onclick="deleteProduct(\'' + p.id + '\')">删除</button></td>' +
       '</tr>';
     }).join('');
   }
@@ -1313,6 +1327,159 @@ function populateProductCategorySelect() {
   });
 }
 
+// ===== 多规格维度编辑 =====
+var editingSpecDimensions = []; // [{name, values:[...]}]
+var editingSpecSkus = [];        // [{specValues:[{name,value}], price, marketPrice, stock}]
+
+function specKey(sv) { return (sv || []).map(function(x) { return x.name + ':' + x.value; }).join('|'); }
+
+function addSpecDimension() {
+  editingSpecDimensions.push({ name: '', values: [] });
+  renderSpecDimensions();
+  regenerateSpecMatrix();
+}
+
+function removeSpecDimension(idx) {
+  editingSpecDimensions.splice(idx, 1);
+  renderSpecDimensions();
+  regenerateSpecMatrix();
+}
+
+function onSpecDimNameInput(idx, val) {
+  editingSpecDimensions[idx].name = val.trim();
+  regenerateSpecMatrix();
+}
+
+function onSpecDimValuesInput(idx, val) {
+  editingSpecDimensions[idx].values = val.split(/[,，]/).map(function(s) { return s.trim(); }).filter(function(s) { return s; });
+  regenerateSpecMatrix();
+}
+
+function renderSpecDimensions() {
+  var box = document.getElementById('specDimensions');
+  if (!box) return;
+  box.innerHTML = '';
+  editingSpecDimensions.forEach(function(d, idx) {
+    var row = document.createElement('div');
+    row.style.cssText = 'display:flex;gap:8px;align-items:center;';
+    row.innerHTML = '<input placeholder="维度名 如 颜色" value="' + escapeHtml(d.name) + '" style="width:140px;padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;" oninput="onSpecDimNameInput(' + idx + ', this.value)">'
+      + '<input placeholder="可选值，逗号分隔 如 红,绿" value="' + escapeHtml(d.values.join(',')) + '" style="flex:1;padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;" oninput="onSpecDimValuesInput(' + idx + ', this.value)">'
+      + '<button type="button" class="btn btn-sm" style="background:#E24B4A;color:#fff;" onclick="removeSpecDimension(' + idx + ')">删除</button>';
+    box.appendChild(row);
+  });
+  // 有维度时隐藏单规格价格行
+  var singleRow = document.getElementById('singleSpecRow');
+  if (singleRow) singleRow.style.display = editingSpecDimensions.length > 0 ? 'none' : '';
+}
+
+// 重建矩阵前，先把矩阵 input 当前值回写到 editingSpecSkus，避免改维度值时已填价格丢失。
+// 注意：输入维度名/值时只重建矩阵（renderSpecMatrix），不重建维度输入区（renderSpecDimensions），
+// 否则正在输入的 input 会被 innerHTML 替换而失焦，导致无法连续输入（表现为"填不了多个规格类型"）。
+function syncMatrixInputsToData() {
+  editingSpecSkus.forEach(function(s, i) {
+    var priceEl = document.getElementById('specPrice_' + i);
+    var mktEl = document.getElementById('specMarket_' + i);
+    var stockEl = document.getElementById('specStock_' + i);
+    if (priceEl) s.price = priceEl.value;
+    if (mktEl) s.marketPrice = mktEl.value;
+    if (stockEl) s.stock = stockEl.value;
+  });
+}
+
+function regenerateSpecMatrix() {
+  syncMatrixInputsToData();
+  var dims = editingSpecDimensions.filter(function(d) { return d.name && d.values.length; });
+  if (dims.length === 0) { editingSpecSkus = []; var w = document.getElementById('specMatrixWrap'); if (w) w.innerHTML = ''; return; }
+  // 笛卡尔积生成组合
+  var combos = [[]];
+  dims.forEach(function(d) {
+    var next = [];
+    combos.forEach(function(c) { d.values.forEach(function(v) { next.push(c.concat([{ name: d.name, value: v }])); }); });
+    combos = next;
+  });
+  // 保留已填值（按 specKey 匹配）
+  var prev = {};
+  editingSpecSkus.forEach(function(s) { prev[specKey(s.specValues)] = s; });
+  editingSpecSkus = combos.map(function(sv) {
+    var old = prev[specKey(sv)];
+    return { specValues: sv, price: old ? old.price : '', marketPrice: old ? old.marketPrice : '', stock: old ? old.stock : '' };
+  });
+  renderSpecMatrix();
+}
+
+function renderSpecMatrix() {
+  var wrap = document.getElementById('specMatrixWrap');
+  if (!wrap) return;
+  if (!editingSpecSkus.length) { wrap.innerHTML = ''; return; }
+  var html = '<div style="border:1px solid var(--border);border-radius:8px;overflow:hidden;">'
+    + '<table style="width:100%;border-collapse:collapse;font-size:13px;">'
+    + '<thead><tr style="background:var(--primary-light);">'
+    + '<th style="padding:8px;text-align:left;">规格组合</th>'
+    + '<th style="padding:8px;">价格(¥)</th>'
+    + '<th style="padding:8px;">划线价(¥)</th>'
+    + '<th style="padding:8px;">库存</th>'
+    + '</tr></thead><tbody>';
+  editingSpecSkus.forEach(function(s, i) {
+    var label = s.specValues.map(function(x) { return x.value; }).join(' / ');
+    html += '<tr style="border-top:1px solid var(--border);">'
+      + '<td style="padding:8px;">' + escapeHtml(label) + '</td>'
+      + '<td style="padding:8px;"><input type="number" id="specPrice_' + i + '" value="' + (s.price != null ? s.price : '') + '" step="0.01" min="0" style="width:90px;padding:4px 6px;border:1px solid var(--border);border-radius:4px;"></td>'
+      + '<td style="padding:8px;"><input type="number" id="specMarket_' + i + '" value="' + (s.marketPrice != null ? s.marketPrice : '') + '" step="0.01" min="0" style="width:90px;padding:4px 6px;border:1px solid var(--border);border-radius:4px;"></td>'
+      + '<td style="padding:8px;"><input type="number" id="specStock_' + i + '" value="' + (s.stock != null ? s.stock : '') + '" step="1" min="0" style="width:80px;padding:4px 6px;border:1px solid var(--border);border-radius:4px;"></td>'
+      + '</tr>';
+  });
+  html += '</tbody></table></div>';
+  wrap.innerHTML = html;
+}
+
+// 收集多规格 sku（有维度时返回数组，否则 null）
+function collectSpecSkus() {
+  if (!editingSpecDimensions.length || !editingSpecSkus.length) return null;
+  var skus = [];
+  editingSpecSkus.forEach(function(s, i) {
+    var priceEl = document.getElementById('specPrice_' + i);
+    var stockEl = document.getElementById('specStock_' + i);
+    var mktEl = document.getElementById('specMarket_' + i);
+    if (!priceEl || !priceEl.value) return; // 跳过未填价格的组合
+    skus.push({
+      specValues: s.specValues,
+      price: parseFloat(priceEl.value) || 0,
+      marketPrice: (mktEl && mktEl.value) ? parseFloat(mktEl.value) : null,
+      stock: parseInt(stockEl && stockEl.value) || 0
+    });
+  });
+  return skus.length ? skus : null;
+}
+
+function resetSpecEditor() {
+  editingSpecDimensions = [];
+  editingSpecSkus = [];
+  renderSpecDimensions();
+  var wrap = document.getElementById('specMatrixWrap');
+  if (wrap) wrap.innerHTML = '';
+}
+
+// 从商品 skus 反推规格维度 + 组合，回填编辑器
+function fillSpecEditorFromSkus(skus) {
+  editingSpecDimensions = [];
+  editingSpecSkus = [];
+  if (!skus || !skus.length) { renderSpecDimensions(); return; }
+  var dimMap = {}, dimOrder = [];
+  skus.forEach(function(s) {
+    (s.specValues || []).forEach(function(x) {
+      if (!dimMap[x.name]) { dimMap[x.name] = []; dimOrder.push(x.name); }
+      if (dimMap[x.name].indexOf(x.value) < 0) dimMap[x.name].push(x.value);
+    });
+  });
+  if (!dimOrder.length) { renderSpecDimensions(); return; }
+  editingSpecDimensions = dimOrder.map(function(n) { return { name: n, values: dimMap[n] }; });
+  editingSpecSkus = skus.map(function(s) {
+    return { specValues: s.specValues || [], price: s.price != null ? s.price : '', marketPrice: s.marketPrice != null ? s.marketPrice : '', stock: s.stock != null ? s.stock : '' };
+  });
+  renderSpecDimensions();
+  renderSpecMatrix();
+}
+
 function openProductModal(id) {
   document.getElementById('editProductId').value = '';
   document.getElementById('productName').value = '';
@@ -1328,6 +1495,7 @@ function openProductModal(id) {
   renderProductImages();
   editingDetailImages = [];
   renderDetailImages();
+  resetSpecEditor();
   document.getElementById('productCategory').innerHTML = '<option value="">加载中...</option>';
 
   var p = id ? products.find(function(x) { return x.id === id; }) : null;
@@ -1348,6 +1516,7 @@ function openProductModal(id) {
       renderProductImages();
       editingDetailImages = (p.detailImages && p.detailImages.length) ? p.detailImages.slice() : [];
       renderDetailImages();
+      fillSpecEditorFromSkus(p.skus);
       document.getElementById('productCategory').value = p.subCategoryId || '';
       if (p.image) {
         document.getElementById('productImagePreview').src = p.image;
@@ -1539,14 +1708,17 @@ function saveProduct() {
   var imageUrl = document.getElementById('productImage').value.trim();
   var subCategoryId = document.getElementById('productCategory').value;
 
-  if (!name || !price) { showToast('请填写商品名称和价格', 'error'); return; }
+  if (!name) { showToast('请填写商品名称', 'error'); return; }
+  var specSkus = collectSpecSkus();
+  if (!specSkus && !price) { showToast('请填写价格或设置规格维度', 'error'); return; }
 
   // 图片：优先用上传/管理得到的多图数组；为空则回退到 URL 输入框单值
   var images = editingImages.filter(function(u) { return u; });
   if (images.length === 0 && imageUrl) images = [imageUrl];
   var isRecommended = document.getElementById('productIsRecommended').checked;
   var recommendSort = parseInt(document.getElementById('productRecommendSort').value) || 0;
-  var body = { name: name, price: parseFloat(price), stock: parseInt(stock) || 0, subCategoryId: subCategoryId, isRecommended: isRecommended, recommendSort: recommendSort };
+  var body = { name: name, subCategoryId: subCategoryId, isRecommended: isRecommended, recommendSort: recommendSort };
+  if (specSkus) { body.skus = specSkus; } else { body.price = parseFloat(price); body.stock = parseInt(stock) || 0; }
   // 轮播图：始终下发当前数组（含空数组，便于编辑时清空）；image 为首张主图兼容字段
   body.images = images;
   if (images.length > 0) body.image = images[0]; else body.image = '';
@@ -1615,6 +1787,78 @@ function deleteProduct(id) {
     showToast('商品已删除', 'success');
   }).catch(function(e) {
     showToast((e && e.message) || '删除失败', 'error');
+  });
+}
+
+// ===== 店管家同步 =====
+// 商品同步：调 product/items/upload，把商品推到店管家（幂等，已同步会跳过）
+function syncProductToDianjia(id, btn) {
+  if (btn) { btn.disabled = true; var orig = btn.textContent; btn.textContent = '同步中…'; }
+  apiPost('/dianjia/goods/' + id + '/sync', {}).then(function(res) {
+    if (res && res.code && res.code !== 0) return showToast(res.message || '同步失败', 'error');
+    var d = (res && res.data) || {};
+    if (d.skipped) showToast('该商品已同步，跳过', 'info');
+    else showToast('已同步 ' + (d.synced || 0) + ' 个规格到店管家', 'success');
+  }).catch(function(e) {
+    showToast((e && e.message) || '同步失败', 'error');
+  }).finally(function() {
+    if (btn) { btn.disabled = false; btn.textContent = '同步店管家'; }
+  });
+}
+
+// 订单同步：调 trade/order/upload 重传订单到店管家（异步上传失败时的补偿入口）
+function syncOrderToDianjia(id, btn) {
+  if (btn) { btn.disabled = true; var orig = btn.textContent; btn.textContent = '同步中…'; }
+  apiPost('/dianjia/orders/' + id + '/upload', {}).then(function(res) {
+    if (res && res.code && res.code !== 0) return showToast(res.message || '同步失败', 'error');
+    var d = (res && res.data) || {};
+    if (d.platformOrderId) showToast('订单已同步到店管家', 'success');
+    else showToast('同步未完成（详见日志）', 'info');
+  }).catch(function(e) {
+    showToast((e && e.message) || '同步失败', 'error');
+  }).finally(function() {
+    if (btn) { btn.disabled = false; btn.textContent = '同步店管家'; }
+  });
+}
+
+// 店管家同步状态徽标
+function dianjiaSyncBadge(s) {
+  if (s === 'synced') return '<span class="badge badge-success">已同步</span>';
+  if (s === 'failed') return '<span class="badge badge-danger">同步失败</span>';
+  return '<span class="badge badge-muted">未同步</span>';
+}
+
+// 批量同步店管家（仅未同步/失败订单；force=true 全量重传）
+function syncAllOrdersToDianjia(force) {
+  if (!window.confirm(force ? '确认全量重传所有已支付订单到店管家？' : '确认批量同步未同步订单到店管家？')) return;
+  showToast('批量同步中…', 'info');
+  apiPost('/dianjia/orders/sync-all' + (force ? '?force=true' : ''), {}).then(function(res) {
+    if (res && res.code && res.code !== 0) return showToast(res.message || '批量同步失败', 'error');
+    var d = (res && res.data) || {};
+    showToast('批量同步完成：同步 ' + (d.synced || 0) + '，跳过 ' + (d.skipped || 0) + '，失败 ' + (d.failed || 0), 'success');
+    loadOrders(); // 刷新同步状态列
+  }).catch(function(e) {
+    showToast((e && e.message) || '批量同步失败', 'error');
+  });
+}
+
+// 读取自动同步开关并回填 checkbox
+function loadDianjiaAutoSync() {
+  apiGet('/dianjia/auto-sync').then(function(res) {
+    var el = document.getElementById('dianjiaAutoSyncToggle');
+    if (el) el.checked = !!(res && res.data && res.data.enabled);
+  }).catch(function() {});
+}
+
+// 切换自动同步开关
+function toggleDianjiaAutoSync(checkbox) {
+  var enabled = !!checkbox.checked;
+  apiPut('/dianjia/auto-sync', { enabled: enabled }).then(function(res) {
+    if (res && res.code && res.code !== 0) { checkbox.checked = !enabled; return showToast(res.message || '设置失败', 'error'); }
+    showToast(enabled ? '已开启自动同步' : '已关闭自动同步', 'success');
+  }).catch(function(e) {
+    checkbox.checked = !enabled;
+    showToast((e && e.message) || '设置失败', 'error');
   });
 }
 
@@ -1812,9 +2056,12 @@ function renderOrders() {
       } else if (o.status === 'receiving') {
         actions += ' <button class="btn btn-success btn-sm" onclick="confirmComplete(\'' + o.id + '\')">确认完成</button>';
       }
+      // 同步到店管家（所有状态可重传，作代发补偿入口）
+      actions += ' <button class="btn btn-sm btn-outline" style="color:#07C160;border-color:#07C160;" onclick="syncOrderToDianjia(\'' + o.id + '\', this)">同步店管家</button>';
       var time = o.createTime || '';
       if (time) { try { time = new Date(time).toLocaleString('zh-CN'); } catch(e){} }
-      return '<tr><td style="font-size:12px;">' + (o.orderNo || o.id || '') + '</td><td>¥' + (parseFloat(o.payAmount || o.amount || 0).toFixed(2)) + '</td><td>' + (o.itemCount || 1) + '</td><td>' + (o.receiver || '') + '</td><td>' + (o.phone || '') + '</td><td>' + statusBadge(o.status) + '</td><td style="font-size:12px;">' + time + '</td><td>' + actions + '</td></tr>';
+      var syncBadge = dianjiaSyncBadge(o.dianjiaSyncStatus);
+      return '<tr><td style="font-size:12px;">' + (o.orderNo || o.id || '') + '</td><td>¥' + (parseFloat(o.payAmount || o.amount || 0).toFixed(2)) + '</td><td>' + (o.itemCount || 1) + '</td><td>' + (o.receiver || '') + '</td><td>' + (o.phone || '') + '</td><td>' + statusBadge(o.status) + '</td><td>' + syncBadge + '</td><td style="font-size:12px;">' + time + '</td><td>' + actions + '</td></tr>';
     }).join('');
     renderOrdersPager();
   }
@@ -2689,7 +2936,8 @@ function openAftersaleDetail(id) {
       + aftersaleInfoRow('售后单号', a.aftersaleSn) + aftersaleInfoRow('状态', aftersaleStatusBadge(a.status))
       + aftersaleInfoRow('售后类型', typeText) + aftersaleInfoRow('退款金额', '¥' + (parseFloat(a.refundAmount || 0).toFixed(2)))
       + aftersaleInfoRow('订单号', a.orderSn) + aftersaleInfoRow('申请时间', a.createdAt ? new Date(a.createdAt).toLocaleString('zh-CN') : '')
-      + aftersaleInfoRow('退款单号', a.refundNo) + aftersaleInfoRow('客户', user)
+      + aftersaleInfoRow('退款单号', a.refundNo) + aftersaleInfoRow('微信退款单号', a.refundId)
+      + aftersaleInfoRow('退款状态', a.refundStatus) + aftersaleInfoRow('客户', user)
       + '</div>'
       + '<div style="margin-top:16px;"><div style="font-weight:600;margin-bottom:6px;">售后原因</div><div>' + escapeHtml(a.reason || '') + '</div></div>'
       + (a.description ? '<div style="margin-top:12px;"><div style="font-weight:600;margin-bottom:6px;">问题描述</div><div>' + escapeHtml(a.description) + '</div></div>' : '')
@@ -2727,7 +2975,17 @@ function refundAftersale(id) {
   if (!window.confirm('确认对该售后执行退款？将生成退款单号且不可撤销。')) return;
   apiPut('/aftersales/' + id + '/refund', {}).then(function(res) {
     if (res && res.code && res.code !== 0) return showToast(res.message || '操作失败', 'error');
-    showToast('退款已完成', 'success');
+    var status = (res && res.data && res.data.status) || '';
+    var refundStatus = (res && res.data && res.data.refundStatus) || '';
+    if (status === 3 || refundStatus === 'PROCESSING') {
+      showToast('退款处理中，请留意回调', 'success');
+    } else if (status === 1 || refundStatus === 'ABNORMAL' || refundStatus === 'FAIL') {
+      showToast('退款失败，请查看备注后重试', 'error');
+    } else if (status === 4) {
+      showToast('退款已完成', 'success');
+    } else {
+      showToast('操作完成', 'success');
+    }
     closeModal('aftersaleDetailOverlay');
     loadAftersales();
   }).catch(function() { showToast('操作失败', 'error'); });

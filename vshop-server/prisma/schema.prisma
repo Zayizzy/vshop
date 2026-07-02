@@ -114,10 +114,16 @@ model Sku {
   id           String  @id @default(cuid())
   goodId       String
   name         String
+  // 多规格维度组合，JSON 字符串：[{"name":"颜色","value":"红"},...]。
+  // SQLite 不支持标量列表，沿用 evidenceImages 的 JSON 字符串存法。
+  // 为空表示单规格（回退 name 展示，兼容旧数据）。
+  specValues   String?
   // 金额以「分」为单位（Int），避免浮点累计误差。Service 层转「元」对外
   price        Int
   marketPrice  Int?
   stock        Int     @default(0)
+  // 店管家平台商品规格 id（product/items/upload 成功回写，代发订单对账用）
+  platformSkuId String?
 
   good         Good           @relation(fields: [goodId], references: [id])
   suppliers    GoodSupplier[]
@@ -178,6 +184,12 @@ model Order {
   freightAmount Int      @default(0)
   payAmount     Int
   remark        String?
+  // 店管家平台单号（trade/order/upload 成功回写；发货回调 all.order.send 对账用）
+  platformOrderId String?
+  // 店管家同步状态：synced=已同步 failed=同步失败 null=未同步
+  dianjiaSyncStatus String?
+  // 最近一次同步时间
+  dianjiaSyncedAt  DateTime?
   kocId         String?
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
@@ -225,6 +237,12 @@ model Payment {
   amount       Int
   status       String   @default("pending")
   payTime      DateTime?
+  // 微信支付交易号（支付成功回写，退款/对账用）
+  transactionId String?
+  // 预支付ID（统一下单返回，排查用）
+  prepayId      String?
+  // 支付渠道：wechatpay / mock
+  provider      String?  @default("wechatpay")
   createdAt    DateTime @default(now())
 
   order Order @relation(fields: [orderId], references: [id])
@@ -347,6 +365,10 @@ model Aftersale {
   evidenceImages String
   refundAmount   Int
   refundNo       String?
+  // 微信退款单号（区别于自生成的 refundNo=out_refund_no）
+  refundId       String?
+  // 微信退款状态：PROCESSING / SUCCESS / CLOSED / ABNORMAL
+  refundStatus  String?
   adminRemark    String?
   status         Int      @default(0)
   createdAt      DateTime @default(now())
@@ -358,4 +380,11 @@ model Aftersale {
   @@index([userId])
   @@index([orderId])
   @@index([status])
+}
+
+// 通用应用设置（key/value），如店管家自动同步开关 dianjia_auto_sync=true|false
+model AppSetting {
+  key       String   @id
+  value     String
+  updatedAt DateTime @updatedAt
 }

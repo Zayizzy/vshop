@@ -10,6 +10,8 @@ Page({
     images: [],
     detailImages: [],
     skus: [],
+    specs: [],
+    selectedSpecs: {},
     selectedSkuId: '',
     selectedSku: null,
     collected: false,
@@ -41,14 +43,27 @@ Page({
     wx.showLoading({ title: '加载中' })
     api.get(`/goods/${this.data.goodsId}`).then(data => {
       wx.hideLoading()
+      const skus = data.skus || []
+      const specs = data.specs || []
+      // 多规格：各维度默认选第一个值，定位匹配 sku；无维度回退首个 sku
+      const selectedSpecs = {}
+      specs.forEach(s => { if (s.values && s.values.length) selectedSpecs[s.name] = s.values[0] })
+      const allSelected = specs.length > 0 && specs.every(s => selectedSpecs[s.name] != null)
+      const matched = allSelected
+        ? skus.find(s => s.specValues && s.specValues.length > 0 && s.specValues.every(sv => selectedSpecs[sv.name] === sv.value))
+        : null
+      const sku = matched || skus[0] || null
+      const original = sku ? (Number(sku.price) || 0) : 0
+      const rate = data.discountRate != null ? data.discountRate : null
+      const paid = rate != null ? Math.round(original * rate * 100) / 100 : original
       this.setData({
         loading: false,
         goods: {
           name: data.name || '',
-          price: Number(data.price) || 0,
-          originalPrice: data.originalPrice != null ? Number(data.originalPrice) : '',
-          discountRate: data.discountRate != null ? data.discountRate : null,
-          marketPrice: data.marketPrice != null ? Number(data.marketPrice) : '',
+          price: paid,
+          originalPrice: original,
+          discountRate: rate,
+          marketPrice: sku && sku.marketPrice != null ? Number(sku.marketPrice) : '',
           discount: data.discount || '',
           sales: data.sales || 0,
           delivery: data.delivery || 'nextDay',
@@ -59,9 +74,11 @@ Page({
         },
         images: (data.images || []).map(fullImg),
         detailImages: (data.detailImages || []).map(fullImg),
-        skus: data.skus || [],
-        selectedSkuId: data.skus && data.skus.length > 0 ? data.skus[0].id : '',
-        selectedSku: data.skus && data.skus.length > 0 ? data.skus[0] : null,
+        skus,
+        specs,
+        selectedSpecs,
+        selectedSkuId: sku ? sku.id : '',
+        selectedSku: sku,
         collected: data.collected || false
       })
     }).catch(() => {
@@ -93,6 +110,37 @@ Page({
         'goods.marketPrice': sku.marketPrice != null ? Number(sku.marketPrice) : ''
       })
     }
+  },
+
+  // 多规格：按维度点选，选齐所有维度后定位匹配 sku 并切换价格
+  selectSpec(e) {
+    const { name, val } = e.currentTarget.dataset
+    const selectedSpecs = Object.assign({}, this.data.selectedSpecs, { [name]: val })
+    const patch = { selectedSpecs }
+    const allSelected = this.data.specs.every(s => selectedSpecs[s.name] != null)
+    if (allSelected) {
+      const sku = this.data.skus.find(s =>
+        s.specValues && s.specValues.length > 0 &&
+        s.specValues.every(sv => selectedSpecs[sv.name] === sv.value)
+      )
+      if (sku) {
+        const original = Number(sku.price) || 0
+        const rate = this.data.goods.discountRate
+        const paid = rate != null ? Math.round(original * rate * 100) / 100 : original
+        patch.selectedSkuId = sku.id
+        patch.selectedSku = sku
+        patch['goods.originalPrice'] = original
+        patch['goods.price'] = paid
+        patch['goods.marketPrice'] = sku.marketPrice != null ? Number(sku.marketPrice) : ''
+      } else {
+        patch.selectedSkuId = ''
+        patch.selectedSku = null
+      }
+    } else {
+      patch.selectedSkuId = ''
+      patch.selectedSku = null
+    }
+    this.setData(patch)
   },
 
   toggleCollect() {

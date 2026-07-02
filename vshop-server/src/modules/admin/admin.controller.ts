@@ -358,4 +358,57 @@ export class AdminController {
     const data = await this.adminService.toggleUserKoc(id, body.enabled);
     return { code: 0, message: 'success', data };
   }
+
+  // ===== 店管家分销代发 =====
+  @Get('dianjia/shops')
+  async getDianjiaShops() {
+    return { code: 0, message: 'success', data: await this.adminService.getDianjiaShops() };
+  }
+
+  /** 手动重传订单到店管家（异步上传失败时的补偿入口）。 */
+  @Post('dianjia/orders/:id/upload')
+  async retryUploadOrder(@Param('id') id: string) {
+    const data = await this.adminService.retryUploadOrder(id);
+    return { code: 0, message: 'success', data };
+  }
+
+  /** 同步单个商品到店管家。 */
+  @Post('dianjia/goods/:id/sync')
+  async syncGood(@Param('id') id: string) {
+    const data = await this.adminService.syncGoodToDianjia(id);
+    return { code: 0, message: 'success', data };
+  }
+
+  /** 批量同步已支付订单到店管家。query.force=true 则全量重传。 */
+  @Post('dianjia/orders/sync-all')
+  async syncAllOrders(@Query('force') force?: string) {
+    const data = await this.adminService.syncAllOrdersToDianjia(force === 'true');
+    return { code: 0, message: 'success', data };
+  }
+
+  /** 读取自动同步开关。 */
+  @Get('dianjia/auto-sync')
+  async getDianjiaAutoSync() {
+    return { code: 0, message: 'success', data: await this.adminService.getDianjiaAutoSync() };
+  }
+
+  /** 设置自动同步开关。 */
+  @Put('dianjia/auto-sync')
+  async setDianjiaAutoSync(@Body() body: { enabled: boolean }) {
+    return { code: 0, message: 'success', data: await this.adminService.setDianjiaAutoSync(body.enabled) };
+  }
+
+  /** 批量同步所有在售商品到店管家。 */
+  @Post('dianjia/goods/sync-all')
+  async syncAllGoods() {
+    const data = await this.adminService.syncAllGoodsToDianjia();
+    return { code: 0, message: 'success', data };
+  }
+
+  /** 库存同步：从店管家拉厂家库存回写鲜到家。query.skuId 缺省则全量。 */
+  @Post('dianjia/stock/sync')
+  async syncStock(@Query('skuId') skuId?: string) {
+    const data = await this.adminService.syncStockToDianjia(skuId);
+    return { code: 0, message: 'success', data };
+  }
 }

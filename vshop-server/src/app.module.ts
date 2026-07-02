@@ -13,6 +13,8 @@ import { AdminModule } from './modules/admin/admin.module';
 import { UploadModule } from './modules/upload/upload.module';
 import { SupportModule } from './modules/support/support.module';
 import { AftersaleModule } from './modules/aftersale/aftersale.module';
+import { PaymentModule } from './modules/payment/payment.module';
+import { DianjiaModule } from './modules/dianjia/dianjia.module';
 
 @Module({
   imports: [
@@ -23,6 +25,8 @@ import { AftersaleModule } from './modules/aftersale/aftersale.module';
     UploadModule,
     SupportModule,
     AftersaleModule,
+    PaymentModule,
+    DianjiaModule,
   ],
 })
 export class AppModule {}

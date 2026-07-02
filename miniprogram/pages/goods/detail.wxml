@@ -54,7 +54,25 @@
     </view>
 
     <!-- SKU 选择区 -->
-    <view class="sku-section">
+    <!-- 多规格：按维度分组选择，选齐所有维度后由 selectSpec 定位 sku 切价 -->
+    <view class="sku-section" wx:if="{{specs.length > 0}}">
+      <block wx:for="{{specs}}" wx:for-item="spec" wx:key="name">
+        <text class="section-title">{{spec.name}}</text>
+        <view class="sku-options">
+          <text
+            wx:for="{{spec.values}}"
+            wx:for-item="val"
+            wx:key="*this"
+            class="sku-btn {{selectedSpecs[spec.name] === val ? 'sku-selected' : 'sku-default'}}"
+            data-name="{{spec.name}}"
+            data-val="{{val}}"
+            bindtap="selectSpec"
+          >{{val}}</text>
+        </view>
+      </block>
+    </view>
+    <!-- 单规格（无 specValues 的旧商品）：直接选 sku -->
+    <view class="sku-section" wx:else>
       <text class="section-title">规格选择</text>
       <view class="sku-options">
         <text

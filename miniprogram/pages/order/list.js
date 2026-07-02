@@ -85,6 +85,16 @@ Page({
     wx.navigateTo({ url: `/subpackages/order/pages/order/logistics?id=${id}` })
   },
 
+  goPay(e) {
+    if (this._paying) return
+    this._paying = true
+    const id = e.currentTarget.dataset.id
+    wx.navigateTo({
+      url: `/subpackages/checkout/pages/payment/result?orderId=${id}&needPay=true`,
+      complete: () => { this._paying = false }
+    })
+  },
+
   confirmReceive(e) {
     const id = e.currentTarget.dataset.id
     wx.showModal({

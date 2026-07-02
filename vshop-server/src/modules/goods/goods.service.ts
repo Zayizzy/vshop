@@ -1,6 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { centToYuan, centToYuanNullable } from '../../common/utils/money';
+import {
+  formatSpecText,
+  parseSpecValues,
+  aggregateSpecs,
+} from '../../common/utils/spec';
 
 /**
  * 商品服务。
@@ -83,7 +88,7 @@ export class GoodsService {
         skuId: g.skus[0]?.id ?? '',
         stock: g.suppliers.reduce((sum, s) => sum + s.stock, 0) || (g.skus[0]?.stock ?? 0),
         tag: g.sales > 1000 ? '爆款' : g.sales > 500 ? '热销' : '',
-        specName: g.skus[0]?.name ?? '',
+        specName: formatSpecText(g.skus[0]?.specValues, g.skus[0]?.name),
         supplier: g.suppliers[0]?.supplier?.name ?? '',
         supplierName: g.suppliers[0]?.supplier?.name ?? '',
         // 供分类页按子分类分组使用
@@ -156,7 +161,7 @@ export class GoodsService {
         coverImage: g.images[0]?.url ?? '',
         skuId: g.skus[0]?.id ?? '',
         title: g.name,
-        specName: g.skus[0]?.name ?? '',
+        specName: formatSpecText(g.skus[0]?.specValues, g.skus[0]?.name),
         supplierName: '',
       };
     });
@@ -223,10 +228,13 @@ export class GoodsService {
       skus: good.skus.map((sku) => ({
         id: sku.id,
         name: sku.name,
+        specValues: parseSpecValues(sku.specValues),
         price: centToYuan(sku.price),
         marketPrice: centToYuanNullable(sku.marketPrice),
         stock: sku.stock,
       })),
+      // 多规格维度分组（从各 sku 的 specValues 聚合推导，供详情页分组选择）
+      specs: aggregateSpecs(good.skus),
       collected: false,
       supplierInfo: good.suppliers.map((gs) => ({
         id: gs.supplier.id,

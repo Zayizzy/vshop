@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { centToYuan } from '../../common/utils/money';
+import { formatSpecText } from '../../common/utils/spec';
 
 /**
  * 购物车服务。
@@ -83,7 +84,7 @@ export class CartService {
         goodId: good.id,
         skuId: sku.id,
         name: good.name,
-        spec: sku.name,
+        spec: formatSpecText(sku.specValues, sku.name),
         // 输出边界：分→元
         price: centToYuan(unitPriceCent),
         quantity: item.quantity,

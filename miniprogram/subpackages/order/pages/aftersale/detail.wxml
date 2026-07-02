@@ -9,6 +9,9 @@
       <image wx:for="{{aftersale.evidenceImages}}" wx:key="index" src="{{item}}" mode="aspectFill" class="evidence-img" lazy-load />
     </view>
     <view class="info-row" wx:if="{{aftersale.refundNo}}"><text>退款单号</text><text>{{aftersale.refundNo}}</text></view>
+    <view class="info-row" wx:if="{{aftersale.refundId}}"><text>微信退款单号</text><text>{{aftersale.refundId}}</text></view>
+    <view class="info-row" wx:if="{{aftersale.refundStatus}}"><text>退款状态</text><text>{{aftersale.refundStatus}}</text></view>
+    <view class="info-row" wx:if="{{aftersale.adminRemark}}"><text>处理备注</text><text>{{aftersale.adminRemark}}</text></view>
     <view class="info-row"><text>申请时间</text><text>{{aftersale.createdAt}}</text></view>
   </view>
 

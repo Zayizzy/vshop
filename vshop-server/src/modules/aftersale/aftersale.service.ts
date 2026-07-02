@@ -181,6 +181,8 @@ export class AftersaleService {
       evidenceImages: parseImages(a.evidenceImages),
       refundAmount: centToYuan(a.refundAmount),
       refundNo: a.refundNo || '',
+      refundId: a.refundId || '',
+      refundStatus: a.refundStatus || '',
       adminRemark: a.adminRemark || '',
       status: a.status,
       createdAt: a.createdAt,

@@ -56,7 +56,7 @@
 
         <view class="order-actions" wx:if="{{item.status === 'pending'}}">
           <t-button theme="default" variant="outline" size="small">取消订单</t-button>
-          <t-button theme="primary" size="small">去付款</t-button>
+          <t-button theme="primary" size="small" catch:tap="goPay" data-id="{{item.id}}">去付款</t-button>
         </view>
 
         <view class="order-actions" wx:if="{{item.status === 'done'}}">

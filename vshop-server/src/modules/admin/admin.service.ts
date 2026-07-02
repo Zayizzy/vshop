@@ -1,6 +1,10 @@
 import { Injectable, BadRequestException, ForbiddenException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { centToYuan, centToYuanNullable, yuanToCent } from '../../common/utils/money';
+import { formatSpecText, parseSpecValues } from '../../common/utils/spec';
+import { WechatPayClient } from '../payment/wechatpay.client';
+import { DianjiaClient } from '../dianjia/dianjia.client';
+import { DianjiaService } from '../dianjia/dianjia.service';
 import {
   CreateCouponDto,
   UpdateCouponDto,
@@ -30,7 +34,52 @@ export function requireKocManager(role: string | undefined) {
 
 @Injectable()
 export class AdminService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private wxPay: WechatPayClient,
+    private dianjia: DianjiaClient,
+    private dianjiaService: DianjiaService,
+  ) {}
+
+  /** 店管家：获取店铺列表（连通验证 + 后续供应商/订单对接基础）。 */
+  async getDianjiaShops() {
+    return this.dianjia.execute('base/shop/list', null);
+  }
+
+  /** 店管家：手动重传订单（异步上传失败时的补偿入口）。 */
+  async retryUploadOrder(orderId: string) {
+    return this.dianjiaService.uploadOrder(orderId);
+  }
+
+  /** 店管家：批量同步已支付未同步订单。force=true 则全量重传。 */
+  async syncAllOrdersToDianjia(force?: boolean) {
+    return this.dianjiaService.syncAllOrders({ force });
+  }
+
+  /** 店管家：读取自动同步开关。 */
+  async getDianjiaAutoSync() {
+    return { enabled: await this.dianjiaService.getAutoSync() };
+  }
+
+  /** 店管家：设置自动同步开关。 */
+  async setDianjiaAutoSync(enabled: boolean) {
+    return { enabled: await this.dianjiaService.setAutoSync(enabled) };
+  }
+
+  /** 店管家：同步单个商品。 */
+  async syncGoodToDianjia(goodId: string) {
+    return this.dianjiaService.syncGood(goodId);
+  }
+
+  /** 店管家：批量同步所有在售商品。 */
+  async syncAllGoodsToDianjia() {
+    return this.dianjiaService.syncAllGoods();
+  }
+
+  /** 店管家：库存同步（skuId 缺省则全量）。 */
+  async syncStockToDianjia(skuId?: string) {
+    return this.dianjiaService.syncStock(skuId);
+  }
 
   async login(username: string, password: string) {
     const acc = ADMIN_ACCOUNTS.find(
@@ -117,7 +166,7 @@ export class AdminService {
     const goods = await this.prisma.good.findMany({
       where,
       include: {
-        skus: { take: 1 },
+        skus: { orderBy: { price: 'asc' } },
         images: { orderBy: { sort: 'asc' } },
         detailImages: { orderBy: { sort: 'asc' } },
         suppliers: { where: { supplierId }, take: 1 },
@@ -155,6 +204,15 @@ export class AdminService {
         skuId: sku?.id,
         subCategoryId: g.subCategoryId,
         subCategoryName: g.subCategory?.name || '',
+        // 完整 sku 列表（含多规格 specValues），供后台编辑回填
+        skus: g.skus.map((s) => ({
+          id: s.id,
+          name: s.name,
+          specValues: parseSpecValues(s.specValues),
+          price: centToYuan(s.price),
+          marketPrice: centToYuanNullable(s.marketPrice),
+          stock: s.stock,
+        })),
       };
     });
   }
@@ -177,10 +235,14 @@ export class AdminService {
     // 支持多规格创建（前端传入元 → 库内分）
     if (body.skus && body.skus.length > 0) {
       for (const s of body.skus) {
+        // 多规格：specValues 为 [{name,value}] 数组，序列化 JSON 存储
+        const specValuesStr = s.specValues ? JSON.stringify(s.specValues) : null;
+        const name = s.name || (specValuesStr ? formatSpecText(specValuesStr) : '默认规格');
         const sku = await this.prisma.sku.create({
           data: {
             goodId: good.id,
-            name: s.name || '默认规格',
+            name,
+            specValues: specValuesStr,
             price: yuanToCent(s.price),
             marketPrice: s.marketPrice ? yuanToCent(s.marketPrice) : null,
             stock: parseInt(s.stock) || 0,
@@ -267,8 +329,55 @@ export class AdminService {
       await this.prisma.good.update({ where: { id }, data: updateData });
     }
 
-    // Update SKU price & marketPrice（前端传元 → 库内分）
-    if (body.price !== undefined || body.marketPrice !== undefined) {
+    // 多规格编辑：body.skus[] 有 id 的更新（含 specValues/price/marketPrice/stock），
+    // 无 id 的新增 + 建 GoodSupplier。不删除 sku（避免破坏已下订单的 OrderItem.skuId 外键）。
+    if (body.skus && body.skus.length > 0) {
+      for (const s of body.skus) {
+        const specValuesStr = s.specValues ? JSON.stringify(s.specValues) : null;
+        const name = s.name || (specValuesStr ? formatSpecText(specValuesStr) : '默认规格');
+        if (s.id) {
+          const skuData: any = { name, specValues: specValuesStr };
+          if (s.price !== undefined) skuData.price = yuanToCent(s.price);
+          if (s.marketPrice !== undefined) skuData.marketPrice = s.marketPrice ? yuanToCent(s.marketPrice) : null;
+          if (s.stock !== undefined) skuData.stock = parseInt(s.stock) || 0;
+          await this.prisma.sku.update({ where: { id: s.id }, data: skuData });
+          // 同步 GoodSupplier 价格/库存（若存在该 sku 的供应商关系）
+          const gs = await this.prisma.goodSupplier.findFirst({
+            where: { goodId: id, skuId: s.id },
+          });
+          if (gs) {
+            await this.prisma.goodSupplier.update({
+              where: { id: gs.id },
+              data: {
+                ...(s.price !== undefined ? { price: yuanToCent(s.price) } : {}),
+                ...(s.stock !== undefined ? { stock: parseInt(s.stock) || 0 } : {}),
+              },
+            });
+          }
+        } else {
+          const sku = await this.prisma.sku.create({
+            data: {
+              goodId: id,
+              name,
+              specValues: specValuesStr,
+              price: yuanToCent(s.price),
+              marketPrice: s.marketPrice ? yuanToCent(s.marketPrice) : null,
+              stock: parseInt(s.stock) || 0,
+            },
+          });
+          await this.prisma.goodSupplier.create({
+            data: {
+              goodId: id,
+              skuId: sku.id,
+              supplierId,
+              price: yuanToCent(s.price),
+              stock: parseInt(s.stock) || 0,
+            },
+          });
+        }
+      }
+    } else if (body.price !== undefined || body.marketPrice !== undefined) {
+      // 兼容旧单值分支：更新首个 sku
       const sku = await this.prisma.sku.findFirst({ where: { goodId: id } });
       if (sku) {
         const skuData: any = {};
@@ -395,6 +504,10 @@ export class AdminService {
       itemCount: o.items.reduce((sum, i) => sum + i.quantity, 0),
       createdAt: o.createdAt.toISOString(),
       createTime: o.createdAt.toISOString(),
+      // 店管家同步状态（供后台展示已同步/未同步/失败）
+      platformOrderId: o.platformOrderId || '',
+      dianjiaSyncStatus: o.dianjiaSyncStatus || '',
+      dianjiaSyncedAt: o.dianjiaSyncedAt ? o.dianjiaSyncedAt.toISOString() : '',
     }));
 
     return {
@@ -1186,18 +1299,74 @@ export class AdminService {
     return { id: updated.id, status: updated.status };
   }
 
-  /** 确认退款：仅「已同意(1)」可操作 → 4 已退款，生成退款单号。
+  /** 确认退款：仅「已同意(1)」可操作。
+   *  - mock 模式：直接置 4 已退款 + 生成 refundNo（无需微信配置）。
+   *  - 真实模式：调微信退款 API，按返回 status 置 4(已退款)/3(退款中)/1(失败可重试)。
    *  注：库存回退（退货入库）暂不在此自动处理，由后台按需手动调整。 */
   async refundAftersale(id: string, remark?: string) {
     const a = await this.prisma.aftersale.findUnique({ where: { id } });
     if (!a) throw new BadRequestException('售后记录不存在');
     if (a.status !== 1) throw new BadRequestException('仅「已同意」状态可确认退款');
     const refundNo = `RF${Date.now()}${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
+
+    // 真实模式：调微信退款，按返回状态决定售后流转
+    let refundId: string | undefined;
+    let refundStatus: string | undefined;
+    let nextStatus = 4; // mock 默认已退款
+    let refundErr: string | undefined;
+    if (!this.wxPay.mock) {
+      const order = await this.prisma.order.findUnique({
+        where: { id: a.orderId },
+        select: { orderSn: true, payAmount: true },
+      });
+      if (!order) throw new BadRequestException('关联订单不存在');
+      try {
+        const res = await this.wxPay.refund({
+          outTradeNo: order.orderSn,
+          outRefundNo: refundNo,
+          refund: a.refundAmount, // 分
+          total: order.payAmount, // 分
+          reason: a.reason,
+        });
+        refundId = res.refundId;
+        refundStatus = res.status;
+        // SUCCESS/CLOSED → 已退款(4)；PROCESSING → 退款中(3)；ABNORMAL 记录失败，保持 1 可重试
+        if (res.status === 'SUCCESS' || res.status === 'CLOSED') {
+          nextStatus = 4;
+        } else if (res.status === 'PROCESSING') {
+          nextStatus = 3;
+        } else {
+          nextStatus = 1;
+          refundErr = `微信退款异常: ${res.status}`;
+        }
+      } catch (e) {
+        nextStatus = 1;
+        refundStatus = 'FAIL';
+        refundErr = `退款调用失败: ${e instanceof Error ? e.message : String(e)}`;
+      }
+    }
+
+    const prevRemark = remark || a.adminRemark || '';
     const updated = await this.prisma.aftersale.update({
       where: { id },
-      data: { status: 4, refundNo, adminRemark: remark || a.adminRemark },
+      data: {
+        status: nextStatus,
+        refundNo,
+        refundId,
+        refundStatus,
+        adminRemark: refundErr
+          ? prevRemark
+            ? `${prevRemark}\n${refundErr}`
+            : refundErr
+          : prevRemark,
+      },
     });
-    return { id: updated.id, status: updated.status, refundNo: updated.refundNo };
+    return {
+      id: updated.id,
+      status: updated.status,
+      refundNo: updated.refundNo,
+      refundStatus: updated.refundStatus,
+    };
   }
 
   /** 售后格式化：分→元、解析 evidenceImages、补 goodsTitle/orderSn/user。 */
@@ -1219,6 +1388,8 @@ export class AdminService {
       evidenceImages: parseAftersaleImages(a.evidenceImages),
       refundAmount: centToYuan(a.refundAmount),
       refundNo: a.refundNo || '',
+      refundId: a.refundId || '',
+      refundStatus: a.refundStatus || '',
       adminRemark: a.adminRemark || '',
       status: a.status,
       createdAt: a.createdAt,

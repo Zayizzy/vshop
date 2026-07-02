@@ -7,6 +7,7 @@ import {
 import { PrismaService } from '../../prisma/prisma.service';
 import { Prisma } from '@prisma/client';
 import { centToYuan } from '../../common/utils/money';
+import { formatSpecText } from '../../common/utils/spec';
 
 /**
  * 订单服务。
@@ -280,7 +281,7 @@ export class OrderService {
         quantity: item.quantity,
         goodId: good.id,
         goodTitle: good.name,
-        specName: sku.name,
+        specName: formatSpecText(sku.specValues, sku.name),
         image: good.images[0]?.url || '',
         price: unitPrice,
         freight,

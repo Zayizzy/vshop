@@ -136,6 +136,12 @@ export class OrderIdDto {
   orderId!: string;
 }
 
+/** 统一下单请求体（payment/result.js 调用） */
+export class UnifiedOrderDto {
+  @IsString()
+  orderId!: string;
+}
+
 // ===== 售后 / 退货退款 =====
 // 金额 refundAmount 以「元」传入，service 层 yuanToCent 转分存储。
 // type: 1=仅退款 2=退货退款。evidenceImages 为已上传的图片 URL 数组。
