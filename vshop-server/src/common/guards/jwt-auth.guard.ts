@@ -42,11 +42,15 @@ export class JwtAuthGuard implements CanActivate {
 
     const request = context.switchToHttp().getRequest<Request>();
     const token = this.extractToken(request);
+    const isDev = process.env.NODE_ENV === 'development';
 
     if (!token) {
-      // 开发模式：无 token 时注入 mock-user，控制器自行兜底
-      (request as any).user = { userId: 'mock-user' };
-      return true;
+      if (isDev) {
+        // 开发模式：无 token 时注入 mock-user，控制器自行兜底
+        (request as any).user = { userId: 'mock-user' };
+        return true;
+      }
+      throw new UnauthorizedException('未提供认证令牌');
     }
 
     try {
@@ -63,11 +67,12 @@ export class JwtAuthGuard implements CanActivate {
       }
       (request as any).user = { userId: payload.userId };
     } catch (e) {
-      // 无效 token / 用户不存在：开发模式注入 mock-user 兜底
-      if (e instanceof UnauthorizedException && e.message === '用户不存在，请重新登录') {
-        throw e;
+      // 开发模式：无效 token 时注入 mock-user 兜底
+      if (isDev && !(e instanceof UnauthorizedException && e.message === '用户不存在，请重新登录')) {
+        (request as any).user = { userId: 'mock-user' };
+        return true;
       }
-      (request as any).user = { userId: 'mock-user' };
+      throw e;
     }
 
     return true;
