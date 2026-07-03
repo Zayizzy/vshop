@@ -7,6 +7,7 @@ import { JwtService } from '@nestjs/jwt';
 import { join } from 'path';
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
+import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
 import { PrismaService } from './prisma/prisma.service';
 import { validateEnv } from './config/env.validation';
 
@@ -40,6 +41,9 @@ async function bootstrap() {
 
   // 统一异常响应结构 { code, message, data }
   app.useGlobalFilters(new AllExceptionsFilter());
+
+  // 请求日志与性能监控
+  app.useGlobalInterceptors(new LoggingInterceptor());
 
   // Mobile API prefix
   app.setGlobalPrefix('v1', {
