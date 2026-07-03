@@ -3,8 +3,8 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
-  url      = "file:./dev.db"
+  provider = "mysql"
+  url      = env("DATABASE_URL")
 }
 
 model User {
@@ -114,10 +114,9 @@ model Sku {
   id           String  @id @default(cuid())
   goodId       String
   name         String
-  // 多规格维度组合，JSON 字符串：[{"name":"颜色","value":"红"},...]。
-  // SQLite 不支持标量列表，沿用 evidenceImages 的 JSON 字符串存法。
+  // 多规格维度组合，MySQL 原生 JSON：[{"name":"颜色","value":"红"},...]。
   // 为空表示单规格（回退 name 展示，兼容旧数据）。
-  specValues   String?
+  specValues   Json?
   // 金额以「分」为单位（Int），避免浮点累计误差。Service 层转「元」对外
   price        Int
   marketPrice  Int?
@@ -136,7 +135,7 @@ model Supplier {
   name            String
   contactName     String?
   contactPhone    String?
-  deliveryRegions String? // JSON array of cities
+  deliveryRegions Json? // JSON array of cities
   fulfillRate     Float   @default(100)
   status          String  @default("active")
   createdAt       DateTime @default(now())
@@ -361,8 +360,8 @@ model Aftersale {
   type           Int
   reason         String
   description    String?
-  // 凭证图 URL 数组，以 JSON 字符串存储（SQLite 不支持标量列表）
-  evidenceImages String
+  // 凭证图 URL 数组，以 MySQL 原生 JSON 存储
+  evidenceImages Json
   refundAmount   Int
   refundNo       String?
   // 微信退款单号（区别于自生成的 refundNo=out_refund_no）

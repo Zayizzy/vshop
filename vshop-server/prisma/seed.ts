@@ -24,9 +24,9 @@ async function main() {
   console.log(`Created ${cats.length} categories`);
 
   // 供应商
-  const s1 = await prisma.supplier.create({ data: { id: 's1', name: '鲜果园旗舰店', deliveryRegions: JSON.stringify(['厦门市','福州市','泉州市','漳州市','北京市','上海市','广州市','深圳市','杭州市','成都市']) } });
-  const s2 = await prisma.supplier.create({ data: { id: 's2', name: '绿叶蔬菜直供', deliveryRegions: JSON.stringify(['厦门市','漳州市','泉州市']) } });
-  const s3 = await prisma.supplier.create({ data: { id: 's3', name: '热带果园直供', deliveryRegions: JSON.stringify(['厦门市','福州市']) } });
+  const s1 = await prisma.supplier.create({ data: { id: 's1', name: '鲜果园旗舰店', deliveryRegions: ['厦门市','福州市','泉州市','漳州市','北京市','上海市','广州市','深圳市','杭州市','成都市'] } });
+  const s2 = await prisma.supplier.create({ data: { id: 's2', name: '绿叶蔬菜直供', deliveryRegions: ['厦门市','漳州市','泉州市'] } });
+  const s3 = await prisma.supplier.create({ data: { id: 's3', name: '热带果园直供', deliveryRegions: ['厦门市','福州市'] } });
   console.log(`Created 3 suppliers`);
 
   // 商品数据 — 与小程序前端 mock 数据对齐

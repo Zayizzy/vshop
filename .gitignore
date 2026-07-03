@@ -16,6 +16,7 @@ vshop-server/dist/
 # Database
 vshop-server/prisma/dev.db
 vshop-server/prisma/dev.db-journal
+mysql_data/
 
 # IDE
 .vscode/

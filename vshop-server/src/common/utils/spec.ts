@@ -1,11 +1,11 @@
 /**
  * 多规格维度工具。
  *
- * 约定：Sku.specValues 在库内以 JSON 字符串存储（SQLite 不支持标量列表，
- * 沿用 evidenceImages 的存法），形如 [{"name":"颜色","value":"红"},...]。
+ * 约定：Sku.specValues 在 MySQL 中以原生 JSON 存储，
+ * 形如 [{"name":"颜色","value":"红"},...]。
  * 本模块是 specValues 跨边界的唯一解析/拼装出入口。
  *
- * - parseSpecValues：入库 JSON → 结构化数组（容错）
+ * - parseSpecValues：库内 JSON → 结构化数组（容错）
  * - formatSpecText：结构化数组 → 可读规格文案 "红色 / 500g"（展示/订单快照用）
  * - aggregateSpecs：从一批 sku 聚合推导出维度分组（详情页分组选择用）
  */
@@ -16,25 +16,26 @@ export interface SpecValue {
 }
 
 /**
- * 解析 specValues JSON 字符串为结构化数组。
+ * 解析 specValues 为结构化数组（兼容 MySQL 原生 JSON 与旧 JSON 字符串）。
  * 容错：空/非法 JSON/非数组 → 返回 []。
  */
-export function parseSpecValues(
-  raw: string | null | undefined,
-): SpecValue[] {
+export function parseSpecValues(raw: any): SpecValue[] {
   if (!raw) return [];
-  try {
-    const v = JSON.parse(raw);
-    if (!Array.isArray(v)) return [];
-    return v
-      .filter(
-        (x) =>
-          x && typeof x.name === 'string' && typeof x.value === 'string',
-      )
-      .map((x) => ({ name: x.name, value: x.value }));
-  } catch {
-    return [];
+  let v = raw;
+  if (typeof raw === 'string') {
+    try {
+      v = JSON.parse(raw);
+    } catch {
+      return [];
+    }
   }
+  if (!Array.isArray(v)) return [];
+  return v
+    .filter(
+      (x) =>
+        x && typeof x.name === 'string' && typeof x.value === 'string',
+    )
+    .map((x) => ({ name: x.name, value: x.value }));
 }
 
 /**
@@ -42,7 +43,7 @@ export function parseSpecValues(
  * specValues 为空 → 回退 fallbackName（兼容旧单规格商品）；都空 → 空串。
  */
 export function formatSpecText(
-  raw: string | null | undefined,
+  raw: any,
   fallbackName?: string | null,
 ): string {
   const specs = parseSpecValues(raw);
@@ -59,7 +60,7 @@ export function formatSpecText(
  *   → [{name:"颜色",values:["红","绿"]},{name:"重量",values:["500g"]}]
  */
 export function aggregateSpecs(
-  skus: { specValues?: string | null }[],
+  skus: { specValues?: any }[],
 ): { name: string; values: string[] }[] {
   const order: string[] = []; // 维度名首次出现顺序
   const map = new Map<string, string[]>(); // 维度名 → 值集合（保持顺序）

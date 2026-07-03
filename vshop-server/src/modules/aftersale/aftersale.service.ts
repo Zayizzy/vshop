@@ -19,7 +19,7 @@ import { CreateAftersaleDto } from '../../common/dto';
  * 撤回（cancel）：仅 status===0 允许 → 删除记录（未审核申请撤回即消失）。
  *
  * 金额：库内「分」(Int)，边界 yuanToCent / centToYuan。
- * evidenceImages：SQLite 不支持标量列表，以 JSON 字符串存储，出入边界 parse/stringify。
+ * evidenceImages：MySQL 原生 JSON 数组，直接读写。
  * 越权防护：list / detail / cancel 均校验归属当前用户。
  */
 @Injectable()
@@ -84,7 +84,7 @@ export class AftersaleService {
         type: dto.type,
         reason: dto.reason,
         description: dto.description || null,
-        evidenceImages: JSON.stringify(dto.evidenceImages || []),
+        evidenceImages: dto.evidenceImages || [],
         refundAmount: refundCent,
         status: 0,
       },
@@ -178,7 +178,7 @@ export class AftersaleService {
       type: a.type,
       reason: a.reason,
       description: a.description || '',
-      evidenceImages: parseImages(a.evidenceImages),
+      evidenceImages: Array.isArray(a.evidenceImages) ? a.evidenceImages : [],
       refundAmount: centToYuan(a.refundAmount),
       refundNo: a.refundNo || '',
       refundId: a.refundId || '',
@@ -204,13 +204,3 @@ function resolveStatusFilter(status?: string): number[] | undefined {
   return undefined;
 }
 
-/** evidenceImages 入库为 JSON 字符串，读取时还原为数组。 */
-function parseImages(raw: string | null | undefined): string[] {
-  if (!raw) return [];
-  try {
-    const v = JSON.parse(raw);
-    return Array.isArray(v) ? v.filter((x) => typeof x === 'string') : [];
-  } catch {
-    return [];
-  }
-}

@@ -235,14 +235,14 @@ export class AdminService {
     // 支持多规格创建（前端传入元 → 库内分）
     if (body.skus && body.skus.length > 0) {
       for (const s of body.skus) {
-        // 多规格：specValues 为 [{name,value}] 数组，序列化 JSON 存储
-        const specValuesStr = s.specValues ? JSON.stringify(s.specValues) : null;
-        const name = s.name || (specValuesStr ? formatSpecText(specValuesStr) : '默认规格');
+        // 多规格：specValues 为 [{name,value}] 数组，直接写入 MySQL JSON
+        const specValues = s.specValues || null;
+        const name = s.name || (specValues ? formatSpecText(specValues) : '默认规格');
         const sku = await this.prisma.sku.create({
           data: {
             goodId: good.id,
             name,
-            specValues: specValuesStr,
+            specValues,
             price: yuanToCent(s.price),
             marketPrice: s.marketPrice ? yuanToCent(s.marketPrice) : null,
             stock: parseInt(s.stock) || 0,
@@ -333,10 +333,10 @@ export class AdminService {
     // 无 id 的新增 + 建 GoodSupplier。不删除 sku（避免破坏已下订单的 OrderItem.skuId 外键）。
     if (body.skus && body.skus.length > 0) {
       for (const s of body.skus) {
-        const specValuesStr = s.specValues ? JSON.stringify(s.specValues) : null;
-        const name = s.name || (specValuesStr ? formatSpecText(specValuesStr) : '默认规格');
+        const specValues = s.specValues || null;
+        const name = s.name || (specValues ? formatSpecText(specValues) : '默认规格');
         if (s.id) {
-          const skuData: any = { name, specValues: specValuesStr };
+          const skuData: any = { name, specValues };
           if (s.price !== undefined) skuData.price = yuanToCent(s.price);
           if (s.marketPrice !== undefined) skuData.marketPrice = s.marketPrice ? yuanToCent(s.marketPrice) : null;
           if (s.stock !== undefined) skuData.stock = parseInt(s.stock) || 0;
@@ -359,7 +359,7 @@ export class AdminService {
             data: {
               goodId: id,
               name,
-              specValues: specValuesStr,
+              specValues,
               price: yuanToCent(s.price),
               marketPrice: s.marketPrice ? yuanToCent(s.marketPrice) : null,
               stock: parseInt(s.stock) || 0,
@@ -1441,7 +1441,7 @@ function resolveAftersaleStatusFilter(status?: string): number[] | undefined {
   return undefined;
 }
 
-/** evidenceImages 入库为 JSON 字符串，读取时还原为数组。 */
+/** evidenceImages 为 MySQL 原生 JSON，读取时直接作为数组。 */
 function parseAftersaleImages(raw: any): string[] {
   if (!raw) return [];
   try {
