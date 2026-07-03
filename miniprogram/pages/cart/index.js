@@ -57,7 +57,7 @@ Page({
 
   loadCart() {
     this.setData({ loading: true })
-    api.get('/cart').then(data => {
+    api.cart.get().then(data => {
       // 后端契约：{ suppliers: [{ supplierId, supplierName, items: [...], totalPrice, freight }], totalAmount }
       const groups = (data.suppliers || []).map(g => ({
         supplierId: g.supplierId,
@@ -97,7 +97,7 @@ Page({
   },
 
   loadRecommend() {
-    api.get('/goods/list', { page: 1, pageSize: 2, sort: 'recommend' }).then(data => {
+    api.goods.getList({ page: 1, pageSize: 2, sort: 'recommend' }).then(data => {
       const list = (data.list || []).slice(0, 2).map(item => ({
         id: item.id,
         title: item.title || item.name,
@@ -206,7 +206,7 @@ Page({
   syncQuantity(gIdx, iIdx, quantity) {
     const item = this.data.supplierGroups[gIdx].items[iIdx]
     // 后端契约：PUT /cart/update { skuId, quantity }
-    api.put('/cart/update', {
+    api.cart.update({
       skuId: item.skuId,
       quantity
     }).catch((err) => handleError(err, { silent: true }))
@@ -234,7 +234,7 @@ Page({
           })
         })
         Promise.all(
-          skuIds.map(skuId => api.put('/cart/update', { skuId, quantity: 0 }).catch((err) => handleError(err, { silent: true })))
+          skuIds.map(skuId => api.cart.remove(skuId).catch((err) => handleError(err, { silent: true })))
         ).then(() => {
           this.loadCart()
         })

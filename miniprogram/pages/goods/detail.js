@@ -43,7 +43,7 @@ Page({
 
   loadDetail() {
     wx.showLoading({ title: '加载中' })
-    api.get(`/goods/${this.data.goodsId}`).then(data => {
+    api.goods.getDetail(this.data.goodsId).then(data => {
       wx.hideLoading()
       const skus = data.skus || []
       const specs = data.specs || []
@@ -91,7 +91,7 @@ Page({
   },
 
   loadCartCount() {
-    api.get('/cart/count').then(data => {
+    api.cart.count().then(data => {
       this.setData({ cartCount: data.count || 0 })
     }).catch((err) => handleError(err, { silent: true }))
   },
@@ -149,7 +149,7 @@ Page({
     const newState = !this.data.collected
     this.setData({ collected: newState })
     // 后端契约：{ goodId, isCollected }
-    api.post('/goods/collect', {
+    api.goods.collect({
       goodId: this.data.goodsId,
       isCollected: newState
     }).catch((err) => {
@@ -164,7 +164,7 @@ Page({
       return
     }
     // 后端契约：{ skuId, quantity }（DTO 会拒绝多余字段）
-    api.post('/cart', {
+    api.cart.add({
       skuId: this.data.selectedSkuId,
       quantity: 1
     }).then(() => {

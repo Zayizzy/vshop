@@ -27,7 +27,7 @@ Page({
   search() {
     const { keyword, sort, page } = this.data
     if (!keyword) return
-    api.get('/goods/search', { keyword, sort, page, pageSize: 10 }).then(data => {
+    api.goods.search({ keyword, sort, page, pageSize: 10 }).then(data => {
       this.setData({
         list: this.data.list.concat(data.list || []),
         page: page + 1,

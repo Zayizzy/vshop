@@ -46,7 +46,7 @@ Page({
   },
 
   loadOrderStats() {
-    api.get('/orders/stats').then(data => {
+    api.order.getStats().then(data => {
       this.setData({
         orderStats: {
           pending: data.pending || 0,
@@ -61,7 +61,7 @@ Page({
   },
 
   loadCouponCount() {
-    api.get('/coupons/count').then(data => {
+    api.coupon.count().then(data => {
       this.setData({ couponCount: data.count || 0 })
     }).catch((err) => {
       handleError(err, { silent: true })
@@ -71,7 +71,7 @@ Page({
 
   loadKocInfo() {
     // /koc/status 提供 isKoc/level/commissionRate；/koc/dashboard 提供累计收益与订单数
-    api.get('/koc/status').then(status => {
+    api.koc.getStatus().then(status => {
       const kocInfo = {
         isKoc: !!status.isKoc,
         level: status.level || '',
@@ -83,7 +83,7 @@ Page({
       this.setData({ kocInfo })
       // 已开通则再拉取收益看板
       if (kocInfo.isKoc) {
-        api.get('/koc/dashboard').then(dash => {
+        api.koc.getDashboard().then(dash => {
           this.setData({
             kocInfo: {
               ...kocInfo,

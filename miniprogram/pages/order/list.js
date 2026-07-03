@@ -40,7 +40,7 @@ Page({
   loadOrders() {
     const { activeTab, page } = this.data
     this.setData({ loading: true })
-    api.get('/orders', { status: activeTab, page, pageSize: 10 }).then(data => {
+    api.order.getList({ status: activeTab, page, pageSize: 10 }).then(data => {
       // 后端订单列表为扁平 items[]，wxml 期望 packages[].items[].coverImage/title 结构，
       // 这里做一次映射：单包裹包裹所有明细，并补 totalCount。
       const mapped = (data.list || []).map(o => ({
@@ -103,7 +103,7 @@ Page({
       content: '确认已收到商品吗？',
       success: res => {
         if (res.confirm) {
-          api.post('/orders/confirm', { orderId: id }).then(() => {
+          api.order.confirm(id).then(() => {
             wx.showToast({ title: '已确认收货', icon: 'success' })
             this.setData({ orders: [], page: 1, hasMore: true })
             this.loadOrders()
@@ -115,7 +115,7 @@ Page({
 
   rebuy(e) {
     const id = e.currentTarget.dataset.id
-    api.post('/orders/rebuy', { orderId: id }).then(() => {
+    api.order.rebuy(id).then(() => {
       wx.showToast({ title: '已加入购物车', icon: 'success' })
     }).catch((err) => handleError(err, { defaultMsg: '重新购买失败' }))
   },

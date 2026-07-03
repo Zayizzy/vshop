@@ -17,7 +17,7 @@ Page({
   },
 
   loadCategories() {
-    api.get('/home').then(data => {
+    api.home.getHome().then(data => {
       const cats = (data && data.categories) || []
       this.setData({ categories: cats })
       if (cats[0]) {
@@ -40,7 +40,7 @@ Page({
     const host = app.globalData.apiBase.replace(/\/v1\/?$/, '')
     Promise.all([
       app.request({ url: `${host}/api/admin/subcategories`, method: 'GET', data: { categoryId: catId } }).catch((err) => { handleError(err, { silent: true }); return [] }),
-      api.get('/goods/list', { categoryId: catId, pageSize: 50 }).catch((err) => { handleError(err, { silent: true }); return { list: [] } })
+      api.goods.getList({ categoryId: catId, pageSize: 50 }).catch((err) => { handleError(err, { silent: true }); return { list: [] } })
     ]).then(([subs, goodsData]) => {
       const subList = Array.isArray(subs) ? subs : (subs && subs.data) || []
       const goodsList = (goodsData && goodsData.list) || []
