@@ -5,6 +5,8 @@ RUN npm ci
 COPY . .
 RUN npx prisma generate
 RUN npm run build
+# 移除 devDependencies，减小生产镜像体积
+RUN npm prune --production
 
 FROM node:22-alpine
 WORKDIR /app
