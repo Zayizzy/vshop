@@ -8,6 +8,10 @@ import { join } from 'path';
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
 import { PrismaService } from './prisma/prisma.service';
+import { validateEnv } from './config/env.validation';
+
+// 启动前校验必填环境变量，避免运行时出现难以排查的连接/签名错误
+validateEnv(process.env);
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
