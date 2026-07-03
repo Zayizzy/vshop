@@ -1,5 +1,6 @@
 const api = require('../../api/index')
 const { full: fullImg } = require('../../utils/image')
+const { handleError } = require('../../utils/error')
 
 Page({
   data: {
@@ -69,9 +70,9 @@ Page({
         hasMore: data.hasMore,
         loading: false
       })
-    }).catch(() => {
+    }).catch((err) => {
       this.setData({ loading: false, hasMore: false })
-      if (page === 1) wx.showToast({ title: '订单加载失败', icon: 'none' })
+      if (page === 1) handleError(err, { defaultMsg: '订单加载失败' })
     })
   },
 
@@ -106,7 +107,7 @@ Page({
             wx.showToast({ title: '已确认收货', icon: 'success' })
             this.setData({ orders: [], page: 1, hasMore: true })
             this.loadOrders()
-          })
+          }).catch((err) => handleError(err, { defaultMsg: '确认收货失败' }))
         }
       }
     })
@@ -116,7 +117,7 @@ Page({
     const id = e.currentTarget.dataset.id
     api.post('/orders/rebuy', { orderId: id }).then(() => {
       wx.showToast({ title: '已加入购物车', icon: 'success' })
-    })
+    }).catch((err) => handleError(err, { defaultMsg: '重新购买失败' }))
   },
 
   getStatusBadge(status) {

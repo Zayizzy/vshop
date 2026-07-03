@@ -1,6 +1,7 @@
 const api = require('../../api/index')
 const { getNavInfo } = require('../../utils/nav')
 const { full: fullImg } = require('../../utils/image')
+const { handleError } = require('../../utils/error')
 
 Page({
   data: {
@@ -89,9 +90,9 @@ Page({
         loading: false
       })
       this.updateSummary()
-    }).catch(() => {
+    }).catch((err) => {
       this.setData({ loading: false })
-      wx.showToast({ title: '购物车加载失败', icon: 'none' })
+      handleError(err, { defaultMsg: '购物车加载失败' })
     })
   },
 
@@ -104,9 +105,7 @@ Page({
         image: fullImg(item.coverImage || item.image || item.picUrl || '')
       }))
       this.setData({ recommendList: list })
-    }).catch(() => {
-      // 静默加载失败
-    })
+    }).catch((err) => handleError(err, { silent: true }))
   },
 
   // 切换商品选中
@@ -210,7 +209,7 @@ Page({
     api.put('/cart/update', {
       skuId: item.skuId,
       quantity
-    }).catch(() => {})
+    }).catch((err) => handleError(err, { silent: true }))
   },
 
   // 切换管理模式
@@ -235,7 +234,7 @@ Page({
           })
         })
         Promise.all(
-          skuIds.map(skuId => api.put('/cart/update', { skuId, quantity: 0 }).catch(() => {}))
+          skuIds.map(skuId => api.put('/cart/update', { skuId, quantity: 0 }).catch((err) => handleError(err, { silent: true })))
         ).then(() => {
           this.loadCart()
         })

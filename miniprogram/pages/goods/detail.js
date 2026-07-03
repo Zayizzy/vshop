@@ -1,6 +1,7 @@
 const api = require('../../api/index')
 const { getNavInfo } = require('../../utils/nav')
 const { full: fullImg } = require('../../utils/image')
+const { handleError } = require('../../utils/error')
 
 Page({
   data: {
@@ -81,17 +82,17 @@ Page({
         selectedSku: sku,
         collected: data.collected || false
       })
-    }).catch(() => {
+    }).catch((err) => {
       wx.hideLoading()
       this.setData({ loading: false })
-      wx.showToast({ title: '商品加载失败', icon: 'none' })
+      handleError(err, { defaultMsg: '商品加载失败' })
     })
   },
 
   loadCartCount() {
     api.get('/cart/count').then(data => {
       this.setData({ cartCount: data.count || 0 })
-    }).catch(() => {})
+    }).catch((err) => handleError(err, { silent: true }))
   },
 
   selectSku(e) {
@@ -150,8 +151,9 @@ Page({
     api.post('/goods/collect', {
       goodId: this.data.goodsId,
       isCollected: newState
-    }).catch(() => {
+    }).catch((err) => {
       this.setData({ collected: !newState })
+      handleError(err, { defaultMsg: '收藏失败' })
     })
   },
 
@@ -167,8 +169,8 @@ Page({
     }).then(() => {
       wx.showToast({ title: '已加入购物车', icon: 'success' })
       this.loadCartCount()
-    }).catch(() => {
-      wx.showToast({ title: '添加失败，请重试', icon: 'none' })
+    }).catch((err) => {
+      handleError(err, { defaultMsg: '添加失败，请重试' })
     })
   },
 

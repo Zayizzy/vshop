@@ -1,4 +1,5 @@
 const api = require('../../api/index')
+const { handleError } = require('../../utils/error')
 
 Page({
   data: {
@@ -32,9 +33,9 @@ Page({
         page: page + 1,
         hasMore: data.hasMore
       })
-    }).catch(() => {
+    }).catch((err) => {
       this.setData({ hasMore: false })
-      if (page === 1) wx.showToast({ title: '搜索失败', icon: 'none' })
+      if (page === 1) handleError(err, { defaultMsg: '搜索失败' })
     })
   },
   onReachBottom() {

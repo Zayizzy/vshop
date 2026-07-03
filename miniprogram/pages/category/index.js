@@ -1,5 +1,6 @@
 const api = require('../../api/index')
 const app = getApp()
+const { handleError } = require('../../utils/error')
 
 Page({
   data: {
@@ -24,9 +25,9 @@ Page({
       } else {
         this.setData({ loading: false })
       }
-    }).catch(() => {
+    }).catch((err) => {
       this.setData({ loading: false })
-      wx.showToast({ title: '分类加载失败', icon: 'none' })
+      handleError(err, { defaultMsg: '分类加载失败' })
     })
   },
 
@@ -38,8 +39,8 @@ Page({
     // host 从 apiBase 去掉末尾 /v1 得到。
     const host = app.globalData.apiBase.replace(/\/v1\/?$/, '')
     Promise.all([
-      app.request({ url: `${host}/api/admin/subcategories`, method: 'GET', data: { categoryId: catId } }).catch(() => []),
-      api.get('/goods/list', { categoryId: catId, pageSize: 50 }).catch(() => ({ list: [] }))
+      app.request({ url: `${host}/api/admin/subcategories`, method: 'GET', data: { categoryId: catId } }).catch((err) => { handleError(err, { silent: true }); return [] }),
+      api.get('/goods/list', { categoryId: catId, pageSize: 50 }).catch((err) => { handleError(err, { silent: true }); return { list: [] } })
     ]).then(([subs, goodsData]) => {
       const subList = Array.isArray(subs) ? subs : (subs && subs.data) || []
       const goodsList = (goodsData && goodsData.list) || []
@@ -59,9 +60,9 @@ Page({
         })
       })
       this.setData({ subCategories: subList, goodsMap, loading: false })
-    }).catch(() => {
+    }).catch((err) => {
       this.setData({ loading: false })
-      wx.showToast({ title: '商品加载失败', icon: 'none' })
+      handleError(err, { defaultMsg: '商品加载失败' })
     })
   },
 

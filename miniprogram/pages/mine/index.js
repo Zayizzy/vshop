@@ -1,6 +1,7 @@
 const app = getApp()
 const api = require('../../api/index')
 const { getNavInfo } = require('../../utils/nav')
+const { handleError } = require('../../utils/error')
 
 Page({
   data: {
@@ -53,7 +54,8 @@ Page({
           receiving: data.receiving || 0
         }
       })
-    }).catch(() => {
+    }).catch((err) => {
+      handleError(err, { silent: true })
       this.setData({ orderStats: { pending: 0, shipping: 0, receiving: 0 } })
     })
   },
@@ -61,7 +63,8 @@ Page({
   loadCouponCount() {
     api.get('/coupons/count').then(data => {
       this.setData({ couponCount: data.count || 0 })
-    }).catch(() => {
+    }).catch((err) => {
+      handleError(err, { silent: true })
       this.setData({ couponCount: 0 })
     })
   },
@@ -89,9 +92,10 @@ Page({
               weeklyCommission: Number(dash.monthly && dash.monthly.commission || 0).toFixed(2)
             }
           })
-        }).catch(() => {})
+        }).catch((err) => handleError(err, { silent: true }))
       }
-    }).catch(() => {
+    }).catch((err) => {
+      handleError(err, { silent: true })
       this.setData({
         kocInfo: { isKoc: false, level: '', totalEarnings: '0.00', weeklyOrders: 0, weeklyCommission: '0.00' }
       })
