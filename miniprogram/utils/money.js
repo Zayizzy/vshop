@@ -17,4 +17,16 @@ function formatYuan(n) {
   return '¥' + formatPrice(n)
 }
 
-module.exports = { formatPrice, formatYuan }
+/**
+ * 计算折后价。
+ * @param {number} originalPrice 原价（元）
+ * @param {number|null|undefined} discountRate 折扣率 0~1，null/undefined 表示无折扣
+ * @returns {number} 折后价（元），保留两位小数精度
+ */
+function calculatePrice(originalPrice, discountRate) {
+  const original = Number(originalPrice) || 0
+  if (discountRate == null) return original
+  return Math.round(original * discountRate * 100) / 100
+}
+
+module.exports = { formatPrice, formatYuan, calculatePrice }

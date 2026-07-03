@@ -2,6 +2,7 @@ const api = require('../../api/index')
 const { getNavInfo } = require('../../utils/nav')
 const { full: fullImg } = require('../../utils/image')
 const { handleError } = require('../../utils/error')
+const { calculatePrice } = require('../../utils/money')
 
 Page({
   data: {
@@ -56,7 +57,7 @@ Page({
       const sku = matched || skus[0] || null
       const original = sku ? (Number(sku.price) || 0) : 0
       const rate = data.discountRate != null ? data.discountRate : null
-      const paid = rate != null ? Math.round(original * rate * 100) / 100 : original
+      const paid = calculatePrice(original, rate)
       this.setData({
         loading: false,
         goods: {
@@ -102,7 +103,7 @@ Page({
       // sku.price 为折前价；有折扣率时折后价 = 折前 × discountRate
       const original = Number(sku.price) || 0
       const rate = this.data.goods.discountRate
-      const paid = rate != null ? Math.round(original * rate * 100) / 100 : original
+      const paid = calculatePrice(original, rate)
       this.setData({
         selectedSkuId: skuId,
         selectedSku: sku,
@@ -127,7 +128,7 @@ Page({
       if (sku) {
         const original = Number(sku.price) || 0
         const rate = this.data.goods.discountRate
-        const paid = rate != null ? Math.round(original * rate * 100) / 100 : original
+        const paid = calculatePrice(original, rate)
         patch.selectedSkuId = sku.id
         patch.selectedSku = sku
         patch['goods.originalPrice'] = original
