@@ -201,6 +201,13 @@ Page({
     wx.navigateBack()
   },
 
+  onDetailImageError(e) {
+    const { index } = e.currentTarget.dataset
+    const detailImages = this.data.detailImages
+    detailImages[index] = '/assets/images/placeholder.png'
+    this.setData({ detailImages })
+  },
+
   onShareAppMessage() {
     return {
       title: this.data.goods.name || '发现一个好物',

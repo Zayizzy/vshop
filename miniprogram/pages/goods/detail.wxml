@@ -20,7 +20,7 @@
     <swiper class="carousel-swiper" indicator-dots="{{true}}" indicator-color="rgba(255,255,255,0.5)" indicator-active-color="#07C160" autoplay="{{true}}" interval="4000" circular="{{true}}">
       <block wx:for="{{images}}" wx:key="index">
         <swiper-item>
-          <t-image class="carousel-image" src="{{item}}" mode="aspectFill" width="100%" height="520rpx" />
+          <t-image class="carousel-image" src="{{item}}" mode="aspectFill" width="100%" height="520rpx" lazy-load="{{true}}" />
         </swiper-item>
       </block>
     </swiper>
@@ -98,7 +98,7 @@
     <view class="detail-content">
       <!-- 详情图：按顺序纵向铺图展示 -->
       <block wx:if="{{detailImages.length > 0}}">
-        <image class="detail-image" wx:for="{{detailImages}}" wx:key="index" src="{{item}}" mode="widthFix" />
+        <image class="detail-image" wx:for="{{detailImages}}" wx:key="index" src="{{item}}" mode="widthFix" lazy-load="{{true}}" binderror="onDetailImageError" data-index="{{index}}" />
       </block>
       <!-- 无详情图时回退富文本 -->
       <rich-text wx:else nodes="{{goods.detail || '暂无商品详情'}}"></rich-text>
