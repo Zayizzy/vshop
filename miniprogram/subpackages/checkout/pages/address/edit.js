@@ -1,4 +1,6 @@
-const app = getApp(); function get(url, data) { return app.request({ url, method: 'GET', data }) }; function post(url, data) { return app.request({ url, method: 'POST', data }) }
+const api = require('../../../../api/index')
+const { handleError } = require('../../../../utils/error')
+const { validate, isPhone } = require('../../../../utils/validation')
 
 Page({
   data: {
@@ -8,7 +10,7 @@ Page({
   onLoad(options) {
     if (options.id) {
       this.setData({ id: options.id, editing: true })
-      get('/addresses').then(list => {
+      api.address.list().then(list => {
         const addr = list.find(a => a.id === Number(options.id))
         if (addr) {
           this.setData({
@@ -17,7 +19,7 @@ Page({
             region: [addr.province, addr.city, addr.district]
           })
         }
-      })
+      }).catch((err) => handleError(err, { defaultMsg: '地址加载失败' }))
     }
   },
   setField(e) {
@@ -37,21 +39,37 @@ Page({
   },
   save() {
     const f = this.data.form
-    if (!f.name || !f.phone || !f.province || !f.detail) return wx.showToast({ title: '请完善信息', icon: 'none' })
+    const error = validate(f, [
+      { key: 'name', name: '收货人' },
+      { key: 'phone', name: '手机号', validator: isPhone },
+      { key: 'province', name: '所在地区' },
+      { key: 'detail', name: '详细地址' },
+    ])
+    if (error) return wx.showToast({ title: error, icon: 'none' })
+
     this.setData({ saving: true })
-    const req = this.data.editing ? app.request({ url: `/addresses/${this.data.id}`, method: 'PUT', data: f }) : post('/addresses', f)
+    const req = this.data.editing
+      ? api.address.update(this.data.id, f)
+      : api.address.create(f)
     req.then(() => {
       wx.showToast({ title: '已保存', icon: 'success' })
       setTimeout(() => wx.navigateBack(), 1000)
-    }).catch(() => this.setData({ saving: false }))
+    }).catch((err) => {
+      this.setData({ saving: false })
+      handleError(err, { defaultMsg: '保存失败' })
+    })
   },
   del() {
-    wx.showModal({ title: '删除地址', content: '确定删除吗？', success: res => {
-      if (!res.confirm) return
-      app.request({ url: `/addresses/${this.data.id}`, method: 'DELETE' }).then(() => {
-        wx.showToast({ title: '已删除', icon: 'none' })
-        setTimeout(() => wx.navigateBack(), 1000)
-      })
-    }})
+    wx.showModal({
+      title: '删除地址',
+      content: '确定删除吗？',
+      success: res => {
+        if (!res.confirm) return
+        api.address.remove(this.data.id).then(() => {
+          wx.showToast({ title: '已删除', icon: 'none' })
+          setTimeout(() => wx.navigateBack(), 1000)
+        }).catch((err) => handleError(err, { defaultMsg: '删除失败' }))
+      }
+    })
   }
 })
