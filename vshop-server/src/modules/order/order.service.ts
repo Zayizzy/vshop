@@ -27,27 +27,16 @@ export class OrderService {
   constructor(private prisma: PrismaService) {}
 
   async getStats(userId: string) {
-    const orders = await this.prisma.order.findMany({
-      where: { userId },
-      select: { status: true },
-    });
+    const [pending, shipping, receiving, done, comment, total] = await Promise.all([
+      this.prisma.order.count({ where: { userId, status: 'pending' } }),
+      this.prisma.order.count({ where: { userId, status: 'shipping' } }),
+      this.prisma.order.count({ where: { userId, status: 'receiving' } }),
+      this.prisma.order.count({ where: { userId, status: 'done' } }),
+      this.prisma.order.count({ where: { userId, status: 'comment' } }),
+      this.prisma.order.count({ where: { userId } }),
+    ]);
 
-    const stats = {
-      pending: 0,
-      shipping: 0,
-      receiving: 0,
-      done: 0,
-      comment: 0,
-      total: orders.length,
-    };
-
-    for (const o of orders) {
-      if (stats[o.status] !== undefined) {
-        stats[o.status]++;
-      }
-    }
-
-    return stats;
+    return { pending, shipping, receiving, done, comment, total };
   }
 
   async getList(
