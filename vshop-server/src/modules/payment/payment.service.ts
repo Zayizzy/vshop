@@ -69,11 +69,10 @@ export class PaymentService {
 
   /** 标记订单已支付（notify 或 mock 调用），幂等 */
   async markPaid(orderId: string, transactionId: string) {
-    const payment = await this.prisma.payment.findUnique({ where: { orderId } });
-    if (!payment || payment.status === 'paid') return; // 幂等：已支付跳过
-    await this.prisma.$transaction([
-      this.prisma.payment.update({
-        where: { orderId },
+    // 用 updateMany + 状态条件实现幂等，避免并发时重复处理
+    const [paymentUpdated, orderUpdated] = await this.prisma.$transaction([
+      this.prisma.payment.updateMany({
+        where: { orderId, status: 'pending' },
         data: {
           status: 'paid',
           payTime: new Date(),
@@ -82,11 +81,16 @@ export class PaymentService {
         },
       }),
       // 待发货（pending→shipping）
-      this.prisma.order.update({
-        where: { id: orderId },
+      this.prisma.order.updateMany({
+        where: { id: orderId, status: 'pending' },
         data: { status: 'shipping' },
       }),
     ]);
+
+    // 未更新到任何行，说明已处理过或状态异常
+    if (paymentUpdated.count === 0) {
+      return;
+    }
 
     // 异步上传店管家代发：fire-and-forget，不阻断支付主链路；失败仅记日志。
     // 受自动同步开关控制（AppSetting.dianjia_auto_sync，默认开）；幂等由 uploadOrder 内部保证。

@@ -1359,8 +1359,9 @@ export class AdminService {
     }
 
     const prevRemark = remark || a.adminRemark || '';
-    const updated = await this.prisma.aftersale.update({
-      where: { id },
+    // 状态条件更新：防止并发重复退款
+    const updateResult = await this.prisma.aftersale.updateMany({
+      where: { id, status: 1 },
       data: {
         status: nextStatus,
         refundNo,
@@ -1373,11 +1374,16 @@ export class AdminService {
           : prevRemark,
       },
     });
+
+    if (updateResult.count === 0) {
+      throw new BadRequestException('售后状态已变更，请勿重复操作');
+    }
+
     return {
-      id: updated.id,
-      status: updated.status,
-      refundNo: updated.refundNo,
-      refundStatus: updated.refundStatus,
+      id: a.id,
+      status: nextStatus,
+      refundNo,
+      refundStatus,
     };
   }
 
