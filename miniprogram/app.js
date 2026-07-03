@@ -1,4 +1,5 @@
 const config = require('./config/index')
+const { NAV_HEIGHT_OFFSET } = require('./constants/index')
 
 App({
   globalData: {
@@ -27,7 +28,7 @@ App({
     } catch (e) {
       statusBarHeight = 20
     }
-    this.globalData.navInfo = { statusBarHeight, navHeight: statusBarHeight + 44 }
+    this.globalData.navInfo = { statusBarHeight, navHeight: statusBarHeight + NAV_HEIGHT_OFFSET }
 
     this.trackChannel(options.query)
     this.checkLogin()

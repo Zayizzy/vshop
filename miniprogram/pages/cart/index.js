@@ -2,6 +2,7 @@ const api = require('../../api/index')
 const { getNavInfo } = require('../../utils/nav')
 const { full: fullImg } = require('../../utils/image')
 const { handleError } = require('../../utils/error')
+const { FREE_SHIPPING_THRESHOLD } = require('../../constants/index')
 
 Page({
   data: {
@@ -63,7 +64,7 @@ Page({
         supplierId: g.supplierId,
         supplierName: g.supplierName || '供应商',
         freeShipping: true,
-        freeShippingThreshold: 39,
+        freeShippingThreshold: FREE_SHIPPING_THRESHOLD,
         checked: false,
         items: (g.items || []).map(item => ({
           id: item.skuId || item.id,

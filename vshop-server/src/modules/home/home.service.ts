@@ -2,6 +2,7 @@ import { Inject, Injectable } from '@nestjs/common';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Cache } from 'cache-manager';
 import { PrismaService } from '../../prisma/prisma.service';
+import { CUTOFF_HOUR } from '../../common/constants';
 
 const HOME_CACHE_KEY = 'home:data';
 const HOME_CACHE_TTL = 30 * 1000; // 首页数据 30 秒缓存
@@ -77,7 +78,7 @@ export class HomeService {
   private getCutoffCountdown() {
     const now = new Date();
     const cutoff = new Date(now);
-    cutoff.setHours(20, 0, 0, 0);
+    cutoff.setHours(CUTOFF_HOUR, 0, 0, 0);
     if (now > cutoff) cutoff.setDate(cutoff.getDate() + 1);
     const diff = Math.max(0, cutoff.getTime() - now.getTime());
     const h = Math.floor(diff / 3600000);
@@ -88,7 +89,7 @@ export class HomeService {
 
   private getNextDayLabel() {
     const now = new Date();
-    if (now.getHours() >= 20) return '后天';
+    if (now.getHours() >= CUTOFF_HOUR) return '后天';
     return '次日';
   }
 }
