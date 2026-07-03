@@ -34,14 +34,39 @@ export class AllExceptionsFilter implements ExceptionFilter {
           ? res
           : (res as any).message || exception.message;
       if (status === HttpStatus.UNAUTHORIZED) code = 401;
-    } else if (
-      exception instanceof Prisma.PrismaClientKnownRequestError &&
-      exception.code === 'P2025'
-    ) {
-      // Prisma: 记录未找到（update/delete 命中 0 行）
-      status = HttpStatus.NOT_FOUND;
-      code = 404;
-      message = '资源不存在或无权操作';
+    } else if (exception instanceof Prisma.PrismaClientKnownRequestError) {
+      // Prisma 已知错误码映射，避免堆栈泄露给前端
+      switch (exception.code) {
+        case 'P2025':
+          status = HttpStatus.NOT_FOUND;
+          code = 404;
+          message = '资源不存在或无权操作';
+          break;
+        case 'P2002': {
+          const target = (exception.meta?.target as string[])?.join(', ');
+          status = HttpStatus.BAD_REQUEST;
+          code = 400;
+          message = target ? `唯一约束冲突: ${target}` : '数据已存在';
+          break;
+        }
+        case 'P2003': {
+          const field = (exception.meta?.field_name as string) || '';
+          status = HttpStatus.BAD_REQUEST;
+          code = 400;
+          message = field ? `关联数据不存在或无效: ${field}` : '关联数据不存在';
+          break;
+        }
+        case 'P2014':
+          status = HttpStatus.BAD_REQUEST;
+          code = 400;
+          message = '数据关联关系异常';
+          break;
+        default:
+          this.logger.error('未处理 Prisma 错误', exception?.stack || exception);
+          status = HttpStatus.BAD_REQUEST;
+          code = 400;
+          message = '数据操作失败';
+      }
     } else {
       this.logger.error('未处理异常', (exception as any)?.stack || exception);
     }
