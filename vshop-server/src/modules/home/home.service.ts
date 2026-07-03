@@ -1,11 +1,22 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { Cache } from 'cache-manager';
 import { PrismaService } from '../../prisma/prisma.service';
+
+const HOME_CACHE_KEY = 'home:data';
+const HOME_CACHE_TTL = 30 * 1000; // 首页数据 30 秒缓存
 
 @Injectable()
 export class HomeService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    @Inject(CACHE_MANAGER) private cacheManager: Cache,
+  ) {}
 
   async getHomeData() {
+    const cached = await this.cacheManager.get<any>(HOME_CACHE_KEY);
+    if (cached) return cached;
+
     const categories = await this.prisma.category.findMany({
       where: { status: 'active' },
       orderBy: { sort: 'asc' },
@@ -18,7 +29,7 @@ export class HomeService {
       },
     });
 
-    return {
+    const result = {
       banners: [
         { title: '产地直采·新鲜果蔬每日直达', color: '#FF6B35' },
         { title: '每日20:00前下单·次日达', color: '#07C160' },
@@ -34,6 +45,9 @@ export class HomeService {
       cutoffCountdown: this.getCutoffCountdown(),
       nextDay: this.getNextDayLabel(),
     };
+
+    await this.cacheManager.set(HOME_CACHE_KEY, result, HOME_CACHE_TTL);
+    return result;
   }
 
   private getCategoryEmoji(name: string) {

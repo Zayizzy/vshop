@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { CacheModule } from '@nestjs/cache-manager';
 import { PrismaModule } from './prisma/prisma.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { GoodsModule } from './modules/goods/goods.module';
@@ -18,6 +19,10 @@ import { DianjiaModule } from './modules/dianjia/dianjia.module';
 
 @Module({
   imports: [
+    CacheModule.register({
+      ttl: 60 * 1000, // 默认缓存 60 秒
+      max: 100,       // 最多 100 条
+    }),
     PrismaModule,
     AuthModule, GoodsModule, CartModule, OrderModule, UserModule,
     HomeModule, CouponModule, ChannelModule, KocModule,
