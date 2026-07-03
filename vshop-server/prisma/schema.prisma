@@ -89,6 +89,9 @@ model Good {
   detailImages GoodDetailImage[]
   suppliers   GoodSupplier[]
   favorites   Favorite[]
+
+  @@index([status])
+  @@index([isRecommended, recommendSort])
 }
 
 model GoodImage {
@@ -168,6 +171,8 @@ model CartItem {
 
   user User @relation(fields: [userId], references: [id])
   sku  Sku  @relation(fields: [skuId], references: [id])
+
+  @@index([userId, skuId])
 }
 
 model Order {
@@ -200,6 +205,10 @@ model Order {
   packages  OrderPackage[]
   payment   Payment?
   aftersales Aftersale[]
+
+  @@index([status])
+  @@index([userId, status])
+  @@index([dianjiaSyncStatus])
 }
 
 model OrderItem {
@@ -295,6 +304,9 @@ model ChannelReport {
   kocId     String?
   batchId   String?
   createdAt DateTime @default(now())
+
+  @@index([kocId])
+  @@index([batchId])
 }
 
 // KOC（分销员）申请资料 + 审核状态 + 佣金配置
