@@ -5,6 +5,7 @@ import { formatSpecText, parseSpecValues } from '../../common/utils/spec';
 import { WechatPayClient } from '../payment/wechatpay.client';
 import { DianjiaClient } from '../dianjia/dianjia.client';
 import { DianjiaService } from '../dianjia/dianjia.service';
+import * as bcrypt from 'bcryptjs';
 import {
   CreateCouponDto,
   UpdateCouponDto,
@@ -17,11 +18,23 @@ import {
  * 经由 yuanToCent / centToYuan 在 service 边界转换。
  */
 
-// 后台账号配置（轻量内存方案，后续可迁移到表）。role: super=超管, ops=运营。
-const ADMIN_ACCOUNTS = [
-  { username: 'admin', password: '123456', role: 'super', name: '超级管理员' },
-  { username: 'ops', password: '123456', role: 'ops', name: '运营' },
-];
+interface AdminAccount {
+  username: string;
+  role: string;
+  name: string;
+  passwordHash: string;
+}
+
+// 后台账号从环境变量读取，格式：username:role:name:passwordHash,...
+// role: super=超管, ops=运营
+function loadAdminAccounts(): AdminAccount[] {
+  const env = process.env.ADMIN_ACCOUNTS || '';
+  if (!env) return [];
+  return env.split(',').map((entry) => {
+    const [username, role, name, passwordHash] = entry.trim().split(':');
+    return { username, role, name, passwordHash };
+  }).filter((a): a is AdminAccount => !!(a.username && a.role && a.passwordHash));
+}
 
 // KOC 相关管理操作仅以下角色可执行
 const KOC_MANAGER_ROLES = ['super'];
@@ -82,10 +95,9 @@ export class AdminService {
   }
 
   async login(username: string, password: string) {
-    const acc = ADMIN_ACCOUNTS.find(
-      (a) => a.username === username && a.password === password,
-    );
-    if (acc) {
+    const accounts = loadAdminAccounts();
+    const acc = accounts.find((a) => a.username === username);
+    if (acc && bcrypt.compareSync(password, acc.passwordHash)) {
       return {
         success: true,
         token: 'adm_' + acc.role + '_' + Date.now(),
