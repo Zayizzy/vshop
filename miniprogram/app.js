@@ -1,3 +1,5 @@
+const config = require('./config/index')
+
 App({
   globalData: {
     userInfo: null,
@@ -5,10 +7,8 @@ App({
     channelSource: '',
     channelKocId: null,
     channelCardBatch: null,
-    // 后端地址。微信小程序不能用 localhost（真机/模拟器下指向设备自身），
-    // 需用运行后端的电脑局域网 IP，并在开发者工具「详情→本地设置」勾选
-    // 「不校验合法域名、web-view...、TLS 版本...」。换网络/电脑后更新此 IP。
-    apiBase: 'http://172.22.10.95:3000/v1',
+    // 后端地址按环境读取，开发版默认使用本机局域网 IP
+    apiBase: config.apiBase,
     navInfo: null  // 导航栏尺寸 { statusBarHeight, navHeight }，onLaunch 预算缓存
   },
 
