@@ -20,6 +20,7 @@ import { DianjiaModule } from './modules/dianjia/dianjia.module';
 @Module({
   imports: [
     CacheModule.register({
+      isGlobal: true,
       ttl: 60 * 1000, // 默认缓存 60 秒
       max: 100,       // 最多 100 条
     }),
