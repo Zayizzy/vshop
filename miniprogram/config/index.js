@@ -4,8 +4,9 @@ const env = (typeof __wxConfig !== 'undefined' && __wxConfig.envVersion) || 'dev
 
 const configs = {
   develop: {
-    // 微信开发者工具内请使用 127.0.0.1；真机预览时请改为本机局域网 IP
-    apiBase: 'http://127.0.0.1:3000/v1',
+    // 微信开发者工具模拟器内使用 localhost（需勾选「不校验合法域名」）
+    // 真机预览/调试时，请改为电脑当前局域网 IP，例如 http://192.168.240.1:3000/v1
+    apiBase: 'http://localhost:3000/v1',
   },
   trial: {
     apiBase: 'https://test-api.yourdomain.com/v1',
