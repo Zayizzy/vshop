@@ -120,7 +120,7 @@ App({
         method: options.method || 'GET',
         data: options.data,
         header,
-        timeout: 10000,
+        timeout: options.timeout || 10000,
         success: (res) => {
           if (res.data && res.data.code === 0) {
             resolve(res.data.data)
@@ -154,6 +154,7 @@ App({
         url: '/auth/wechat-login',
         method: 'POST',
         data: payload,
+        timeout: 30000,        // 登录接口放宽超时
         _isAuthRequest: true  // 标记：自身 401 不触发跳转
       }).then((data) => {
         this.globalData.token = data.token

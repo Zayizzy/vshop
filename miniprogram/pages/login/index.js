@@ -10,31 +10,6 @@ const TAB_PAGES = [
   'pages/mine/index'
 ]
 
-function wxLogin() {
-  return new Promise((resolve, reject) => {
-    wx.login({ success: resolve, fail: reject })
-  })
-}
-
-function wxGetUserProfile(timeout = 5000) {
-  return new Promise((resolve, reject) => {
-    const timer = setTimeout(() => {
-      reject({ errMsg: 'getUserProfile:timeout' })
-    }, timeout)
-    wx.getUserProfile({
-      desc: '用于完善用户资料',
-      success: (res) => {
-        clearTimeout(timer)
-        resolve(res)
-      },
-      fail: (err) => {
-        clearTimeout(timer)
-        reject(err)
-      }
-    })
-  })
-}
-
 Page({
   data: {
     redirect: '/pages/home/index',
@@ -55,41 +30,62 @@ Page({
   onLogin() {
     if (this.data.loading) return
     this.setData({ loading: true })
+    console.log('[login] 开始登录流程')
 
-    // wx.login 与 wx.getUserProfile 同时发起，避免嵌套回调导致授权手势上下文丢失
-    Promise.all([
-      wxLogin().catch(err => ({ _error: err })),
-      wxGetUserProfile().catch(err => ({ _error: err }))
-    ]).then(([loginRes, profileRes]) => {
-      if (loginRes && loginRes._error) {
+    wx.login({
+      success: (loginRes) => {
+        console.log('[login] wx.login 成功，code=', loginRes.code?.slice(0, 8) + '...')
+        // 先用 code 完成账号登录，保证授权/网络异常时也能进入小程序
+        app.syncLogin({ code: loginRes.code })
+          .then((data) => {
+            console.log('[login] 服务端登录成功，userId=', data?.userInfo?.id)
+            // 再尝试同步微信昵称头像（失败不影响主流程）
+            this.syncProfileAfterLogin()
+            this.navigateAfterLogin()
+          })
+          .catch((err) => {
+            this.setData({ loading: false })
+            console.error('[login] 服务端登录失败:', err)
+            handleError(err, { defaultMsg: '登录失败，请检查网络或后端服务' })
+          })
+      },
+      fail: (err) => {
         this.setData({ loading: false })
-        handleError(loginRes._error, { defaultMsg: '微信登录失败' })
-        return
+        console.error('[login] wx.login 失败:', err)
+        handleError(err, { defaultMsg: '微信登录失败' })
       }
+    })
+  },
 
-      const payload = {
-        code: loginRes.code
-      }
-
-      if (profileRes && !profileRes._error && profileRes.userInfo) {
-        payload.nickName = profileRes.userInfo.nickName
-        payload.avatarUrl = profileRes.userInfo.avatarUrl
-        payload.rawData = profileRes.rawData
-        payload.signature = profileRes.signature
-        payload.encryptedData = profileRes.encryptedData
-        payload.iv = profileRes.iv
-      } else {
-        console.warn('[login] 未获取到微信资料，使用默认信息登录:', profileRes && profileRes._error)
-      }
-
-      app.syncLogin(payload)
-        .then(() => {
-          this.navigateAfterLogin()
+  /**
+   * 登录成功后尝试同步微信资料。
+   * wx.getUserProfile 在部分基础库/模拟器下可能超时，失败仅记录日志。
+   */
+  syncProfileAfterLogin() {
+    if (!wx.getUserProfile) {
+      console.warn('[login] 当前基础库不支持 wx.getUserProfile')
+      return
+    }
+    wx.getUserProfile({
+      desc: '用于完善用户资料',
+      success: (profileRes) => {
+        console.log('[login] 获取微信资料成功:', profileRes.userInfo?.nickName)
+        const { nickName, avatarUrl } = profileRes.userInfo || {}
+        app.request({
+          url: '/user/profile',
+          method: 'PUT',
+          data: { nickname: nickName, avatar: avatarUrl },
+          timeout: 10000
+        }).then(() => {
+          // 刷新本地缓存
+          app.refreshUserInfo().catch(() => {})
+        }).catch((err) => {
+          console.warn('[login] 同步资料到后端失败:', err)
         })
-        .catch((err) => {
-          this.setData({ loading: false })
-          handleError(err, { defaultMsg: '登录失败，请重试' })
-        })
+      },
+      fail: (err) => {
+        console.warn('[login] 获取微信资料失败:', err)
+      }
     })
   },
 
