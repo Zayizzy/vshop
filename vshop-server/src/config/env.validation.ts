@@ -1,5 +1,5 @@
 import { plainToClass } from 'class-transformer';
-import { IsString, validateSync } from 'class-validator';
+import { IsString, IsOptional, validateSync } from 'class-validator';
 
 class EnvironmentVariables {
   @IsString()
@@ -7,6 +7,14 @@ class EnvironmentVariables {
 
   @IsString()
   JWT_SECRET: string;
+
+  @IsOptional()
+  @IsString()
+  WX_APPID?: string;
+
+  @IsOptional()
+  @IsString()
+  WX_SECRET?: string;
 }
 
 export function validateEnv(config: Record<string, unknown>) {

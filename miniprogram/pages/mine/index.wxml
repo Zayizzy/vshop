@@ -3,7 +3,8 @@
   <view class="profile-header" style="padding-top:{{statusBarHeight + 20}}rpx">
     <view class="profile-row" bindtap="goEditProfile">
       <view class="profile-avatar-wrap">
-        <text class="profile-avatar-text">{{userInfo.nickName ? userInfo.nickName.charAt(0) : '👤'}}</text>
+        <image wx:if="{{userInfo.avatarUrl || userInfo.avatar}}" class="profile-avatar-img" src="{{userInfo.avatarUrl || userInfo.avatar}}" mode="aspectFill" />
+        <text wx:else class="profile-avatar-text">{{userInfo.nickName ? userInfo.nickName.charAt(0) : '👤'}}</text>
       </view>
       <view class="profile-info">
         <text class="profile-name">{{userInfo.nickName || '点击登录'}}</text>

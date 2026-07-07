@@ -36,13 +36,16 @@ Page({
   },
 
   loadUserInfo() {
-    const userInfo = wx.getStorageSync('userInfo') || {}
-    // 开发阶段默认用户信息
-    if (!userInfo.nickName) {
-      userInfo.nickName = '鲜到家用户'
-      userInfo.location = '厦门市'
-    }
-    this.setData({ userInfo })
+    const cached = wx.getStorageSync('userInfo') || {}
+    this.setData({ userInfo: cached })
+
+    api.user.getInfo().then(data => {
+      const userInfo = data || {}
+      wx.setStorageSync('userInfo', userInfo)
+      this.setData({ userInfo })
+    }).catch((err) => {
+      handleError(err, { silent: true })
+    })
   },
 
   loadOrderStats() {

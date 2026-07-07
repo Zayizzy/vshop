@@ -1,0 +1,12 @@
+<view class="login-page">
+  <view class="login-card">
+    <image class="logo" src="/assets/icons/logo.png" mode="aspectFit" />
+    <view class="title">鲜到家</view>
+    <view class="subtitle">新鲜果蔬，直达您家</view>
+    <view class="desc">登录后即可同步微信资料，享受完整购物体验</view>
+    <button class="login-btn" bindtap="onLogin">
+      微信授权登录
+    </button>
+    <view class="tips">点击按钮即表示您同意同步微信昵称与头像</view>
+  </view>
+</view>

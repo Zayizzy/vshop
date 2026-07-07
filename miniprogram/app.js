@@ -13,7 +13,7 @@ App({
     navInfo: null  // 导航栏尺寸 { statusBarHeight, navHeight }，onLaunch 预算缓存
   },
 
-  // 防止 401 自动重登与登录请求互相递归
+  // 防止并发登录请求
   _loginPromise: null,
 
   onLaunch(options) {
@@ -31,7 +31,7 @@ App({
     this.globalData.navInfo = { statusBarHeight, navHeight: statusBarHeight + NAV_HEIGHT_OFFSET }
 
     this.trackChannel(options.query)
-    this.checkLogin()
+    this.checkLogin(options)
   },
 
   onShow(options) {
@@ -62,17 +62,47 @@ App({
     })
   },
 
-  checkLogin() {
+  /**
+   * 启动时强制登录检查。
+   * - 无 token：重定向到登录页。
+   * - 有 token：刷新用户信息；若 token 已失效则清理并去登录。
+   */
+  checkLogin(options = {}) {
     const token = wx.getStorageSync('token')
-    if (token) {
-      this.globalData.token = token
+    const redirect = this.buildRedirectUrl(options)
+
+    if (!token) {
+      this.goLogin(redirect)
+      return
     }
+
+    this.globalData.token = token
+    this.refreshUserInfo().catch(() => {
+      this.clearToken()
+      this.goLogin(redirect)
+    })
+  },
+
+  buildRedirectUrl(options = {}) {
+    const path = options.path || 'pages/home/index'
+    const query = options.query || {}
+    const pairs = Object.keys(query).map(k => `${encodeURIComponent(k)}=${encodeURIComponent(query[k])}`)
+    const queryStr = pairs.length ? '?' + pairs.join('&') : ''
+    return `/${path}${queryStr}`
+  },
+
+  refreshUserInfo() {
+    return this.request({ url: '/user/info', method: 'GET' }).then(data => {
+      this.globalData.userInfo = data
+      wx.setStorageSync('userInfo', data)
+      return data
+    })
   },
 
   /**
    * 统一请求封装。
    * - 自动携带 Authorization: Bearer <token>
-   * - 401 自动重登一次后重试（登录接口本身不重试，避免递归死循环）
+   * - 401 时清理 token 并跳转登录页（同步头像需用户手势，不再静默重试）
    */
   request(options) {
     return new Promise((resolve, reject) => {
@@ -95,20 +125,14 @@ App({
           if (res.data && res.data.code === 0) {
             resolve(res.data.data)
           } else if (res.data && res.data.code === 401) {
-            // 登录接口自身的 401 不再重试，直接失败
+            // 登录接口自身的 401 不再跳转，直接失败
             if (options._isAuthRequest) {
               reject(res.data)
               return
             }
-            // 已带过重试标记仍 401，说明重登后依旧失败，停止递归
-            if (options._retried) {
-              this.clearToken()
-              reject(res.data)
-              return
-            }
-            this.login().then(() => {
-              this.request({ ...options, _retried: true }).then(resolve).catch(reject)
-            }).catch(reject)
+            this.clearToken()
+            this.goLogin()
+            reject(res.data)
           } else {
             reject(res.data)
           }
@@ -118,40 +142,51 @@ App({
     })
   },
 
-  login() {
-    // 并发调用 login 时复用同一个 Promise，避免重复登录
+  /**
+   * 小程序微信授权登录。
+   * 由登录页调用，传入 wx.login + wx.getUserProfile 的结果。
+   */
+  syncLogin(payload) {
+    // 并发调用时复用同一个 Promise，避免重复登录
     if (this._loginPromise) return this._loginPromise
     this._loginPromise = new Promise((resolve, reject) => {
-      wx.login({
-        success: (res) => {
-          this.request({
-            url: '/auth/wechat-login',
-            method: 'POST',
-            data: { code: res.code },
-            _isAuthRequest: true  // 标记：自身 401 不触发重登
-          }).then((data) => {
-            this.globalData.token = data.token
-            this.globalData.userInfo = data.userInfo
-            wx.setStorageSync('token', data.token)
-            this._loginPromise = null
-            resolve(data)
-          }).catch((err) => {
-            this._loginPromise = null
-            reject(err)
-          })
-        },
-        fail: (err) => {
-          this._loginPromise = null
-          reject(err)
-        }
+      this.request({
+        url: '/auth/wechat-login',
+        method: 'POST',
+        data: payload,
+        _isAuthRequest: true  // 标记：自身 401 不触发跳转
+      }).then((data) => {
+        this.globalData.token = data.token
+        this.globalData.userInfo = data.userInfo
+        wx.setStorageSync('token', data.token)
+        wx.setStorageSync('userInfo', data.userInfo)
+        this._loginPromise = null
+        resolve(data)
+      }).catch((err) => {
+        this._loginPromise = null
+        reject(err)
       })
     })
     return this._loginPromise
+  },
+
+  /**
+   * 跳转登录页。
+   * 若当前页已是登录页则忽略，避免循环跳转。
+   */
+  goLogin(redirect = '/pages/home/index') {
+    const pages = getCurrentPages()
+    const current = pages[pages.length - 1]
+    if (current && current.route === 'pages/login/index') return
+
+    const encoded = encodeURIComponent(redirect)
+    wx.redirectTo({ url: `/pages/login/index?redirect=${encoded}` })
   },
 
   clearToken() {
     this.globalData.token = null
     this.globalData.userInfo = null
     wx.removeStorageSync('token')
+    wx.removeStorageSync('userInfo')
   }
 })

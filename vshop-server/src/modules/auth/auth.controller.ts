@@ -10,7 +10,7 @@ export class AuthController {
 
   @Post('wechat-login')
   async wechatLogin(@Body() body: WechatLoginDto) {
-    const data = await this.authService.login(body.code);
+    const data = await this.authService.login(body);
     return { code: 0, message: 'success', data };
   }
 }

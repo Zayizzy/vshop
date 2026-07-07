@@ -2,6 +2,7 @@ import {
   Injectable,
   NotFoundException,
   ForbiddenException,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 
@@ -124,5 +125,38 @@ export class UserService {
 
     await this.prisma.address.delete({ where: { id } });
     return { deleted: true };
+  }
+
+  async getUserInfo(userId: string) {
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (!user) throw new UnauthorizedException('用户不存在，请重新登录');
+    return this.toUserInfo(user);
+  }
+
+  async updateProfile(
+    userId: string,
+    body: { nickname?: string; avatar?: string; phone?: string; location?: string },
+  ) {
+    const user = await this.prisma.user.update({
+      where: { id: userId },
+      data: body,
+    });
+    return this.toUserInfo(user);
+  }
+
+  private toUserInfo(user: {
+    id: string;
+    nickname: string | null;
+    avatar: string | null;
+    phone: string | null;
+    isKoc: boolean;
+  }) {
+    return {
+      id: user.id,
+      nickname: user.nickname,
+      avatar: user.avatar,
+      phone: user.phone,
+      isKoc: user.isKoc,
+    };
   }
 }

@@ -14,10 +14,46 @@ import {
 } from 'class-validator';
 import { Type } from 'class-transformer';
 
-/** 登录请求体（小程序 wx.login 拿到的临时 code） */
+/** 登录请求体（小程序 wx.login 拿到的临时 code + 可选的用户授权信息） */
 export class WechatLoginDto {
   @IsString()
   code!: string;
+
+  @IsOptional()
+  @IsString()
+  nickName?: string;
+
+  @IsOptional()
+  @IsString()
+  avatarUrl?: string;
+
+  /** wx.getUserProfile 返回的 rawData，用于服务端校验签名 */
+  @IsOptional()
+  @IsString()
+  rawData?: string;
+
+  /** wx.getUserProfile 返回的 signature */
+  @IsOptional()
+  @IsString()
+  signature?: string;
+
+  /** 加密数据，用于解密 unionId */
+  @IsOptional()
+  @IsString()
+  encryptedData?: string;
+
+  /** 加密算法初始向量 */
+  @IsOptional()
+  @IsString()
+  iv?: string;
+}
+
+/** 更新当前用户资料 */
+export class UpdateUserProfileDto {
+  @IsOptional() @IsString() nickname?: string;
+  @IsOptional() @IsString() avatar?: string;
+  @IsOptional() @IsString() phone?: string;
+  @IsOptional() @IsString() location?: string;
 }
 
 /** 渠道上报请求体（KOC 推广扫码进入时上报） */

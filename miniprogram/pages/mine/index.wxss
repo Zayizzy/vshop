@@ -28,6 +28,12 @@
   flex-shrink: 0;
 }
 
+.profile-avatar-img {
+  width: 96rpx;
+  height: 96rpx;
+  border-radius: 50%;
+}
+
 .profile-avatar-text {
   font-size: 40rpx;
   color: #FFFFFF;
