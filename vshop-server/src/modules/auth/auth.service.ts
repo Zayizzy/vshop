@@ -96,7 +96,9 @@ export class AuthService {
         console.warn('[auth] code2Session 调用失败，落入 mock openid:', e);
       }
     }
-    return { openid: 'wx_' + (code || 'default') };
+    // 开发模式：没有微信配置时返回固定 mock openid，避免每次 wx.login 的 code 不同都创建新用户，
+    // 否则退出重登后购物车/订单等用户级数据会丢失。
+    return { openid: 'wx_mock_openid' };
   }
 
   /**
