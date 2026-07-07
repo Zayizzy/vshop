@@ -10,6 +10,31 @@ const TAB_PAGES = [
   'pages/mine/index'
 ]
 
+function wxLogin() {
+  return new Promise((resolve, reject) => {
+    wx.login({ success: resolve, fail: reject })
+  })
+}
+
+function wxGetUserProfile(timeout = 5000) {
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => {
+      reject({ errMsg: 'getUserProfile:timeout' })
+    }, timeout)
+    wx.getUserProfile({
+      desc: '用于完善用户资料',
+      success: (res) => {
+        clearTimeout(timer)
+        resolve(res)
+      },
+      fail: (err) => {
+        clearTimeout(timer)
+        reject(err)
+      }
+    })
+  })
+}
+
 Page({
   data: {
     redirect: '/pages/home/index',
@@ -31,40 +56,40 @@ Page({
     if (this.data.loading) return
     this.setData({ loading: true })
 
-    wx.login({
-      success: (loginRes) => {
-        wx.getUserProfile({
-          desc: '用于完善用户资料',
-          success: (profileRes) => {
-            const payload = {
-              code: loginRes.code,
-              nickName: profileRes.userInfo.nickName,
-              avatarUrl: profileRes.userInfo.avatarUrl,
-              rawData: profileRes.rawData,
-              signature: profileRes.signature,
-              encryptedData: profileRes.encryptedData,
-              iv: profileRes.iv
-            }
-            app.syncLogin(payload)
-              .then(() => {
-                this.navigateAfterLogin()
-              })
-              .catch((err) => {
-                this.setData({ loading: false })
-                handleError(err, { defaultMsg: '登录失败，请重试' })
-              })
-          },
-          fail: (err) => {
-            this.setData({ loading: false })
-            wx.showToast({ title: '需要授权才能继续使用', icon: 'none' })
-            console.warn('[login] getUserProfile 取消或失败:', err)
-          }
-        })
-      },
-      fail: (err) => {
+    // wx.login 与 wx.getUserProfile 同时发起，避免嵌套回调导致授权手势上下文丢失
+    Promise.all([
+      wxLogin().catch(err => ({ _error: err })),
+      wxGetUserProfile().catch(err => ({ _error: err }))
+    ]).then(([loginRes, profileRes]) => {
+      if (loginRes && loginRes._error) {
         this.setData({ loading: false })
-        handleError(err, { defaultMsg: '微信登录失败' })
+        handleError(loginRes._error, { defaultMsg: '微信登录失败' })
+        return
       }
+
+      const payload = {
+        code: loginRes.code
+      }
+
+      if (profileRes && !profileRes._error && profileRes.userInfo) {
+        payload.nickName = profileRes.userInfo.nickName
+        payload.avatarUrl = profileRes.userInfo.avatarUrl
+        payload.rawData = profileRes.rawData
+        payload.signature = profileRes.signature
+        payload.encryptedData = profileRes.encryptedData
+        payload.iv = profileRes.iv
+      } else {
+        console.warn('[login] 未获取到微信资料，使用默认信息登录:', profileRes && profileRes._error)
+      }
+
+      app.syncLogin(payload)
+        .then(() => {
+          this.navigateAfterLogin()
+        })
+        .catch((err) => {
+          this.setData({ loading: false })
+          handleError(err, { defaultMsg: '登录失败，请重试' })
+        })
     })
   },
 

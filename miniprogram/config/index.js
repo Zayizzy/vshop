@@ -4,7 +4,8 @@ const env = (typeof __wxConfig !== 'undefined' && __wxConfig.envVersion) || 'dev
 
 const configs = {
   develop: {
-    apiBase: 'http://172.22.10.95:3000/v1',
+    // 微信开发者工具内请使用 localhost；真机预览时请改为本机局域网 IP
+    apiBase: 'http://localhost:3000/v1',
   },
   trial: {
     apiBase: 'https://test-api.yourdomain.com/v1',
