@@ -21,5 +21,9 @@
     </view>
   </view>
 
+  <view class="logout-wrap">
+    <button class="logout-btn" bindtap="logout">退出登录</button>
+  </view>
+
   <text class="footer-text">鲜到家 · 新鲜果蔬直达您家</text>
 </view>

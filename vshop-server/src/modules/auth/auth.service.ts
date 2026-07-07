@@ -160,8 +160,8 @@ export class AuthService {
   }) {
     return {
       id: user.id,
-      nickname: user.nickname,
-      avatar: user.avatar,
+      nickName: user.nickname,
+      avatarUrl: user.avatar,
       phone: user.phone,
       isKoc: user.isKoc,
     };

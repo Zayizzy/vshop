@@ -135,13 +135,19 @@ export class UserService {
 
   async updateProfile(
     userId: string,
-    body: { nickname?: string; avatar?: string; phone?: string; location?: string },
+    body: { nickName?: string; avatarUrl?: string; phone?: string; location?: string },
   ) {
+    const data: any = {}
+    if (body.nickName !== undefined) data.nickname = body.nickName
+    if (body.avatarUrl !== undefined) data.avatar = body.avatarUrl
+    if (body.phone !== undefined) data.phone = body.phone
+    if (body.location !== undefined) data.location = body.location
+
     const user = await this.prisma.user.update({
       where: { id: userId },
-      data: body,
-    });
-    return this.toUserInfo(user);
+      data,
+    })
+    return this.toUserInfo(user)
   }
 
   private toUserInfo(user: {
@@ -153,8 +159,8 @@ export class UserService {
   }) {
     return {
       id: user.id,
-      nickname: user.nickname,
-      avatar: user.avatar,
+      nickName: user.nickname,
+      avatarUrl: user.avatar,
       phone: user.phone,
       isKoc: user.isKoc,
     };

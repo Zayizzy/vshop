@@ -50,8 +50,8 @@ export class WechatLoginDto {
 
 /** 更新当前用户资料 */
 export class UpdateUserProfileDto {
-  @IsOptional() @IsString() nickname?: string;
-  @IsOptional() @IsString() avatar?: string;
+  @IsOptional() @IsString() nickName?: string;
+  @IsOptional() @IsString() avatarUrl?: string;
   @IsOptional() @IsString() phone?: string;
   @IsOptional() @IsString() location?: string;
 }

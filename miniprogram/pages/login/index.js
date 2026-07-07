@@ -74,7 +74,7 @@ Page({
         app.request({
           url: '/user/profile',
           method: 'PUT',
-          data: { nickname: nickName, avatar: avatarUrl },
+          data: { nickName, avatarUrl },
           timeout: 10000
         }).then(() => {
           // 刷新本地缓存

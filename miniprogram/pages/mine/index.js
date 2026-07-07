@@ -37,15 +37,26 @@ Page({
 
   loadUserInfo() {
     const cached = wx.getStorageSync('userInfo') || {}
-    this.setData({ userInfo: cached })
+    this.setData({ userInfo: this.normalizeUserInfo(cached) })
 
     api.user.getInfo().then(data => {
-      const userInfo = data || {}
+      const userInfo = this.normalizeUserInfo(data || {})
       wx.setStorageSync('userInfo', userInfo)
       this.setData({ userInfo })
     }).catch((err) => {
       handleError(err, { silent: true })
     })
+  },
+
+  normalizeUserInfo(info) {
+    const userInfo = { ...info }
+    if (!userInfo.nickName) {
+      userInfo.nickName = '鲜到家用户'
+    }
+    if (!userInfo.avatarUrl && userInfo.avatar) {
+      userInfo.avatarUrl = userInfo.avatar
+    }
+    return userInfo
   },
 
   loadOrderStats() {
