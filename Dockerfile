@@ -5,8 +5,20 @@
 #   构建上下文: ./
 #   监听端口: 3000
 
-FROM node:22-alpine AS build
+# Dockerfile for WeChat Cloud Run (微信云托管)
+# 构建上下文 = 项目根目录（包含 vshop-server/ 和 miniprogram/）
+# 在微信云托管控制台配置：
+#   Dockerfile 路径: Dockerfile
+#   构建上下文: ./
+#   监听端口: 3000
+#
+# 使用 node:22-slim（Debian）而非 alpine，避免 Prisma OpenSSL 兼容性问题
+
+FROM node:22-slim AS build
 WORKDIR /app
+
+# 安装 OpenSSL（Prisma 引擎运行时依赖）
+RUN apt-get update && apt-get install -y --no-install-recommends openssl ca-certificates && rm -rf /var/lib/apt/lists/*
 
 # 先复制 package 文件，利用 Docker 层缓存
 COPY vshop-server/package*.json ./
@@ -29,8 +41,11 @@ RUN npm run build
 RUN npm prune --production
 
 # --- 运行阶段 ---
-FROM node:22-alpine
+FROM node:22-slim
 WORKDIR /app
+
+# 安装 OpenSSL（Prisma 引擎运行时依赖）
+RUN apt-get update && apt-get install -y --no-install-recommends openssl ca-certificates && rm -rf /var/lib/apt/lists/*
 
 # 复制构建产物和运行时依赖
 COPY --from=build /app/dist ./dist
