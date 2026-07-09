@@ -33,6 +33,7 @@ const api = {
 
   order: {
     getList: (params) => get('/orders', params),
+    export: (params) => get('/orders/export', params),
     getDetail: (id) => get(`/orders/${id}`),
     getStats: () => get('/orders/stats'),
     confirm: (orderId) => post('/orders/confirm', { orderId }),

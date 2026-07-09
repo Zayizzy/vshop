@@ -9,6 +9,64 @@ t-tabs {
   background: #FFFFFF;
 }
 
+/* ========== 日期筛选栏 ========== */
+.date-filter-bar {
+  display: flex;
+  align-items: center;
+  padding: 16rpx 20rpx;
+  background: #FFFFFF;
+  border-bottom: 1rpx solid #F5F5F5;
+  gap: 16rpx;
+}
+
+.date-picker-trigger {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12rpx 16rpx;
+  background: #F5F7F5;
+  border-radius: 8rpx;
+  gap: 8rpx;
+}
+
+.date-label {
+  font-size: 26rpx;
+  color: #999999;
+}
+
+.date-label.active {
+  color: #333333;
+  font-weight: 500;
+}
+
+.date-arrow {
+  font-size: 20rpx;
+  color: #999999;
+}
+
+.date-separator {
+  font-size: 26rpx;
+  color: #999999;
+}
+
+.reset-btn {
+  padding: 12rpx 20rpx;
+  font-size: 26rpx;
+  color: #07C160;
+  background: #E8F8EE;
+  border-radius: 8rpx;
+}
+
+.export-btn {
+  margin-left: auto;
+  padding: 12rpx 24rpx;
+  font-size: 26rpx;
+  color: #FFFFFF;
+  background: #07C160;
+  border-radius: 8rpx;
+}
+
 /* ========== 订单列表 ========== */
 .order-list {
   padding: 16rpx 0;
@@ -37,10 +95,21 @@ t-tabs {
   border-bottom: 1rpx solid #F5F5F5;
 }
 
+.order-header-left {
+  display: flex;
+  flex-direction: column;
+  gap: 6rpx;
+}
+
 .order-sn {
   font-size: 24rpx;
   color: #999999;
   letter-spacing: 0.5rpx;
+}
+
+.order-time {
+  font-size: 22rpx;
+  color: #BBBBBB;
 }
 
 /* ========== 包裹区域 ========== */

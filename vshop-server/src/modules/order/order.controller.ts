@@ -29,13 +29,32 @@ export class OrderController {
   async getList(
     @Req() req: AuthedRequest,
     @Query('status') status?: string,
+    @Query('startDate') startDate?: string,
+    @Query('endDate') endDate?: string,
     @Query('page') page?: string,
     @Query('pageSize') pageSize?: string,
   ) {
     const data = await this.orderService.getList(req.user.userId, {
       status,
+      startDate,
+      endDate,
       page: Number(page) || 1,
       pageSize: Number(pageSize) || 10,
+    });
+    return { code: 0, message: 'success', data };
+  }
+
+  @Get('export')
+  async exportOrders(
+    @Req() req: AuthedRequest,
+    @Query('status') status?: string,
+    @Query('startDate') startDate?: string,
+    @Query('endDate') endDate?: string,
+  ) {
+    const data = await this.orderService.exportOrders(req.user.userId, {
+      status,
+      startDate,
+      endDate,
     });
     return { code: 0, message: 'success', data };
   }

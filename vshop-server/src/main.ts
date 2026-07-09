@@ -62,8 +62,11 @@ async function bootstrap() {
   // Serve shared assets (images from miniprogram)
   app.useStaticAssets(join(__dirname, '..', '..', 'miniprogram', 'assets'), { prefix: '/assets' });
 
-  await app.listen(3000);
-  console.log('鲜到家服务已启动: http://localhost:3000');
-  console.log('供应商后台: http://localhost:3000/admin');
+  // 微信云托管要求容器监听 0.0.0.0（不能只监听 127.0.0.1）
+  // 端口支持从环境变量读取，默认 3000
+  const port = parseInt(process.env.PORT || '3000', 10);
+  await app.listen(port, '0.0.0.0');
+  console.log(`鲜到家服务已启动: http://0.0.0.0:${port}`);
+  console.log(`供应商后台: http://0.0.0.0:${port}/admin`);
 }
 bootstrap();

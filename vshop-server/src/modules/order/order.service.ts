@@ -39,16 +39,44 @@ export class OrderService {
     return { pending, shipping, receiving, done, comment, total };
   }
 
-  async getList(
+  private buildOrderWhere(
     userId: string,
-    params: { status?: string; page: number; pageSize: number },
-  ) {
-    const { status, page, pageSize } = params;
+    params: { status?: string; startDate?: string; endDate?: string },
+  ): Prisma.OrderWhereInput {
+    const { status, startDate, endDate } = params;
 
     const where: Prisma.OrderWhereInput = { userId };
     if (status && status !== 'all') {
       where.status = status;
     }
+
+    // 订单日期范围筛选（包含起止日当天）
+    const dateFilter: Prisma.DateTimeFilter = {};
+    if (startDate && !Number.isNaN(Date.parse(startDate))) {
+      dateFilter.gte = new Date(`${startDate}T00:00:00`);
+    }
+    if (endDate && !Number.isNaN(Date.parse(endDate))) {
+      dateFilter.lte = new Date(`${endDate}T23:59:59.999`);
+    }
+    if (Object.keys(dateFilter).length > 0) {
+      where.createdAt = dateFilter;
+    }
+
+    return where;
+  }
+
+  async getList(
+    userId: string,
+    params: {
+      status?: string;
+      startDate?: string;
+      endDate?: string;
+      page: number;
+      pageSize: number;
+    },
+  ) {
+    const { page, pageSize, ...filterParams } = params;
+    const where = this.buildOrderWhere(userId, filterParams);
 
     const [orders, total] = await Promise.all([
       this.prisma.order.findMany({
@@ -107,6 +135,95 @@ export class OrderService {
       pageSize,
       totalPages: Math.ceil(total / pageSize),
       hasMore: page < Math.ceil(total / pageSize),
+    };
+  }
+
+  async exportOrders(
+    userId: string,
+    params: { status?: string; startDate?: string; endDate?: string },
+  ) {
+    const where = this.buildOrderWhere(userId, params);
+
+    const orders = await this.prisma.order.findMany({
+      where,
+      orderBy: { createdAt: 'desc' },
+      include: {
+        items: true,
+        address: true,
+      },
+    });
+
+    const statusMap: Record<string, string> = {
+      pending: '待付款',
+      shipping: '待发货',
+      receiving: '待收货',
+      done: '已完成',
+      comment: '待评价',
+    };
+
+    const headers = [
+      '订单号',
+      '下单时间',
+      '订单状态',
+      '商品名称',
+      '规格',
+      '单价（元）',
+      '数量',
+      '订单金额（元）',
+      '实付金额（元）',
+      '收货人',
+      '手机号',
+      '收货地址',
+    ];
+
+    const formatTime = (d: Date) => {
+      const pad = (n: number) => (n < 10 ? `0${n}` : `${n}`);
+      return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+    };
+
+    const rows: (string | number)[][] = [];
+    for (const o of orders) {
+      const base = [
+        o.orderSn,
+        formatTime(o.createdAt),
+        statusMap[o.status] || o.status,
+      ];
+      const address = o.address
+        ? [o.address.name, o.address.phone, `${o.address.province}${o.address.city}${o.address.district}${o.address.detail}`]
+        : ['', '', ''];
+      const totals = [centToYuan(o.totalAmount), centToYuan(o.payAmount)];
+
+      if (o.items.length === 0) {
+        rows.push([...base, '', '', '', '', ...totals, ...address]);
+      } else {
+        for (const item of o.items) {
+          rows.push([
+            ...base,
+            item.goodTitle,
+            item.specName || '',
+            centToYuan(item.price),
+            item.quantity,
+            ...totals,
+            ...address,
+          ]);
+        }
+      }
+    }
+
+    const escapeCsv = (value: string | number) => {
+      const str = String(value ?? '');
+      if (/[",\n\r]/.test(str)) {
+        return `"${str.replace(/"/g, '""')}"`;
+      }
+      return str;
+    };
+
+    const csv =
+      '﻿' + [headers, ...rows].map((r) => r.map(escapeCsv).join(',')).join('\n');
+
+    return {
+      content: csv,
+      filename: `orders_${Date.now()}.csv`,
     };
   }
 

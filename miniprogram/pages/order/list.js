@@ -2,6 +2,22 @@ const api = require('../../api/index')
 const { full: fullImg } = require('../../utils/image')
 const { handleError } = require('../../utils/error')
 
+function formatDateTime(iso) {
+  if (!iso) return ''
+  const d = new Date(iso)
+  if (Number.isNaN(d.getTime())) return iso
+  const pad = n => (n < 10 ? `0${n}` : n)
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`
+}
+
+function formatDate(iso) {
+  if (!iso) return ''
+  const d = new Date(iso)
+  if (Number.isNaN(d.getTime())) return iso
+  const pad = n => (n < 10 ? `0${n}` : n)
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
+}
+
 Page({
   data: {
     statusTabs: [
@@ -12,6 +28,11 @@ Page({
       { key: 'done', label: '已完成' }
     ],
     activeTab: '',
+    startDate: '',
+    endDate: '',
+    today: formatDate(new Date()),
+    startPickerVisible: false,
+    endPickerVisible: false,
     orders: [],
     page: 1,
     hasMore: true,
@@ -37,10 +58,61 @@ Page({
     this.switchTab({ currentTarget: { dataset: { status: e.detail.value } } })
   },
 
+  openStartPicker() {
+    this.setData({ startPickerVisible: true })
+  },
+
+  openEndPicker() {
+    this.setData({ endPickerVisible: true })
+  },
+
+  onStartDateConfirm(e) {
+    let startDate = e.detail.value
+    const { endDate } = this.data
+    if (endDate && startDate > endDate) {
+      startDate = endDate
+      wx.showToast({ title: '开始日期不能晚于结束日期', icon: 'none' })
+    }
+    this.setData({ startDate, startPickerVisible: false })
+    this.resetAndLoad()
+  },
+
+  onStartDateCancel() {
+    this.setData({ startPickerVisible: false })
+  },
+
+  onEndDateConfirm(e) {
+    let endDate = e.detail.value
+    const { startDate } = this.data
+    if (startDate && endDate < startDate) {
+      endDate = startDate
+      wx.showToast({ title: '结束日期不能早于开始日期', icon: 'none' })
+    }
+    this.setData({ endDate, endPickerVisible: false })
+    this.resetAndLoad()
+  },
+
+  onEndDateCancel() {
+    this.setData({ endPickerVisible: false })
+  },
+
+  resetDateFilter() {
+    this.setData({ startDate: '', endDate: '' })
+    this.resetAndLoad()
+  },
+
+  resetAndLoad() {
+    this.setData({ orders: [], page: 1, hasMore: true })
+    this.loadOrders()
+  },
+
   loadOrders() {
-    const { activeTab, page } = this.data
+    const { activeTab, startDate, endDate, page } = this.data
     this.setData({ loading: true })
-    api.order.getList({ status: activeTab, page, pageSize: 10 }).then(data => {
+    const params = { status: activeTab, page, pageSize: 10 }
+    if (startDate) params.startDate = startDate
+    if (endDate) params.endDate = endDate
+    api.order.getList(params).then(data => {
       // 后端订单列表为扁平 items[]，wxml 期望 packages[].items[].coverImage/title 结构，
       // 这里做一次映射：单包裹包裹所有明细，并补 totalCount。
       const mapped = (data.list || []).map(o => ({
@@ -48,6 +120,7 @@ Page({
         orderSn: o.orderSn,
         status: o.status,
         totalAmount: o.totalAmount,
+        createdAtText: formatDateTime(o.createdAt),
         totalCount: (o.items || []).reduce((s, i) => s + i.quantity, 0),
         packages: [{
           supplierId: o.supplierId || 1,
@@ -118,6 +191,53 @@ Page({
     api.order.rebuy(id).then(() => {
       wx.showToast({ title: '已加入购物车', icon: 'success' })
     }).catch((err) => handleError(err, { defaultMsg: '重新购买失败' }))
+  },
+
+  exportOrders() {
+    const { activeTab, startDate, endDate } = this.data
+    const params = { status: activeTab }
+    if (startDate) params.startDate = startDate
+    if (endDate) params.endDate = endDate
+
+    wx.showLoading({ title: '导出中...', mask: true })
+    api.order.export(params).then((res) => {
+      wx.hideLoading()
+      const { content, filename } = res.data || {}
+      if (!content) {
+        wx.showToast({ title: '导出内容为空', icon: 'none' })
+        return
+      }
+
+      const fs = wx.getFileSystemManager()
+      const filePath = `${wx.env.USER_DATA_PATH}/${filename}`
+      fs.writeFile({
+        filePath,
+        data: content,
+        encoding: 'utf8',
+        success: () => {
+          wx.openDocument({
+            filePath,
+            fileType: 'csv',
+            showMenu: true,
+            fail: () => {
+              // 部分机型对 csv 支持不好，回退用 txt 预览
+              wx.openDocument({
+                filePath,
+                fileType: 'txt',
+                showMenu: true,
+              })
+            },
+          })
+        },
+        fail: (err) => {
+          wx.showToast({ title: '文件保存失败', icon: 'none' })
+          console.error('导出文件写入失败', err)
+        },
+      })
+    }).catch((err) => {
+      wx.hideLoading()
+      handleError(err, { defaultMsg: '订单导出失败' })
+    })
   },
 
   getStatusBadge(status) {

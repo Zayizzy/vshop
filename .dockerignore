@@ -1,0 +1,16 @@
+node_modules
+**/node_modules
+dist
+**/dist
+.git
+.gitignore
+.env
+.env.*
+*.log
+mysql_data
+vshop-server/public/uploads
+miniprogram/miniprogram_npm
+.workbuddy
+docs
+*.md
+!vshop-server/prisma/migrations/**/migration.md

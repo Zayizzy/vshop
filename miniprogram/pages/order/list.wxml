@@ -4,6 +4,21 @@
     <t-tab-panel wx:for="{{statusTabs}}" wx:key="key" value="{{item.key}}" label="{{item.label}}" />
   </t-tabs>
 
+  <!-- 日期筛选 -->
+  <view class="date-filter-bar">
+    <view class="date-picker-trigger" bindtap="openStartPicker">
+      <text class="date-label {{startDate ? 'active' : ''}}">{{startDate || '开始日期'}}</text>
+      <text class="date-arrow">▼</text>
+    </view>
+    <text class="date-separator">-</text>
+    <view class="date-picker-trigger" bindtap="openEndPicker">
+      <text class="date-label {{endDate ? 'active' : ''}}">{{endDate || '结束日期'}}</text>
+      <text class="date-arrow">▼</text>
+    </view>
+    <view wx:if="{{startDate || endDate}}" class="reset-btn" bindtap="resetDateFilter">重置</view>
+    <view class="export-btn" bindtap="exportOrders">导出</view>
+  </view>
+
   <!-- 空状态 -->
   <t-empty wx:if="{{orders.length === 0 && !loading}}" icon="order" description="暂无相关订单" />
 
@@ -13,7 +28,10 @@
       <view class="order-card" bindtap="goDetail" data-id="{{item.id}}">
         <!-- 头部 -->
         <view class="order-header">
-          <text class="order-sn">订单号：{{item.orderSn}}</text>
+          <view class="order-header-left">
+            <text class="order-sn">订单号：{{item.orderSn}}</text>
+            <text wx:if="{{item.createdAtText}}" class="order-time">{{item.createdAtText}}</text>
+          </view>
           <t-tag
             theme="{{item.status === 'shipping' ? 'warning' : (item.status === 'done' ? 'success' : (item.status === 'receiving' ? 'primary' : 'default'))}}"
             size="small" variant="light"
@@ -75,4 +93,28 @@
 
   <view class="no-more" wx:if="{{!hasMore && orders.length > 0}}">— 没有更多了 —</view>
   <view class="safe-bottom" />
+
+  <t-date-time-picker
+    visible="{{startPickerVisible}}"
+    mode="date"
+    format="YYYY-MM-DD"
+    value="{{startDate || today}}"
+    defaultValue="{{today}}"
+    start="2000-01-01"
+    end="2030-12-31"
+    bind:confirm="onStartDateConfirm"
+    bind:cancel="onStartDateCancel"
+  />
+
+  <t-date-time-picker
+    visible="{{endPickerVisible}}"
+    mode="date"
+    format="YYYY-MM-DD"
+    value="{{endDate || today}}"
+    defaultValue="{{today}}"
+    start="2000-01-01"
+    end="2030-12-31"
+    bind:confirm="onEndDateConfirm"
+    bind:cancel="onEndDateCancel"
+  />
 </view>

@@ -5,7 +5,8 @@
     "t-tag": "tdesign-miniprogram/tag/tag",
     "t-image": "tdesign-miniprogram/image/image",
     "t-empty": "tdesign-miniprogram/empty/empty",
-    "t-button": "tdesign-miniprogram/button/button"
+    "t-button": "tdesign-miniprogram/button/button",
+    "t-date-time-picker": "tdesign-miniprogram/date-time-picker/date-time-picker"
   },
   "navigationBarTitleText": "订单"
 }
