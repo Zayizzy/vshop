@@ -18,7 +18,7 @@
 - Dockerfile 需执行 `prisma migrate deploy` 后再启动
 - `prisma` 必须在 dependencies（不能只在 devDependencies）
 - `main.ts` 的 `/assets` 路径引用了 `../miniprogram/assets`，容器内不存在，需在 Dockerfile 中复制
-- `public/uploads/` 容器内不持久化 → **已改云开发对象存储（2026-07）**：`vshop-server/src/modules/upload/cos.service.ts` 用 `@cloudbase/node-sdk`，云托管容器内 `tcb.init({env})` 自动从元数据服务取临时凭证对接同账号对象存储（**零密钥配置**）。可选环境变量 `TCB_ENV_ID`（默认 `1452085588`），未配/非云托管回退本地磁盘
+- `public/uploads/` 容器内不持久化 → **已改云托管 COS（v3，2026-07-27）**：`cos.service.ts` 用 `cos-nodejs-sdk-v5` + 云托管元数据 STS（`metadata.tencentyun.com/.../security-credentials/<role>`）。**前置**：CAM 给服务运行角色授对象存储读写权限（一次性，零 API 密钥）。可选环境变量 `COS_BUCKET/REGION/ROLE_NAME`（均有默认值取自截图）
 - 小程序端推荐 `wx.cloud.callContainer` 内网调用，免域名配置
 
 ## 文档

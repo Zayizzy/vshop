@@ -16,15 +16,7 @@ class EnvironmentVariables {
   @IsString()
   WX_SECRET?: string;
 
-  // COS 对象存储（生产环境必填，本地开发可不配则回退本地磁盘存储）
-  @IsOptional()
-  @IsString()
-  COS_SECRET_ID?: string;
-
-  @IsOptional()
-  @IsString()
-  COS_SECRET_KEY?: string;
-
+  // COS 对象存储（云托管元数据 STS 自动鉴权；以下全部可选，有默认值）
   @IsOptional()
   @IsString()
   COS_BUCKET?: string;
@@ -32,6 +24,11 @@ class EnvironmentVariables {
   @IsOptional()
   @IsString()
   COS_REGION?: string;
+
+  // 指定服务角色名（不配则按候选顺序自动尝试：TCBRunInvokerRole / TCBRunRole / TcbRunRole）
+  @IsOptional()
+  @IsString()
+  COS_ROLE_NAME?: string;
 }
 
 export function validateEnv(config: Record<string, unknown>) {

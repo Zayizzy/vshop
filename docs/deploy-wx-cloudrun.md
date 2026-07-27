@@ -548,22 +548,26 @@ const configs = {
 
 ### 11.2 方案：使用微信云托管对象存储（COS）
 
-> ✅ **已实施（2026-07）**：通过微信云开发 Node SDK（`@cloudbase/node-sdk`）
-> **直接对接云托管同账号的对象存储**，零 SecretId/Key、零角色配置。代码：
-> - `vshop-server/src/modules/upload/cos.service.ts`（`CosService`，双模式）
-> - `vshop-server/src/modules/upload/upload.controller.ts`（`memoryStorage` + 注入）
+> ✅ **已实施（v3，2026-07-27）**：使用 `cos-nodejs-sdk-v5` + **云托管元数据 STS
+> 临时凭证**，**零 API 密钥**。代码：`vshop-server/src/modules/upload/cos.service.ts`。
 >
-> **为什么用 @cloudbase/node-sdk 而非 cos-nodejs-sdk-v5？**
-> 云托管容器内 `tcb.init({ env })` 会自动通过元数据服务获取临时凭证，
-> 直接对接「对象存储」页已开通的桶（截图：`7072-prod-d8gf4sglmae440765-1452085588` / `ap-shanghai`），
-> 无需用户创建 CAM 子账号密钥、无需手动绑定服务角色。
+> **为什么用 cos + 元数据 STS？**
+> 微信云托管容器内可通过
+> `http://metadata.tencentyun.com/latest/meta-data/cam/security-credentials/<角色>`
+> 获取 STS 临时凭证（TmpSecretId/Key/Token），用 cos SDK 上传到「对象存储」
+> 页面已开通的桶（截图：`7072-prod-d8gf4sglmae440765-1452085588` / `ap-shanghai`）。
+> 上传后用 `cos.getObjectUrl` 拿长期签名 URL（10 年），小程序 `<image>` 直接加载。
+>
+> **前置（一次性 CAM 授权）**：
+> 在 CAM 控制台 → 角色 → 给服务运行角色（`TCBRunInvokerRole` 等）关联
+> `QcloudCOSFullAccess`（或自定义 `cos:*` 读写权限）。否则 STS 获取失败，
+> 自动回退本地磁盘。
 >
 > **双模式回退**：
-> - 云托管环境（默认）：上传到云开发对象存储，返回长期 https URL（10 年有效）
-> - 本地开发 / 非云托管：回退本地磁盘 `public/uploads/goods/`（返回相对路径）
+> - 云托管环境（默认）：上传 COS，返回 https 签名 URL
+> - 本地开发 / STS 获取失败：回退本地磁盘 `public/uploads/goods/`
 >
-> 小程序端**无需改动**：`utils/image.full()` 已能识别 https 原样返回。
-> **历史相对路径数据无需迁移**，但建议后续重新上传替换为 COS URL。
+> 小程序端**无需改动**：`utils/image.full()` 识别 https 原样返回。
 > 注意：`multer` 用 `memoryStorage()`，单次最多 9 张 × 10MB 峰值约 90MB 内存。
 
 #### 11.2.1 开通对象存储
@@ -579,63 +583,89 @@ const configs = {
 安装 SDK：
 
 ```bash
-npm install @cloudbase/node-sdk --save
-# 如之前装过旧的 COS SDK，先卸载：
-# npm uninstall cos-nodejs-sdk-v5 --save
+npm install cos-nodejs-sdk-v5 --save
 ```
 
-`cos.service.ts` 核心实现（双模式）：
+`cos.service.ts` 核心实现（云托管元数据 STS + cos SDK + 签名 URL）：
 
 ```typescript
 import { Injectable, Logger } from '@nestjs/common';
-import { tmpdir } from 'os';
 import { extname, join } from 'path';
-import { existsSync, mkdirSync, writeFile, unlink } from 'fs';
+import { existsSync, mkdirSync, writeFile } from 'fs';
 import { promisify } from 'util';
+import * as http from 'http';
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const tcb = require('@cloudbase/node-sdk');
+const COS = require('cos-nodejs-sdk-v5');
 
 const writeFileAsync = promisify(writeFile);
-const unlinkAsync = promisify(unlink);
+const META_STS_URL = 'http://metadata.tencentyun.com/latest/meta-data/cam/security-credentials';
+const DEFAULT_ROLES = ['TCBRunInvokerRole', 'TCBRunRole', 'TcbRunRole'];
+const DEFAULT_BUCKET = '7072-prod-d8gf4sglmae440765-1452085588';
+const DEFAULT_REGION = 'ap-shanghai';
+const SIGN_EXPIRES = 60 * 60 * 24 * 365 * 10; // 10 年
 
 @Injectable()
 export class CosService {
   private readonly logger = new Logger(CosService.name);
-  private app: any = null;
-  private readonly enabled: boolean;
+  private cos: any = null;
+  private creds: any = null;
+  private credsExpireAt = 0;
+  private readonly bucket: string;
+  private readonly region: string;
+  private readonly roleCandidates: string[];
 
   constructor() {
-    try {
-      // 云托管容器内 init({env}) 自动从元数据服务获取临时凭证
-      const envId = process.env.TCB_ENV_ID || '1452085588';
-      this.app = tcb.init({ env: envId });
-      this.enabled = true;
-      this.logger.log(`微信云开发存储已启用 (env=${envId})`);
-    } catch (err: any) {
-      this.logger.warn(`云开发存储初始化失败，回退本地磁盘：${err?.message}`);
-    }
+    this.bucket = process.env.COS_BUCKET || DEFAULT_BUCKET;
+    this.region = process.env.COS_REGION || DEFAULT_REGION;
+    this.roleCandidates = process.env.COS_ROLE_NAME ? [process.env.COS_ROLE_NAME] : DEFAULT_ROLES;
   }
 
   async store(file: Express.Multer.File): Promise<string> {
-    return this.enabled ? this.uploadToTcb(file) : this.storeLocal(file);
+    try { return await this.uploadToCos(file); }
+    catch (err: any) {
+      this.logger.warn(`COS 上传失败，回退本地磁盘：${err?.message}`);
+      return this.storeLocal(file);
+    }
   }
 
-  private async uploadToTcb(file: Express.Multer.File): Promise<string> {
+  private async uploadToCos(file: Express.Multer.File): Promise<string> {
+    const cos = await this.getCosClient();
     const ext = extname(file.originalname).toLowerCase() || '.png';
-    const cloudPath = `goods/${Date.now()}-${Math.random().toString(36).slice(2, 8)}${ext}`;
-    const tmpPath = join(tmpdir(), `vshop-upload-${Date.now()}-${Math.random().toString(36).slice(2, 8)}${ext}`);
-    await writeFileAsync(tmpPath, file.buffer);
-    try {
-      const { fileID } = await this.app.uploadFile({ cloudPath, filePath: tmpPath });
-      const urlRes = await this.app.getTempFileURL({
-        fileList: [{ fileID, maxAge: 60 * 60 * 24 * 365 * 10 }], // 10 年
-      });
-      const entry = urlRes.fileList?.[0];
-      if (!entry || entry.code !== 0) throw new Error(`获取文件 URL 失败：${entry?.message}`);
-      return entry.downloadUrl;
-    } finally {
-      unlinkAsync(tmpPath).catch(() => {});
+    const key = `goods/${Date.now()}-${Math.random().toString(36).slice(2, 8)}${ext}`;
+    await new Promise<void>((resolve, reject) => cos.putObject({
+      Bucket: this.bucket, Region: this.region, Key: key,
+      Body: file.buffer, ContentType: file.mimetype,
+    }, (err: any) => err ? reject(err) : resolve()));
+    const url = await new Promise<string>((resolve, reject) => cos.getObjectUrl({
+      Bucket: this.bucket, Region: this.region, Key: key,
+      Sign: true, Expires: SIGN_EXPIRES, Protocol: 'https',
+    }, (err: any, data: any) => err ? reject(err) : resolve(data.url)));
+    return url;
+  }
+
+  private async getCosClient(): Promise<any> {
+    const now = Date.now();
+    if (this.cos && this.creds && now < this.credsExpireAt - 60_000) return this.cos;
+    const creds = await this.fetchSts();
+    this.creds = creds; this.credsExpireAt = new Date(creds.Expiration).getTime();
+    this.cos = new COS({ SecretId: creds.TmpSecretId, SecretKey: creds.TmpSecretKey, SecurityToken: creds.Token });
+    return this.cos;
+  }
+
+  private async fetchSts(): Promise<any> {
+    for (const role of this.roleCandidates) {
+      try {
+        const raw = await new Promise<string>((resolve, reject) => {
+          http.get(`${META_STS_URL}/${role}`, (res) => {
+            if (res.statusCode !== 200) return reject(new Error(`HTTP ${res.statusCode}`));
+            let d = ''; res.setEncoding('utf8'); res.on('data', c => d += c); res.on('end', () => resolve(d));
+          }).on('error', reject);
+        });
+        const c = JSON.parse(raw);
+        if (c.TmpSecretId && c.TmpSecretKey && c.Token) return c;
+      } catch {}
     }
+    throw new Error('STS 获取失败，请检查 CAM 角色授权');
   }
 
   private async storeLocal(file: Express.Multer.File): Promise<string> {
@@ -654,14 +684,19 @@ export class CosService {
 
 #### 11.2.3 配置环境变量
 
-| 变量名 | 必填 | 说明 |
-|--------|------|------|
-| `TCB_ENV_ID` | ❌ 可选 | 云开发/云托管环境 ID。缺省回退到项目硬编码 `1452085588`（与 `miniprogram/config/index.js` 的 `cloudEnv` 一致）。**通常无需配置** |
+全部可选，有默认值（桶名/地域取自截图）。
 
-> **无需 SecretId/Key、无需 CAM 角色绑定**。云托管容器内
-> `@cloudbase/node-sdk` 自动从元数据服务（`metadata.tencentyun.com`）
-> 获取临时凭证，直接对接同账号下「对象存储」页已开通的桶。
-> 如确需切换环境，在云托管控制台 → 服务 → 环境变量 添加 `TCB_ENV_ID`。
+| 变量名 | 必填 | 默认 | 说明 |
+|--------|------|------|------|
+| `COS_BUCKET` | ❌ | `7072-prod-d8gf4sglmae440765-1452085588` | 对象存储桶名（含 AppId） |
+| `COS_REGION` | ❌ | `ap-shanghai` | 桶地域 |
+| `COS_ROLE_NAME` | ❌ | `TCBRunInvokerRole`（依次尝试 `TCBRunInvokerRole` → `TCBRunRole` → `TcbRunRole`） | 服务角色名，需在 CAM 被授予对象存储读写权限 |
+
+> **无需 API 密钥**。STS 临时凭证从云托管元数据服务自动获取。
+> **唯一需要做的（一次性）**：在 CAM 控制台 → 角色列表 →
+> 找到服务运行角色（默认名 `TCBRunInvokerRole`，可在云托管「服务管理 →
+> 高级配置」查看）→ 关联策略 `QcloudCOSFullAccess`（生产）或
+> 自定义 `cos:PutObject` + `cos:GetObject`（最小权限）。
 
 #### 11.2.4 访问域名
 
