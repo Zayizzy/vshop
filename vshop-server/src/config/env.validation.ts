@@ -15,6 +15,23 @@ class EnvironmentVariables {
   @IsOptional()
   @IsString()
   WX_SECRET?: string;
+
+  // COS 对象存储（生产环境必填，本地开发可不配则回退本地磁盘存储）
+  @IsOptional()
+  @IsString()
+  COS_SECRET_ID?: string;
+
+  @IsOptional()
+  @IsString()
+  COS_SECRET_KEY?: string;
+
+  @IsOptional()
+  @IsString()
+  COS_BUCKET?: string;
+
+  @IsOptional()
+  @IsString()
+  COS_REGION?: string;
 }
 
 export function validateEnv(config: Record<string, unknown>) {

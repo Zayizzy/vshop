@@ -548,6 +548,24 @@ const configs = {
 
 ### 11.2 方案：使用微信云托管对象存储（COS）
 
+> ✅ **已实施（2026-07）**：通过微信云开发 Node SDK（`@cloudbase/node-sdk`）
+> **直接对接云托管同账号的对象存储**，零 SecretId/Key、零角色配置。代码：
+> - `vshop-server/src/modules/upload/cos.service.ts`（`CosService`，双模式）
+> - `vshop-server/src/modules/upload/upload.controller.ts`（`memoryStorage` + 注入）
+>
+> **为什么用 @cloudbase/node-sdk 而非 cos-nodejs-sdk-v5？**
+> 云托管容器内 `tcb.init({ env })` 会自动通过元数据服务获取临时凭证，
+> 直接对接「对象存储」页已开通的桶（截图：`7072-prod-d8gf4sglmae440765-1452085588` / `ap-shanghai`），
+> 无需用户创建 CAM 子账号密钥、无需手动绑定服务角色。
+>
+> **双模式回退**：
+> - 云托管环境（默认）：上传到云开发对象存储，返回长期 https URL（10 年有效）
+> - 本地开发 / 非云托管：回退本地磁盘 `public/uploads/goods/`（返回相对路径）
+>
+> 小程序端**无需改动**：`utils/image.full()` 已能识别 https 原样返回。
+> **历史相对路径数据无需迁移**，但建议后续重新上传替换为 COS URL。
+> 注意：`multer` 用 `memoryStorage()`，单次最多 9 张 × 10MB 峰值约 90MB 内存。
+
 #### 11.2.1 开通对象存储
 
 1. 进入云托管控制台 →「对象存储」
@@ -561,99 +579,98 @@ const configs = {
 安装 SDK：
 
 ```bash
-npm install cos-nodejs-sdk-v5
+npm install @cloudbase/node-sdk --save
+# 如之前装过旧的 COS SDK，先卸载：
+# npm uninstall cos-nodejs-sdk-v5 --save
 ```
 
-修改 `upload.controller.ts`：
+`cos.service.ts` 核心实现（双模式）：
 
 ```typescript
-import { Controller, Post, UseInterceptors, UploadedFiles, BadRequestException } from '@nestjs/common';
-import { FilesInterceptor } from '@nestjs/platform-express';
-import { memoryStorage } from 'multer';
-import * as COS from 'cos-nodejs-sdk-v5';
-import { extname } from 'path';
-import { Public } from '../../common/guards/public.decorator';
+import { Injectable, Logger } from '@nestjs/common';
+import { tmpdir } from 'os';
+import { extname, join } from 'path';
+import { existsSync, mkdirSync, writeFile, unlink } from 'fs';
+import { promisify } from 'util';
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const tcb = require('@cloudbase/node-sdk');
 
-const MAX_SIZE = 10 * 1024 * 1024;
-const ALLOWED_EXT = ['.jpg', '.jpeg', '.png', '.webp', '.gif', '.heic', '.heif', '.bmp'];
+const writeFileAsync = promisify(writeFile);
+const unlinkAsync = promisify(unlink);
 
-// 从环境变量读取 COS 配置
-const cos = new COS({
-  SecretId: process.env.COS_SECRET_ID!,
-  SecretKey: process.env.COS_SECRET_KEY!,
-});
+@Injectable()
+export class CosService {
+  private readonly logger = new Logger(CosService.name);
+  private app: any = null;
+  private readonly enabled: boolean;
 
-const BUCKET = process.env.COS_BUCKET || 'vshop-uploads-1234567890';
-const REGION = process.env.COS_REGION || 'ap-guangzhou';
-
-@Public()
-@Controller('api/admin')
-export class UploadController {
-  @Post('upload')
-  @UseInterceptors(
-    FilesInterceptor('files', 9, {
-      storage: memoryStorage(), // 文件存内存，不落盘
-      limits: { fileSize: MAX_SIZE },
-      fileFilter: (_req, file, cb) => {
-        const ext = extname(file.originalname).toLowerCase();
-        const extOk = ALLOWED_EXT.includes(ext);
-        const mimeOk = (file.mimetype || '').startsWith('image/');
-        if (!extOk && !mimeOk) {
-          return cb(
-            new BadRequestException(`不支持的图片格式：${ext || '(无扩展名)'}`),
-            false,
-          );
-        }
-        cb(null, true);
-      },
-    }),
-  )
-  async upload(@UploadedFiles() files: Express.Multer.File[]) {
-    if (!files || files.length === 0) {
-      throw new BadRequestException('未接收到图片文件');
+  constructor() {
+    try {
+      // 云托管容器内 init({env}) 自动从元数据服务获取临时凭证
+      const envId = process.env.TCB_ENV_ID || '1452085588';
+      this.app = tcb.init({ env: envId });
+      this.enabled = true;
+      this.logger.log(`微信云开发存储已启用 (env=${envId})`);
+    } catch (err: any) {
+      this.logger.warn(`云开发存储初始化失败，回退本地磁盘：${err?.message}`);
     }
+  }
 
-    const urls = await Promise.all(
-      files.map(async (f) => {
-        const ext = extname(f.originalname).toLowerCase() || '.png';
-        const key = `goods/${Date.now()}-${Math.random().toString(36).slice(2, 8)}${ext}`;
+  async store(file: Express.Multer.File): Promise<string> {
+    return this.enabled ? this.uploadToTcb(file) : this.storeLocal(file);
+  }
 
-        await cos.putObject({
-          Bucket: BUCKET,
-          Region: REGION,
-          Key: key,
-          Body: f.buffer,
-          ContentType: f.mimetype,
-        });
+  private async uploadToTcb(file: Express.Multer.File): Promise<string> {
+    const ext = extname(file.originalname).toLowerCase() || '.png';
+    const cloudPath = `goods/${Date.now()}-${Math.random().toString(36).slice(2, 8)}${ext}`;
+    const tmpPath = join(tmpdir(), `vshop-upload-${Date.now()}-${Math.random().toString(36).slice(2, 8)}${ext}`);
+    await writeFileAsync(tmpPath, file.buffer);
+    try {
+      const { fileID } = await this.app.uploadFile({ cloudPath, filePath: tmpPath });
+      const urlRes = await this.app.getTempFileURL({
+        fileList: [{ fileID, maxAge: 60 * 60 * 24 * 365 * 10 }], // 10 年
+      });
+      const entry = urlRes.fileList?.[0];
+      if (!entry || entry.code !== 0) throw new Error(`获取文件 URL 失败：${entry?.message}`);
+      return entry.downloadUrl;
+    } finally {
+      unlinkAsync(tmpPath).catch(() => {});
+    }
+  }
 
-        // 返回 COS 访问 URL
-        return `https://${BUCKET}.cos.${REGION}.myqcloud.com/${key}`;
-      }),
-    );
-
-    return { code: 0, message: 'success', data: { urls } };
+  private async storeLocal(file: Express.Multer.File): Promise<string> {
+    const dir = join(__dirname, '..', '..', '..', 'public', 'uploads', 'goods');
+    if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
+    const ext = extname(file.originalname).toLowerCase() || '.png';
+    const name = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}${ext}`;
+    await writeFileAsync(join(dir, name), file.buffer);
+    return `/admin/uploads/goods/${name}`;
   }
 }
 ```
 
-#### 11.2.3 配置 COS 环境变量
+`upload.controller.ts` 改用 `memoryStorage()`，构造器注入 `CosService.store()`
+（详见源文件）。
 
-在云托管控制台添加：
+#### 11.2.3 配置环境变量
 
-| 变量名 | 值 |
-|--------|-----|
-| `COS_SECRET_ID` | 腾讯云 API 密钥 SecretId |
-| `COS_SECRET_KEY` | 腾讯云 API 密钥 SecretKey |
-| `COS_BUCKET` | `vshop-uploads-1234567890` |
-| `COS_REGION` | `ap-guangzhou`（与存储桶地域一致） |
+| 变量名 | 必填 | 说明 |
+|--------|------|------|
+| `TCB_ENV_ID` | ❌ 可选 | 云开发/云托管环境 ID。缺省回退到项目硬编码 `1452085588`（与 `miniprogram/config/index.js` 的 `cloudEnv` 一致）。**通常无需配置** |
 
-> **获取密钥：** 访问 [腾讯云 API 密钥管理](https://console.cloud.tencent.com/cam/capi)，建议创建子账号并仅授予 COS 读写权限。
+> **无需 SecretId/Key、无需 CAM 角色绑定**。云托管容器内
+> `@cloudbase/node-sdk` 自动从元数据服务（`metadata.tencentyun.com`）
+> 获取临时凭证，直接对接同账号下「对象存储」页已开通的桶。
+> 如确需切换环境，在云托管控制台 → 服务 → 环境变量 添加 `TCB_ENV_ID`。
 
-#### 11.2.4 配置 COS 访问域名
+#### 11.2.4 访问域名
 
-在存储桶详情页：
-1. 「权限管理」→ 设置公有读权限（如果图片需要直接通过 URL 访问）
-2. 「域名与传输管理」→ 可绑定自定义 CDN 域名加速
+上传后的 URL 形如：
+`https://7072-prod-d8gf4sglmae440765-1452085588.tcb.qcloud.la/goods/xxx.png`
+
+该域名在云托管对象存储「安全域名」中**默认已配置**（含 `localhost:80/8080`），
+小程序 `<image>` 组件加载 https 图片**无需**额外配置 `request`/`downloadFile`
+合法域名。如需 CDN 加速，可在对象存储控制台「域名与传输管理」绑定自定义 CDN。
 
 > **替代方案：** 如果不想改代码，短期可在云托管中使用「持久化存储卷」挂载到 `public/uploads/`，但此方案在多实例扩容时数据不同步，**不推荐生产使用**。
 

@@ -30,6 +30,11 @@ App({
     }
     this.globalData.navInfo = { statusBarHeight, navHeight: statusBarHeight + NAV_HEIGHT_OFFSET }
 
+    // 生产环境初始化云托管 SDK（用于 callContainer 内网调用）
+    if (config.useCloudContainer && wx.cloud) {
+      wx.cloud.init({ env: config.cloudEnv })
+    }
+
     this.trackChannel(options.query)
     this.checkLogin(options)
   },
@@ -51,15 +56,16 @@ App({
 
   reportChannel() {
     if (!this.globalData.channelSource) return
-    wx.request({
-      url: `${this.globalData.apiBase}/channel/report`,
+    // 走统一请求方法（自动选择 callContainer 或 wx.request）
+    this.request({
+      url: '/channel/report',
       method: 'POST',
       data: {
         source: this.globalData.channelSource,
         kocId: this.globalData.channelKocId,
         batchId: this.globalData.channelCardBatch
       }
-    })
+    }).catch(() => {}) // 渠道上报失败不阻断流程
   },
 
   /**
@@ -102,6 +108,8 @@ App({
   /**
    * 统一请求封装。
    * - 自动携带 Authorization: Bearer <token>
+   * - 生产环境走 wx.cloud.callContainer（内网专线，免域名配置）
+   * - 开发环境走 wx.request + apiBase
    * - 401 时清理 token 并跳转登录页（同步头像需用户手势，不再静默重试）
    */
   request(options) {
@@ -110,26 +118,50 @@ App({
       if (this.globalData.token) {
         header['Authorization'] = `Bearer ${this.globalData.token}`
       }
-      // url 以 http 开头视为完整地址直接用（如 /api/admin 等无 v1 前缀的接口），
-      // 否则拼接 apiBase
-      const fullUrl = /^https?:\/\//.test(options.url)
-        ? options.url
-        : `${this.globalData.apiBase}${options.url}`
-      wx.request({
-        url: fullUrl,
+
+      // url 以 http 开头视为完整地址，直接走 wx.request（如第三方接口）
+      const isFullUrl = /^https?:\/\//.test(options.url)
+
+      // 开发环境或完整 URL：走 wx.request
+      if (!config.useCloudContainer || isFullUrl) {
+        const fullUrl = isFullUrl
+          ? options.url
+          : `${this.globalData.apiBase}${options.url}`
+        wx.request({
+          url: fullUrl,
+          method: options.method || 'GET',
+          data: options.data,
+          header,
+          timeout: options.timeout || 10000,
+          success: (res) => {
+            if (res.data && res.data.code === 0) {
+              resolve(res.data.data)
+            } else if (res.data && res.data.code === 401) {
+              if (options._isAuthRequest) { reject(res.data); return }
+              this.clearToken()
+              this.goLogin()
+              reject(res.data)
+            } else {
+              reject(res.data)
+            }
+          },
+          fail: reject
+        })
+        return
+      }
+
+      // 生产环境：走 wx.cloud.callContainer（内网专线）
+      wx.cloud.callContainer({
+        config: { env: config.cloudEnv },
+        path: `${config.apiPrefix}${options.url}`,
         method: options.method || 'GET',
         data: options.data,
         header,
-        timeout: options.timeout || 10000,
         success: (res) => {
           if (res.data && res.data.code === 0) {
             resolve(res.data.data)
           } else if (res.data && res.data.code === 401) {
-            // 登录接口自身的 401 不再跳转，直接失败
-            if (options._isAuthRequest) {
-              reject(res.data)
-              return
-            }
+            if (options._isAuthRequest) { reject(res.data); return }
             this.clearToken()
             this.goLogin()
             reject(res.data)
