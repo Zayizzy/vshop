@@ -1,4 +1,5 @@
 import { Injectable, BadRequestException, ForbiddenException } from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../../prisma/prisma.service';
 import { centToYuan, centToYuanNullable, yuanToCent } from '../../common/utils/money';
 import { formatSpecText, parseSpecValues } from '../../common/utils/spec';
@@ -49,6 +50,7 @@ export function requireKocManager(role: string | undefined) {
 export class AdminService {
   constructor(
     private prisma: PrismaService,
+    private jwtService: JwtService,
     private wxPay: WechatPayClient,
     private dianjia: DianjiaClient,
     private dianjiaService: DianjiaService,
@@ -94,19 +96,45 @@ export class AdminService {
     return this.dianjiaService.syncStock(skuId);
   }
 
-  async login(username: string, password: string) {
+  async login(username: string, password: string, supplierId?: string) {
     const accounts = loadAdminAccounts();
     const acc = accounts.find((a) => a.username === username);
-    if (acc && bcrypt.compareSync(password, acc.passwordHash)) {
-      return {
-        success: true,
-        token: 'adm_' + acc.role + '_' + Date.now(),
-        role: acc.role,
-        name: acc.name,
-        supplier: { id: 's1', name: '鲜果园旗舰店' },
-      };
+    if (!acc || !bcrypt.compareSync(password, acc.passwordHash)) {
+      return { success: false, message: '账号或密码错误' };
     }
-    return { success: false, message: '账号或密码错误' };
+    // 确定供应商：优先用传入的 supplierId（校验存在），否则取第一个 active
+    let sup: { id: string; name: string } | null = null;
+    if (supplierId) {
+      sup = await this.prisma.supplier.findUnique({
+        where: { id: supplierId },
+        select: { id: true, name: true },
+      });
+      if (!sup) {
+        return { success: false, message: '供应商不存在' };
+      }
+    } else {
+      sup = await this.prisma.supplier.findFirst({
+        where: { status: 'active' },
+        orderBy: { createdAt: 'asc' },
+        select: { id: true, name: true },
+      });
+      if (!sup) {
+        return { success: false, message: '系统未配置供应商' };
+      }
+    }
+    const token = await this.jwtService.signAsync({
+      supplierId: sup.id,
+      role: acc.role,
+      name: acc.name,
+    });
+    return {
+      success: true,
+      token,
+      role: acc.role,
+      name: acc.name,
+      supplierId: sup.id,
+      supplier: { id: sup.id, name: sup.name },
+    };
   }
 
   async getDashboard(supplierId: string) {

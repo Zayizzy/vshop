@@ -21,6 +21,13 @@
 - `public/uploads/` 容器内不持久化 → **已改云托管 COS（v3，2026-07-27）**：`cos.service.ts` 用 `cos-nodejs-sdk-v5` + 云托管元数据 STS（`metadata.tencentyun.com/.../security-credentials/<role>`）。**前置**：CAM 给服务运行角色授对象存储读写权限（一次性，零 API 密钥）。可选环境变量 `COS_BUCKET/REGION/ROLE_NAME`（均有默认值取自截图）
 - 小程序端推荐 `wx.cloud.callContainer` 内网调用，免域名配置
 
+## Admin 后台鉴权（JWT）
+- 2026-07-28 改造：admin 接口用 `AdminAuthGuard`（`common/guards/admin-auth.guard.ts`）验证后台 JWT（payload `{supplierId,role,name}`），从 `req.user` 取，去掉 `x-supplier-id` 头 + `'s1'` fallback
+- `admin.service.login` 注入 JwtService，签发真 JWT；查 Supplier 表确定 supplierId（传入校验或取第一个 active），不再返回伪 token / 不再硬编码 `supplier:{id:'s1'}`
+- 彻底解决生产 Supplier 表无 `'s1'` 导致 `GoodSupplier` 外键违反（商品保存 500 → 图片没绑上 → 前端"没有图片"）
+- `AdminLoginDto` 加可选 `supplierId`；`admin.module` 注册 `AdminAuthGuard` provider（否则 @UseGuards 运行时 DI 解析失败）
+- 前端 `public/index.html` `authHeaders/uploadHeaders` 去 `x-supplier-id`/`x-admin-role`，只带 `Authorization`
+
 ## 文档
 - PRD：`docs/PRD.md`
 - 部署指南：`docs/deploy-wx-cloudrun.md`

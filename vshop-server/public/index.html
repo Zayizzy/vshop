@@ -950,8 +950,6 @@ let customerFilter = 'all';
 function authHeaders() {
   return {
     'Content-Type': 'application/json',
-    'x-supplier-id': SUPPLIER_ID,
-    'x-admin-role': adminRole || '',
     'Authorization': authToken ? 'Bearer ' + authToken : ''
   };
 }
@@ -960,8 +958,6 @@ function authHeaders() {
 // multipart/form-data; boundary=...，否则 multer 解析不到文件字段。
 function uploadHeaders() {
   return {
-    'x-supplier-id': SUPPLIER_ID,
-    'x-admin-role': adminRole || '',
     'Authorization': authToken ? 'Bearer ' + authToken : ''
   };
 }
@@ -1006,7 +1002,7 @@ function handleLogin() {
 
   fetch(API_BASE + '/login', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'x-supplier-id': SUPPLIER_ID },
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ username: username, password: password })
   })
   .then(function(r) { return r.json().then(function(data) { return { ok: r.ok, status: r.status, data: data }; }); })

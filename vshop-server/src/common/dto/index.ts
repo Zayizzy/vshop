@@ -235,6 +235,10 @@ export class AdminLoginDto {
 
   @IsString()
   password!: string;
+
+  @IsOptional()
+  @IsString()
+  supplierId?: string;
 }
 
 // ===== 优惠券管理（admin） =====
