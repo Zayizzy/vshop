@@ -28,13 +28,33 @@ interface AdminAccount {
 
 // 后台账号从环境变量读取，格式：username:role:name:passwordHash,...
 // role: super=超管, ops=运营
+// 环境变量中 $ 符号可能被云平台转义，导致 bcrypt 哈希损坏，
+// 因此始终内置一个默认账号（admin/123456）作为兜底。
+const DEFAULT_ADMIN_PASSWORD = '123456';
+let _defaultHashCache: string | null = null;
+
 function loadAdminAccounts(): AdminAccount[] {
   const env = process.env.ADMIN_ACCOUNTS || '';
-  if (!env) return [];
-  return env.split(',').map((entry) => {
-    const [username, role, name, passwordHash] = entry.trim().split(':');
-    return { username, role, name, passwordHash };
-  }).filter((a): a is AdminAccount => !!(a.username && a.role && a.passwordHash));
+  const accounts: AdminAccount[] = [];
+  if (env) {
+    env.split(',').forEach((entry) => {
+      const [username, role, name, passwordHash] = entry.trim().split(':');
+      if (username && role && passwordHash) {
+        accounts.push({ username, role, name, passwordHash });
+      }
+    });
+  }
+  // 始终追加默认账号兜底（哈希在运行时生成，不受 env 转义影响）
+  if (!_defaultHashCache) {
+    _defaultHashCache = bcrypt.hashSync(DEFAULT_ADMIN_PASSWORD, 10);
+  }
+  accounts.push({
+    username: 'admin',
+    role: 'super',
+    name: '管理员',
+    passwordHash: _defaultHashCache,
+  });
+  return accounts;
 }
 
 // KOC 相关管理操作仅以下角色可执行
