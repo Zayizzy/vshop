@@ -154,10 +154,31 @@ export class CosService {
     return this.cos;
   }
 
-  /** 从云托管元数据服务获取 STS 临时凭证（依次尝试候选角色名） */
+  /** 从云托管元数据服务获取 STS 临时凭证 */
   private async fetchSts(): Promise<StsCreds> {
     let lastErr: any;
-    for (const role of this.roleCandidates) {
+
+    // 先尝试从 metadata 服务自动发现可用角色名
+    let rolesToTry = this.roleCandidates;
+    try {
+      const raw = await this.httpGet(META_STS_URL);
+      const discovered = JSON.parse(raw);
+      if (Array.isArray(discovered) && discovered.length > 0) {
+        this.logger.log(`STS 自动发现角色：${discovered.join(', ')}`);
+        rolesToTry = discovered;
+      } else if (typeof discovered === 'object' && discovered !== null) {
+        // 某些版本返回 { roleName: [...] } 格式
+        const vals = Object.values(discovered).flat() as string[];
+        if (vals.length > 0) {
+          this.logger.log(`STS 自动发现角色：${vals.join(', ')}`);
+          rolesToTry = vals;
+        }
+      }
+    } catch (err: any) {
+      this.logger.warn(`STS 角色自动发现失败，使用候选列表：${err?.message || err}`);
+    }
+
+    for (const role of rolesToTry) {
       try {
         const url = `${META_STS_URL}/${role}`;
         const raw = await this.httpGet(url);
@@ -172,7 +193,7 @@ export class CosService {
       }
     }
     throw new Error(
-      `获取 STS 失败（已尝试角色：${this.roleCandidates.join(', ')}）：${
+      `获取 STS 失败（已尝试角色：${rolesToTry.join(', ')}）：${
         lastErr?.message || lastErr
       }`,
     );
