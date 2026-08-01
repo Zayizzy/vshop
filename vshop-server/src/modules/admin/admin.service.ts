@@ -98,6 +98,10 @@ export class AdminService {
 
   async login(username: string, password: string, supplierId?: string) {
     const accounts = loadAdminAccounts();
+    console.log('[admin] login attempt: username=%s, accounts loaded=%d, ADMIN_ACCOUNTS set=%s', username, accounts.length, process.env.ADMIN_ACCOUNTS ? 'yes' : 'no');
+    if (accounts.length > 0) {
+      console.log('[admin] first account: username=%s, hashPrefix=%s', accounts[0].username, accounts[0].passwordHash?.slice(0, 10));
+    }
     const acc = accounts.find((a) => a.username === username);
     if (!acc || !bcrypt.compareSync(password, acc.passwordHash)) {
       return { success: false, message: '账号或密码错误' };
