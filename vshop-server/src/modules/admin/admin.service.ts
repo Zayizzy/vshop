@@ -284,7 +284,7 @@ export class AdminService {
             name,
             specValues,
             price: yuanToCent(s.price),
-            marketPrice: s.marketPrice ? yuanToCent(s.marketPrice) : null,
+            marketPrice: s.marketPrice != null ? yuanToCent(s.marketPrice) : null,
             stock: parseInt(s.stock) || 0,
           },
         });
@@ -305,7 +305,7 @@ export class AdminService {
           goodId: good.id,
           name: '默认规格',
           price: yuanToCent(body.price),
-          marketPrice: body.marketPrice ? yuanToCent(body.marketPrice) : null,
+          marketPrice: body.marketPrice != null ? yuanToCent(body.marketPrice) : null,
           stock: parseInt(body.stock) || 0,
         },
       });
@@ -378,7 +378,7 @@ export class AdminService {
         if (s.id) {
           const skuData: any = { name, specValues };
           if (s.price !== undefined) skuData.price = yuanToCent(s.price);
-          if (s.marketPrice !== undefined) skuData.marketPrice = s.marketPrice ? yuanToCent(s.marketPrice) : null;
+          if (s.marketPrice !== undefined) skuData.marketPrice = s.marketPrice != null ? yuanToCent(s.marketPrice) : null;
           if (s.stock !== undefined) skuData.stock = parseInt(s.stock) || 0;
           await this.prisma.sku.update({ where: { id: s.id }, data: skuData });
           // 同步 GoodSupplier 价格/库存（若存在该 sku 的供应商关系）
@@ -401,7 +401,7 @@ export class AdminService {
               name,
               specValues,
               price: yuanToCent(s.price),
-              marketPrice: s.marketPrice ? yuanToCent(s.marketPrice) : null,
+              marketPrice: s.marketPrice != null ? yuanToCent(s.marketPrice) : null,
               stock: parseInt(s.stock) || 0,
             },
           });
@@ -423,7 +423,7 @@ export class AdminService {
         const skuData: any = {};
         if (body.price !== undefined) skuData.price = yuanToCent(body.price);
         if (body.marketPrice !== undefined) {
-          skuData.marketPrice = body.marketPrice ? yuanToCent(body.marketPrice) : null;
+          skuData.marketPrice = body.marketPrice != null ? yuanToCent(body.marketPrice) : null;
         }
         if (body.skuName !== undefined) skuData.name = body.skuName;
         await this.prisma.sku.update({ where: { id: sku.id }, data: skuData });

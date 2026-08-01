@@ -32,6 +32,16 @@
 - PRD：`docs/PRD.md`
 - 部署指南：`docs/deploy-wx-cloudrun.md`
 
+## 价格体系（重要：三种价格语义，勿混淆）
+- `Sku.price`（Int 分）= 折前价/商品基础价；后端列表接口输出为 `originalPrice`（元）
+- `Sku.marketPrice`（Int? 分）= 市场价/划线价（商家显式设置，可空）；后端输出为 `marketPrice`（元，`centToYuanNullable` 透传 null）
+- `Good.discountRate`（Float? 0~1）= 商品级折扣率；折后价 = price × discountRate；后端输出 `price`（折后）+ `discountRate`
+- **划线价展示统一逻辑**（2026-07-30 修复后）：优先 `marketPrice`（商家设的市场价），回退 `originalPrice`（折扣率场景的折前价）；仅当划线价 > 实付价时展示
+  - 详情页：`detail.js` `computeLinePrice()` → `goods.linePrice` → `detail.wxml`
+  - 列表卡片：`goods-card.js` `resolve()` oldPrice 优先 marketPrice 回退 originalPrice
+  - admin 后台：单规格 `singleSpecRow` 有 `productMarketPrice` 输入框；多规格矩阵有 `specMarket_*` 列
+- 后端 marketPrice 判空必须用 `!= null`（不能用 `? :`，否则 0 被当空值）
+
 ## 版本规划
 - v1.0 MVP：核心交易闭环
 - v1.1：KOC分销体系完整上线

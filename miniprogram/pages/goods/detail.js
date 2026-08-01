@@ -4,6 +4,17 @@ const { full: fullImg } = require('../../utils/image')
 const { handleError } = require('../../utils/error')
 const { calculatePrice } = require('../../utils/money')
 
+// 划线价展示值：优先市场价 marketPrice（商家显式设置），回退折前价 originalPrice（折扣率场景）
+// 仅当划线价 > 实付价时返回该值，否则返回空串（不展示）
+function computeLinePrice(marketPrice, originalPrice, price) {
+  const p = Number(price)
+  const mkt = (marketPrice !== '' && marketPrice != null) ? Number(marketPrice) : NaN
+  const orig = originalPrice != null ? Number(originalPrice) : NaN
+  if (Number.isFinite(mkt) && mkt > p) return mkt
+  if (Number.isFinite(orig) && orig > p) return orig
+  return ''
+}
+
 Page({
   data: {
     statusBarHeight: 20,
@@ -58,6 +69,7 @@ Page({
       const original = sku ? (Number(sku.price) || 0) : 0
       const rate = data.discountRate != null ? data.discountRate : null
       const paid = calculatePrice(original, rate)
+      const mkt = sku && sku.marketPrice != null ? Number(sku.marketPrice) : ''
       this.setData({
         loading: false,
         goods: {
@@ -65,7 +77,8 @@ Page({
           price: paid,
           originalPrice: original,
           discountRate: rate,
-          marketPrice: sku && sku.marketPrice != null ? Number(sku.marketPrice) : '',
+          marketPrice: mkt,
+          linePrice: computeLinePrice(mkt, original, paid),
           discount: data.discount || '',
           sales: data.sales || 0,
           delivery: data.delivery || 'nextDay',
@@ -104,12 +117,14 @@ Page({
       const original = Number(sku.price) || 0
       const rate = this.data.goods.discountRate
       const paid = calculatePrice(original, rate)
+      const mkt = sku.marketPrice != null ? Number(sku.marketPrice) : ''
       this.setData({
         selectedSkuId: skuId,
         selectedSku: sku,
         'goods.originalPrice': original,
         'goods.price': paid,
-        'goods.marketPrice': sku.marketPrice != null ? Number(sku.marketPrice) : ''
+        'goods.marketPrice': mkt,
+        'goods.linePrice': computeLinePrice(mkt, original, paid)
       })
     }
   },
@@ -129,11 +144,13 @@ Page({
         const original = Number(sku.price) || 0
         const rate = this.data.goods.discountRate
         const paid = calculatePrice(original, rate)
+        const mkt = sku.marketPrice != null ? Number(sku.marketPrice) : ''
         patch.selectedSkuId = sku.id
         patch.selectedSku = sku
         patch['goods.originalPrice'] = original
         patch['goods.price'] = paid
-        patch['goods.marketPrice'] = sku.marketPrice != null ? Number(sku.marketPrice) : ''
+        patch['goods.marketPrice'] = mkt
+        patch['goods.linePrice'] = computeLinePrice(mkt, original, paid)
       } else {
         patch.selectedSkuId = ''
         patch.selectedSku = null

@@ -35,8 +35,8 @@
     <view class="info-price-row">
       <text class="info-price-symbol">¥</text>
       <text class="info-price">{{goods.price}}</text>
-      <!-- 划线价：折前价 originalPrice，仅当有折扣时显示 -->
-      <text class="info-market-price" wx:if="{{goods.originalPrice && goods.originalPrice > goods.price}}">¥{{goods.originalPrice}}</text>
+      <!-- 划线价：优先市场价 marketPrice，其次折扣场景下的折前价 originalPrice -->
+      <text class="info-market-price" wx:if="{{goods.linePrice}}">¥{{goods.linePrice}}</text>
       <text class="info-discount" wx:if="{{goods.discountRate}}">{{goods.discountRate * 10}}折</text>
     </view>
 

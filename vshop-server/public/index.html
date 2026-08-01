@@ -778,6 +778,10 @@ table .actions { display: flex; gap: 8px; flex-wrap: wrap; }
           <input type="number" id="productPrice" placeholder="例如：12.80" step="0.01" min="0.01">
         </div>
         <div class="form-group">
+          <label for="productMarketPrice">划线价 (¥)</label>
+          <input type="number" id="productMarketPrice" placeholder="选填，例如：19.90" step="0.01" min="0">
+        </div>
+        <div class="form-group">
           <label for="productStock">库存</label>
           <input type="number" id="productStock" placeholder="例如：100" step="1" min="0">
         </div>
@@ -1480,6 +1484,7 @@ function openProductModal(id) {
   document.getElementById('editProductId').value = '';
   document.getElementById('productName').value = '';
   document.getElementById('productPrice').value = '';
+  document.getElementById('productMarketPrice').value = '';
   document.getElementById('productStock').value = '';
   document.getElementById('productImage').value = '';
   document.getElementById('productImagePreview').style.display = 'none';
@@ -1504,6 +1509,7 @@ function openProductModal(id) {
       document.getElementById('editProductId').value = p.id;
       document.getElementById('productName').value = p.name || '';
       document.getElementById('productPrice').value = p.price || '';
+      document.getElementById('productMarketPrice').value = (p.skus && p.skus.length > 0 && p.skus[0].marketPrice != null) ? p.skus[0].marketPrice : '';
       document.getElementById('productStock').value = p.stock || '';
       document.getElementById('productImage').value = p.image || '';
       document.getElementById('productIsRecommended').checked = !!p.isRecommended;
@@ -1700,6 +1706,7 @@ function saveProduct() {
   var id = document.getElementById('editProductId').value;
   var name = document.getElementById('productName').value.trim();
   var price = document.getElementById('productPrice').value;
+  var marketPrice = document.getElementById('productMarketPrice').value;
   var stock = document.getElementById('productStock').value;
   var imageUrl = document.getElementById('productImage').value.trim();
   var subCategoryId = document.getElementById('productCategory').value;
@@ -1714,7 +1721,7 @@ function saveProduct() {
   var isRecommended = document.getElementById('productIsRecommended').checked;
   var recommendSort = parseInt(document.getElementById('productRecommendSort').value) || 0;
   var body = { name: name, subCategoryId: subCategoryId, isRecommended: isRecommended, recommendSort: recommendSort };
-  if (specSkus) { body.skus = specSkus; } else { body.price = parseFloat(price); body.stock = parseInt(stock) || 0; }
+  if (specSkus) { body.skus = specSkus; } else { body.price = parseFloat(price); body.marketPrice = marketPrice ? parseFloat(marketPrice) : null; body.stock = parseInt(stock) || 0; }
   // 轮播图：始终下发当前数组（含空数组，便于编辑时清空）；image 为首张主图兼容字段
   body.images = images;
   if (images.length > 0) body.image = images[0]; else body.image = '';

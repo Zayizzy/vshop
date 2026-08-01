@@ -54,6 +54,7 @@ Page({
           id: g.id,
           name: g.name,
           price: Number(g.price) || 0,
+          marketPrice: g.marketPrice != null ? Number(g.marketPrice) : null,
           originalPrice: g.originalPrice != null ? Number(g.originalPrice) : null,
           image: g.image || g.coverImage || '',
           bgColor: this.getColor(subList.findIndex(s => s.id === subId))
