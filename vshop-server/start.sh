@@ -19,5 +19,9 @@ npx prisma migrate deploy || {
 }
 
 echo "[vshop] ✅ migrations applied successfully"
+
+# 云托管环境的 HTTPS 代理使用自签证书，需关闭 TLS 校验才能调通微信 API
+export NODE_TLS_REJECT_UNAUTHORIZED=0
+
 echo "[vshop] Starting application..."
 node dist/main.js

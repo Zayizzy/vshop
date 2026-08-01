@@ -32,15 +32,37 @@ Page({
     this.setData({ loading: true })
     console.log('[login] 开始登录流程')
 
+    // wx.getUserProfile 必须在用户点击事件中直接调用，不能在异步回调里调
+    wx.getUserProfile({
+      desc: '用于完善用户资料',
+      success: (profileRes) => {
+        console.log('[login] 获取微信资料成功:', profileRes.userInfo?.nickName)
+        this.doLogin(profileRes.userInfo)
+      },
+      fail: (err) => {
+        console.warn('[login] 获取微信资料失败:', err)
+        // 用户拒绝授权也继续登录，不传资料即可
+        this.doLogin(null)
+      }
+    })
+  },
+
+  /**
+   * 微信登录 + 服务端鉴权。
+   * profile 可为 null（用户拒绝授权时）。
+   */
+  doLogin(profile) {
     wx.login({
       success: (loginRes) => {
         console.log('[login] wx.login 成功，code=', loginRes.code?.slice(0, 8) + '...')
-        // 先用 code 完成账号登录，保证授权/网络异常时也能进入小程序
-        app.syncLogin({ code: loginRes.code })
+        const payload = { code: loginRes.code }
+        if (profile) {
+          payload.nickName = profile.nickName
+          payload.avatarUrl = profile.avatarUrl
+        }
+        app.syncLogin(payload)
           .then((data) => {
             console.log('[login] 服务端登录成功，userId=', data?.userInfo?.id)
-            // 再尝试同步微信昵称头像（失败不影响主流程）
-            this.syncProfileAfterLogin()
             this.navigateAfterLogin()
           })
           .catch((err) => {
@@ -53,38 +75,6 @@ Page({
         this.setData({ loading: false })
         console.error('[login] wx.login 失败:', err)
         handleError(err, { defaultMsg: '微信登录失败' })
-      }
-    })
-  },
-
-  /**
-   * 登录成功后尝试同步微信资料。
-   * wx.getUserProfile 在部分基础库/模拟器下可能超时，失败仅记录日志。
-   */
-  syncProfileAfterLogin() {
-    if (!wx.getUserProfile) {
-      console.warn('[login] 当前基础库不支持 wx.getUserProfile')
-      return
-    }
-    wx.getUserProfile({
-      desc: '用于完善用户资料',
-      success: (profileRes) => {
-        console.log('[login] 获取微信资料成功:', profileRes.userInfo?.nickName)
-        const { nickName, avatarUrl } = profileRes.userInfo || {}
-        app.request({
-          url: '/user/profile',
-          method: 'PUT',
-          data: { nickName, avatarUrl },
-          timeout: 10000
-        }).then(() => {
-          // 刷新本地缓存
-          app.refreshUserInfo().catch(() => {})
-        }).catch((err) => {
-          console.warn('[login] 同步资料到后端失败:', err)
-        })
-      },
-      fail: (err) => {
-        console.warn('[login] 获取微信资料失败:', err)
       }
     })
   },
