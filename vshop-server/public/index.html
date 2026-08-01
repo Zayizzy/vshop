@@ -1144,17 +1144,44 @@ function closeSidebar() {
 // ==============================
 // API Calls
 // ==============================
+function handleApi401(resp) {
+  if (resp.status === 401) {
+    authToken = '';
+    localStorage.removeItem('supplierToken');
+    localStorage.removeItem('supplierName');
+    document.getElementById('appContainer').classList.remove('active');
+    document.getElementById('loginScreen').style.display = 'flex';
+    document.getElementById('username').value = 'admin';
+    document.getElementById('password').value = '123456';
+    showToast('登录已过期，请重新登录', 'warning');
+    return Promise.reject(new Error('401 Unauthorized'));
+  }
+  return null;
+}
+
 function apiGet(path) {
-  return fetch(API_BASE + path, { headers: authHeaders() }).then(function(r) { return r.json(); });
+  return fetch(API_BASE + path, { headers: authHeaders() }).then(function(r) {
+    var e = handleApi401(r); if (e) return e;
+    return r.json();
+  });
 }
 function apiPost(path, data) {
-  return fetch(API_BASE + path, { method: 'POST', headers: authHeaders(), body: JSON.stringify(data) }).then(function(r) { return r.json(); });
+  return fetch(API_BASE + path, { method: 'POST', headers: authHeaders(), body: JSON.stringify(data) }).then(function(r) {
+    var e = handleApi401(r); if (e) return e;
+    return r.json();
+  });
 }
 function apiPut(path, data) {
-  return fetch(API_BASE + path, { method: 'PUT', headers: authHeaders(), body: JSON.stringify(data) }).then(function(r) { return r.json(); });
+  return fetch(API_BASE + path, { method: 'PUT', headers: authHeaders(), body: JSON.stringify(data) }).then(function(r) {
+    var e = handleApi401(r); if (e) return e;
+    return r.json();
+  });
 }
 function apiDel(path) {
-  return fetch(API_BASE + path, { method: 'DELETE', headers: authHeaders() }).then(function(r) { return r.json(); });
+  return fetch(API_BASE + path, { method: 'DELETE', headers: authHeaders() }).then(function(r) {
+    var e = handleApi401(r); if (e) return e;
+    return r.json();
+  });
 }
 
 // ==============================
