@@ -54,6 +54,13 @@ export class GoodsController {
   }
 
   @Public()
+  @Get('subcategories')
+  async getSubCategories(@Query('categoryId') categoryId?: string) {
+    const data = await this.goodsService.getSubCategories(categoryId);
+    return { code: 0, message: 'success', data };
+  }
+
+  @Public()
   @Get(':id')
   async getDetail(@Param('id') id: string) {
     const data = await this.goodsService.getDetail(id);

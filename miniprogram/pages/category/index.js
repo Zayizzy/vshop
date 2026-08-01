@@ -35,9 +35,9 @@ Page({
     const catId = e.currentTarget.dataset.id
     this.setData({ activeCategoryId: catId, loading: true, subCategories: [], goodsMap: {} })
 
-    // admin 子分类接口前缀为 /api/admin（无 v1 前缀），用 skipPrefix 绕过 apiPrefix 拼接
+    // 子分类走公开接口 /v1/goods/subcategories（不再调 admin 端点）
     Promise.all([
-      app.request({ url: '/api/admin/subcategories', method: 'GET', skipPrefix: true, data: { categoryId: catId } }).catch((err) => { handleError(err, { silent: true }); return [] }),
+      app.request({ url: '/goods/subcategories', method: 'GET', data: { categoryId: catId } }).catch((err) => { handleError(err, { silent: true }); return [] }),
       api.goods.getList({ categoryId: catId, pageSize: 50 }).catch((err) => { handleError(err, { silent: true }); return { list: [] } })
     ]).then(([subs, goodsData]) => {
       const subList = Array.isArray(subs) ? subs : (subs && subs.data) || []

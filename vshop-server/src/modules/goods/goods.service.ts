@@ -285,4 +285,13 @@ export class GoodsService {
         return { sales: 'desc' as const };
     }
   }
+
+  async getSubCategories(categoryId?: string) {
+    const where: any = {};
+    if (categoryId) where.categoryId = categoryId;
+    return this.prisma.subCategory.findMany({
+      where,
+      orderBy: [{ sort: 'asc' }],
+    });
+  }
 }
