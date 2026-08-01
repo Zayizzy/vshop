@@ -1014,8 +1014,8 @@ function handleLogin() {
     // Unwrap nestjs {code, data} envelope
     var innerData = resp.data.data || resp.data;
 
-    if (resp.ok && (innerData.token || innerData.success)) {
-      var token = innerData.token || 'mock-token-' + Date.now();
+    if (resp.ok && innerData.token) {
+      var token = innerData.token;
       var name = (innerData.supplier && innerData.supplier.name) || innerData.name || '供应商';
       var role = innerData.role || (username === 'admin' ? 'super' : 'ops');
       authToken = token;
@@ -1032,45 +1032,14 @@ function handleLogin() {
       initDashboard();
       showToast('登录成功', 'success');
     } else {
-      // Fallback: accept default credentials locally
-      if (username === 'admin' && password === '123456') {
-        authToken = 'local-mock-token-' + Date.now();
-        supplierName = '鲜乐园供应商';
-        adminRole = 'super';
-        localStorage.setItem('supplierToken', authToken);
-        localStorage.setItem('supplierName', supplierName);
-        localStorage.setItem('adminRole', 'super');
-        document.getElementById('sidebarSupplier').textContent = supplierName + '（超管）';
-        document.getElementById('topbarSupplier').textContent = supplierName;
-        document.getElementById('loginScreen').style.display = 'none';
-        document.getElementById('appContainer').classList.add('active');
-        applyAdminRole();
-        initDashboard();
-        showToast('登录成功（离线模式）', 'info');
-      } else {
-        err.textContent = (resp.data && resp.data.message) || '用户名或密码错误';
-        err.style.display = 'block';
-      }
+      // 登录失败：显示后端返回的错误信息，不再用假 token 伪装登录成功
+      err.textContent = (innerData && innerData.message) || (resp.data && resp.data.message) || '用户名或密码错误';
+      err.style.display = 'block';
     }
   })
   .catch(function() {
-    if (username === 'admin' && password === '123456') {
-      authToken = 'local-mock-token-' + Date.now();
-      supplierName = '鲜乐园供应商';
-      adminRole = 'super';
-      localStorage.setItem('supplierToken', authToken);
-      localStorage.setItem('supplierName', supplierName);
-      localStorage.setItem('adminRole', 'super');
-      document.getElementById('sidebarSupplier').textContent = supplierName + '（超管）';
-      document.getElementById('topbarSupplier').textContent = supplierName;
-      document.getElementById('loginScreen').style.display = 'none';
-      document.getElementById('appContainer').classList.add('active');
-      applyAdminRole();
-      initDashboard();
-      showToast('登录成功（离线模式）', 'info');
-    } else {
-      err.style.display = 'block';
-    }
+    err.textContent = '登录请求失败，请检查网络或后端服务是否正常';
+    err.style.display = 'block';
   })
   .finally(function() {
     btn.disabled = false;
@@ -1429,7 +1398,7 @@ function regenerateSpecMatrix() {
   editingSpecSkus.forEach(function(s) { prev[specKey(s.specValues)] = s; });
   editingSpecSkus = combos.map(function(sv) {
     var old = prev[specKey(sv)];
-    return { specValues: sv, price: old ? old.price : '', marketPrice: old ? old.marketPrice : '', stock: old ? old.stock : '' };
+    return { id: old ? old.id : '', specValues: sv, price: old ? old.price : '', marketPrice: old ? old.marketPrice : '', stock: old ? old.stock : '' };
   });
   renderSpecMatrix();
 }
@@ -1469,6 +1438,7 @@ function collectSpecSkus() {
     var mktEl = document.getElementById('specMarket_' + i);
     if (!priceEl || !priceEl.value) return; // 跳过未填价格的组合
     skus.push({
+      id: s.id || undefined,
       specValues: s.specValues,
       price: parseFloat(priceEl.value) || 0,
       marketPrice: (mktEl && mktEl.value) ? parseFloat(mktEl.value) : null,
@@ -1501,7 +1471,7 @@ function fillSpecEditorFromSkus(skus) {
   if (!dimOrder.length) { renderSpecDimensions(); return; }
   editingSpecDimensions = dimOrder.map(function(n) { return { name: n, values: dimMap[n] }; });
   editingSpecSkus = skus.map(function(s) {
-    return { specValues: s.specValues || [], price: s.price != null ? s.price : '', marketPrice: s.marketPrice != null ? s.marketPrice : '', stock: s.stock != null ? s.stock : '' };
+    return { id: s.id || '', specValues: s.specValues || [], price: s.price != null ? s.price : '', marketPrice: s.marketPrice != null ? s.marketPrice : '', stock: s.stock != null ? s.stock : '' };
   });
   renderSpecDimensions();
   renderSpecMatrix();

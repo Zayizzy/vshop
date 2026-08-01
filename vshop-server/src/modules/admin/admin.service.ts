@@ -401,6 +401,31 @@ export class AdminService {
     // 多规格编辑：body.skus[] 有 id 的更新（含 specValues/price/marketPrice/stock），
     // 无 id 的新增 + 建 GoodSupplier。不删除 sku（避免破坏已下订单的 OrderItem.skuId 外键）。
     if (body.skus && body.skus.length > 0) {
+      // 清理该商品中不在提交列表中的旧 SKU（仅删未被订单引用的，避免外键冲突）
+      const submittedIds = body.skus.filter((s: any) => s.id).map((s: any) => s.id);
+      const oldSkus = await this.prisma.sku.findMany({
+        where: { goodId: id },
+        select: { id: true },
+      });
+      const orphanIds = oldSkus
+        .map((s) => s.id)
+        .filter((sid) => !submittedIds.includes(sid));
+      if (orphanIds.length > 0) {
+        // 只删未被订单引用的 SKU（被订单引用的保留，不影响数据一致性）
+        const deletable = await this.prisma.sku.findMany({
+          where: { id: { in: orphanIds }, orderItems: { none: {} } },
+          select: { id: true },
+        });
+        const deletableIds = deletable.map((s) => s.id);
+        if (deletableIds.length > 0) {
+          await this.prisma.goodSupplier.deleteMany({
+            where: { skuId: { in: deletableIds } },
+          });
+          await this.prisma.sku.deleteMany({
+            where: { id: { in: deletableIds } },
+          });
+        }
+      }
       for (const s of body.skus) {
         const specValues = s.specValues || null;
         const name = s.name || (specValues ? formatSpecText(specValues) : '默认规格');

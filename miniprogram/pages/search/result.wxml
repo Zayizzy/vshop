@@ -14,7 +14,6 @@
       wx:key="id"
       item="{{item}}"
       img-bg="{{item.imgBg}}"
-      show-market-price="{{false}}"
       bindtap="goDetail"
     />
   </view>

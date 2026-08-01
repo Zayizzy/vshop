@@ -4,13 +4,13 @@ const { full: fullImg } = require('../../utils/image')
 const { handleError } = require('../../utils/error')
 const { calculatePrice } = require('../../utils/money')
 
-// 划线价展示值：优先市场价 marketPrice（商家显式设置），回退折前价 originalPrice（折扣率场景）
-// 仅当划线价 > 实付价时返回该值，否则返回空串（不展示）
+// 划线价展示值：优先市场价 marketPrice（商家显式设置，有值即展示）；
+// 回退折前价 originalPrice（折扣率场景，须大于折后价才有意义）
 function computeLinePrice(marketPrice, originalPrice, price) {
   const p = Number(price)
   const mkt = (marketPrice !== '' && marketPrice != null) ? Number(marketPrice) : NaN
   const orig = originalPrice != null ? Number(originalPrice) : NaN
-  if (Number.isFinite(mkt) && mkt > p) return mkt
+  if (Number.isFinite(mkt)) return mkt
   if (Number.isFinite(orig) && orig > p) return orig
   return ''
 }

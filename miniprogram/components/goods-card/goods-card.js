@@ -41,11 +41,11 @@ Component({
     resolve(it) {
       const i = it || {}
       const price = Number(i.price)
-      // 划线价：优先市场价 marketPrice（商家显式设置），回退折前价 originalPrice（折扣率场景）
-      // 仅当划线价 > 实付价时展示
+      // 划线价：优先 marketPrice（商家显式设置，有值即展示）；
+      // 回退 originalPrice（折扣率场景，须大于折后价才有意义）
       const mkt = i.marketPrice != null ? Number(i.marketPrice) : NaN
       const original = i.originalPrice != null ? Number(i.originalPrice) : NaN
-      const linePrice = (Number.isFinite(mkt) && mkt > price) ? mkt
+      const linePrice = Number.isFinite(mkt) ? mkt
         : (Number.isFinite(original) && original > price) ? original
         : null
       return {
