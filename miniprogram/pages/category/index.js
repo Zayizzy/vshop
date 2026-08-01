@@ -35,11 +35,9 @@ Page({
     const catId = e.currentTarget.dataset.id
     this.setData({ activeCategoryId: catId, loading: true, subCategories: [], goodsMap: {} })
 
-    // admin 子分类接口前缀为 /api/admin（无 v1 前缀），需用完整 URL 绕过 apiBase 的 /v1 拼接。
-    // host 从 apiBase 去掉末尾 /v1 得到。
-    const host = app.globalData.apiBase.replace(/\/v1\/?$/, '')
+    // admin 子分类接口前缀为 /api/admin（无 v1 前缀），用 skipPrefix 绕过 apiPrefix 拼接
     Promise.all([
-      app.request({ url: `${host}/api/admin/subcategories`, method: 'GET', data: { categoryId: catId } }).catch((err) => { handleError(err, { silent: true }); return [] }),
+      app.request({ url: '/api/admin/subcategories', method: 'GET', skipPrefix: true, data: { categoryId: catId } }).catch((err) => { handleError(err, { silent: true }); return [] }),
       api.goods.getList({ categoryId: catId, pageSize: 50 }).catch((err) => { handleError(err, { silent: true }); return { list: [] } })
     ]).then(([subs, goodsData]) => {
       const subList = Array.isArray(subs) ? subs : (subs && subs.data) || []

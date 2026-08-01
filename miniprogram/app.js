@@ -121,12 +121,15 @@ App({
 
       // url 以 http 开头视为完整地址，直接走 wx.request（如第三方接口）
       const isFullUrl = /^https?:\/\//.test(options.url)
+      const skipPrefix = options.skipPrefix === true
 
       // 开发环境或完整 URL：走 wx.request
       if (!config.useCloudContainer || isFullUrl) {
         const fullUrl = isFullUrl
           ? options.url
-          : `${this.globalData.apiBase}${options.url}`
+          : skipPrefix
+            ? `${this.globalData.apiBase.replace(/\/v1\/?$/, '')}${options.url}`
+            : `${this.globalData.apiBase}${options.url}`
         wx.request({
           url: fullUrl,
           method: options.method || 'GET',
@@ -153,10 +156,10 @@ App({
       // 生产环境：走 wx.cloud.callContainer（内网专线）
       wx.cloud.callContainer({
         config: { env: config.cloudEnv },
-        path: `${config.apiPrefix}${options.url}`,
+        path: skipPrefix ? options.url : `${config.apiPrefix}${options.url}`,
         method: options.method || 'GET',
         data: options.data,
-        header,
+        header: { ...header, 'X-WX-SERVICE': 'vshop' },
         success: (res) => {
           if (res.data && res.data.code === 0) {
             resolve(res.data.data)
