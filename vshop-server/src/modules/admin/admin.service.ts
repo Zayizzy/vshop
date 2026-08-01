@@ -143,7 +143,12 @@ export class AdminService {
         select: { id: true, name: true },
       });
       if (!sup) {
-        return { success: false, message: '系统未配置供应商' };
+        // 数据库无供应商时自动创建默认供应商，避免首次部署无法登录
+        sup = await this.prisma.supplier.create({
+          data: { name: '默认供应商', status: 'active' },
+          select: { id: true, name: true },
+        });
+        console.log('[admin] 自动创建默认供应商:', sup.id, sup.name);
       }
     }
     const token = await this.jwtService.signAsync({
