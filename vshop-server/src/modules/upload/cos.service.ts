@@ -136,12 +136,24 @@ export class CosService {
     return url;
   }
 
-  /** 获取（或刷新）带 STS 凭证的 COS 客户端 */
+  /** 获取 COS 客户端（优先使用永久密钥，其次 STS 元数据） */
   private async getCosClient(): Promise<any> {
     const now = Date.now();
-    if (this.cos && this.creds && now < this.credsExpireAt - 60_000) {
+    if (this.cos && now < this.credsExpireAt - 60_000) {
       return this.cos;
     }
+
+    // 优先使用永久密钥（环境变量配置）
+    const secretId = process.env.COS_SECRET_ID;
+    const secretKey = process.env.COS_SECRET_KEY;
+    if (secretId && secretKey) {
+      this.cos = new COS({ SecretId: secretId, SecretKey: secretKey });
+      this.credsExpireAt = Number.MAX_SAFE_INTEGER;
+      this.logger.log('使用永久密钥创建 COS 客户端');
+      return this.cos;
+    }
+
+    // 其次使用云托管元数据 STS
     const creds = await this.fetchSts();
     this.creds = creds;
     this.credsExpireAt = new Date(creds.Expiration).getTime();
@@ -214,7 +226,7 @@ export class CosService {
         res.on('error', reject);
       });
       req.on('error', reject);
-      req.setTimeout(5000, () => {
+      req.setTimeout(2000, () => {
         req.destroy(new Error('metadata timeout'));
       });
     });
