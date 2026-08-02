@@ -80,8 +80,8 @@ export class AdminController {
   @Get('dashboard')
   @UseGuards(AdminAuthGuard)
   async dashboard(@Req() req: Request) {
-    const supplierId = (req as any).user.supplierId;
-    const data = await this.adminService.getDashboard(supplierId);
+    const user = (req as any).user;
+    const data = await this.adminService.getDashboard(user.supplierId, user.role);
     return { code: 0, message: 'success', data };
   }
 
@@ -486,6 +486,39 @@ export class AdminController {
   @UseGuards(AdminAuthGuard)
   async syncStock(@Query('skuId') skuId?: string) {
     const data = await this.adminService.syncStockToDianjia(skuId);
+    return { code: 0, message: 'success', data };
+  }
+
+  // ===== 轮播图管理 =====
+
+  @Get('banners')
+  @UseGuards(AdminAuthGuard)
+  async listBanners() {
+    const data = await this.adminService.listBanners();
+    return { code: 0, message: 'success', data };
+  }
+
+  @Post('banners')
+  @UseGuards(AdminAuthGuard)
+  async createBanner(@Body() body: { title: string; imageUrl: string; link?: string; sort?: number; status?: string }) {
+    const data = await this.adminService.createBanner(body);
+    return { code: 0, message: 'success', data };
+  }
+
+  @Put('banners/:id')
+  @UseGuards(AdminAuthGuard)
+  async updateBanner(
+    @Param('id') id: string,
+    @Body() body: { title?: string; imageUrl?: string; link?: string; sort?: number; status?: string },
+  ) {
+    const data = await this.adminService.updateBanner(id, body);
+    return { code: 0, message: 'success', data };
+  }
+
+  @Delete('banners/:id')
+  @UseGuards(AdminAuthGuard)
+  async deleteBanner(@Param('id') id: string) {
+    const data = await this.adminService.deleteBanner(id);
     return { code: 0, message: 'success', data };
   }
 }

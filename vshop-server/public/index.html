@@ -1177,13 +1177,9 @@ function loadDashboard() {
     dashboardData = data.data || data || {};
     renderDashboard(dashboardData);
   }).catch(function() {
-    renderDashboard({
-      pendingOrders: 12,
-      todayRevenue: 3580.50,
-      totalProducts: 86,
-      todayShipments: 28,
-      recentOrders: mockOrders.slice(0, 5)
-    });
+    // 接口失败时展示空数据，不使用 mock 假数据误导
+    renderDashboard({ pendingOrders: 0, todayRevenue: 0, totalProducts: 0, todayShipments: 0, recentOrders: [] });
+    showToast('工作台数据加载失败', 'error');
   });
 }
 

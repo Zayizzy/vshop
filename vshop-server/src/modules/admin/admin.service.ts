@@ -166,20 +166,75 @@ export class AdminService {
     };
   }
 
-  async getDashboard(supplierId: string) {
-    const [totalProducts, pendingCount] = await Promise.all([
-      this.prisma.good.count({ where: { status: 'active' } }),
-      this.prisma.order.count({ where: { status: 'pending' } }),
+  async getDashboard(supplierId: string, role?: string) {
+    const isSuper = role === 'super';
+    // 超管看全局；供应商/运营只看自己名下数据
+    const orderWhere: any = isSuper ? {} : { supplierId };
+    const productWhere: any = isSuper
+      ? { status: 'active' }
+      : { status: 'active', suppliers: { some: { supplierId } } };
+
+    // 今日 0 点（按本地时区；云托管建议设 TZ=Asia/Shanghai）
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+
+    const paymentWhere: any = { status: 'paid', payTime: { gte: todayStart } };
+    if (!isSuper) paymentWhere.order = { supplierId };
+
+    const [pendingOrders, totalProducts, todayRevenueAgg, todayShipments, recentOrdersRaw] = await Promise.all([
+      // 待处理订单（待付款）
+      this.prisma.order.count({ where: { ...orderWhere, status: 'pending' } }),
+      // 在售商品数
+      this.prisma.good.count({ where: productWhere }),
+      // 今日收入：今日已支付订单实付金额合计（Payment.amount 单位「分」）
+      this.prisma.payment.aggregate({
+        where: paymentWhere,
+        _sum: { amount: true },
+      }),
+      // 今日发货：今日更新且状态为已发货/已完成
+      // （OrderPackage 无发货时间字段，用 order.updatedAt 近似）
+      this.prisma.order.count({
+        where: { ...orderWhere, status: { in: ['receiving', 'done'] }, updatedAt: { gte: todayStart } },
+      }),
+      // 最近订单
+      this.prisma.order.findMany({
+        where: orderWhere,
+        orderBy: { createdAt: 'desc' },
+        take: 8,
+        include: {
+          address: { select: { name: true, phone: true } },
+          items: { select: { quantity: true } },
+        },
+      }),
     ]);
+
+    // 时间格式化（Asia/Shanghai，避免云托管 UTC 环境下时间偏差）
+    const fmtTime = (d: Date) => {
+      const parts = new Intl.DateTimeFormat('zh-CN', {
+        timeZone: 'Asia/Shanghai',
+        year: 'numeric', month: '2-digit', day: '2-digit',
+        hour: '2-digit', minute: '2-digit', hour12: false,
+      }).formatToParts(d);
+      const g = (t: string) => parts.find((x) => x.type === t)?.value ?? '';
+      return `${g('year')}-${g('month')}-${g('day')} ${g('hour')}:${g('minute')}`;
+    };
+
+    const recentOrders = recentOrdersRaw.map((o) => ({
+      orderNo: o.orderSn,
+      amount: centToYuan(o.payAmount),
+      itemCount: o.items.reduce((s, it) => s + it.quantity, 0),
+      receiver: o.address?.name || o.address?.phone || '',
+      status: o.status,
+      createTime: fmtTime(o.createdAt),
+    }));
+
     return {
-      pendingOrders: pendingCount,
-      todayRevenue: 2580.50,
+      pendingOrders,
+      todayRevenue: centToYuan(todayRevenueAgg._sum.amount ?? 0),
       totalProducts,
-      shippingToday: 0,
-      recentOrders: [
-        { orderSn: '20260616001', amount: 88, status: 'pending', createdAt: '2026-06-16 08:30' },
-        { orderSn: '20260616002', amount: 156, status: 'shipping', createdAt: '2026-06-16 07:15' },
-      ]
+      // 字段名对齐前端 renderDashboard（前端读 data.todayShipments）
+      todayShipments,
+      recentOrders,
     };
   }
 
@@ -1703,6 +1758,60 @@ export class AdminService {
       };
     }
     return base;
+  }
+
+  // ===== 轮播图管理 =====
+
+  /** 轮播图列表（管理端，含隐藏的；按 sort 升序） */
+  async listBanners() {
+    const banners = await this.prisma.banner.findMany({
+      orderBy: [{ sort: 'asc' }, { createdAt: 'desc' }],
+    });
+    return {
+      list: banners.map((b) => ({
+        id: b.id,
+        title: b.title,
+        imageUrl: b.imageUrl,
+        link: b.link || '',
+        sort: b.sort,
+        status: b.status,
+        createdAt: b.createdAt.toISOString(),
+        updatedAt: b.updatedAt.toISOString(),
+      })),
+      total: banners.length,
+    };
+  }
+
+  /** 新增轮播图 */
+  async createBanner(body: { title: string; imageUrl: string; link?: string; sort?: number; status?: string }) {
+    const banner = await this.prisma.banner.create({
+      data: {
+        title: body.title,
+        imageUrl: body.imageUrl,
+        link: body.link || null,
+        sort: body.sort != null ? Number(body.sort) : 0,
+        status: body.status || 'active',
+      },
+    });
+    return { id: banner.id };
+  }
+
+  /** 更新轮播图 */
+  async updateBanner(id: string, body: { title?: string; imageUrl?: string; link?: string; sort?: number; status?: string }) {
+    const data: any = {};
+    if (body.title != null) data.title = body.title;
+    if (body.imageUrl != null) data.imageUrl = body.imageUrl;
+    if (body.link != null) data.link = body.link || null;
+    if (body.sort != null) data.sort = Number(body.sort);
+    if (body.status != null) data.status = body.status;
+    await this.prisma.banner.update({ where: { id }, data });
+    return { id };
+  }
+
+  /** 删除轮播图 */
+  async deleteBanner(id: string) {
+    await this.prisma.banner.delete({ where: { id } });
+    return { id };
   }
 }
 
