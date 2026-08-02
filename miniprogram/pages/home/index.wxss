@@ -79,6 +79,18 @@
   overflow: hidden;
 }
 
+/* 有图片的轮播图：图片铺满，不再居中文字 */
+.banner-item-img {
+  align-items: stretch;
+  justify-content: flex-start;
+}
+
+.banner-img {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
 /* 渐变叠加层，让纯色 banner 更有质感 */
 .banner-item::after {
   content: '';

@@ -108,6 +108,29 @@ table { border-collapse: collapse; width: 100%; }
 .nav-item:hover { background: var(--sidebar-hover); color: white; }
 .nav-item.active { background: rgba(7,193,96,0.15); color: var(--sidebar-active); font-weight: 600; }
 .nav-item .nav-icon { font-size: 18px; width: 24px; text-align: center; }
+
+/* 可折叠子菜单 */
+.nav-group { margin: 2px 12px; }
+.nav-group-title {
+  display: flex; align-items: center; gap: 12px; padding: 12px 20px;
+  border-radius: var(--radius-sm); color: var(--sidebar-text); cursor: pointer;
+  transition: var(--transition); font-size: 14px; font-weight: 500; user-select: none;
+}
+.nav-group-title:hover { background: var(--sidebar-hover); color: white; }
+.nav-group-title .nav-icon { font-size: 18px; width: 24px; text-align: center; }
+.nav-group-title .nav-arrow { margin-left: auto; font-size: 12px; transition: transform 0.2s; }
+.nav-group.open .nav-arrow { transform: rotate(90deg); }
+.nav-sub { overflow: hidden; max-height: 0; transition: max-height 0.25s ease; }
+.nav-group.open .nav-sub { max-height: 400px; }
+.nav-sub-item {
+  display: flex; align-items: center; gap: 10px; padding: 10px 20px 10px 48px;
+  color: var(--sidebar-text); cursor: pointer; font-size: 13px; transition: var(--transition);
+  border-radius: var(--radius-sm); margin: 1px 0;
+}
+.nav-sub-item:hover { background: var(--sidebar-hover); color: white; }
+.nav-sub-item.active { background: rgba(7,193,96,0.15); color: var(--sidebar-active); font-weight: 600; }
+.nav-sub-item .nav-sub-icon { font-size: 15px; width: 20px; text-align: center; }
+
 .sidebar-footer { padding: 16px 20px; border-top: 1px solid rgba(255,255,255,0.06); }
 .btn-logout {
   display: flex; align-items: center; gap: 10px; width: 100%; padding: 10px 16px;
@@ -449,6 +472,17 @@ table .actions { display: flex; gap: 8px; flex-wrap: wrap; }
       <div class="nav-item" data-view="aftersale" onclick="switchView('aftersale', this)">
         <span class="nav-icon">↩️</span> 退货管理
       </div>
+      <div class="nav-group" id="navGroupSettings">
+        <div class="nav-group-title" onclick="toggleNavGroup('navGroupSettings')">
+          <span class="nav-icon">⚙️</span> 设置
+          <span class="nav-arrow">▶</span>
+        </div>
+        <div class="nav-sub">
+          <div class="nav-sub-item" data-view="banners" onclick="switchView('banners', this)">
+            <span class="nav-sub-icon">🖼️</span> 轮播图设置
+          </div>
+        </div>
+      </div>
     </nav>
     <div class="sidebar-footer">
       <button class="btn-logout" onclick="handleLogout()">&#x21AA; &#x9000;&#x51FA;&#x767B;&#x5F55;</button>
@@ -685,6 +719,75 @@ table .actions { display: flex; gap: 8px; flex-wrap: wrap; }
           </div>
           <div class="empty-state" id="aftersalesEmpty" style="display:none;"><div class="empty-icon">↩️</div><p>暂无售后记录</p></div>
           <div id="aftersalesPager" style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-top:1px solid var(--border);font-size:13px;color:var(--text-secondary);"></div>
+        </div>
+      </div>
+
+      <!-- Banners View -->
+      <div class="view" id="view-banners">
+        <div class="section-header">
+          <div class="section-header-left">
+            <h2>🖼️ 轮播图设置</h2>
+            <span>管理小程序首页轮播图，排序越小越靠前</span>
+          </div>
+          <div class="section-header-right">
+            <button class="btn btn-primary btn-sm" onclick="openBannerModal()">+ 新增轮播图</button>
+          </div>
+        </div>
+        <div class="card" style="padding:0;overflow:hidden;">
+          <div class="table-wrap">
+            <table class="product-table">
+              <thead><tr><th>缩略图</th><th>标题</th><th>跳转链接</th><th>排序</th><th>状态</th><th style="text-align:right">操作</th></tr></thead>
+              <tbody id="bannersTable"></tbody>
+            </table>
+          </div>
+          <div class="empty-state" id="bannersEmpty" style="display:none;"><div class="empty-icon">🖼️</div><p>暂无轮播图，点击右上角新增</p></div>
+        </div>
+      </div>
+
+      <!-- Banner Modal -->
+      <div class="modal-overlay" id="bannerModalOverlay">
+        <div class="modal">
+          <div class="modal-header">
+            <h3 id="bannerModalTitle">新增轮播图</h3>
+            <button class="modal-close" onclick="closeModal('bannerModalOverlay')">&times;</button>
+          </div>
+          <div class="modal-body">
+            <input type="hidden" id="bannerEditId">
+            <div class="form-group">
+              <label for="bannerTitle">标题</label>
+              <input type="text" id="bannerTitle" placeholder="轮播图标题（如：产地直采·新鲜果蔬每日直达）">
+            </div>
+            <div class="form-group">
+              <label>轮播图片</label>
+              <div style="display:flex;gap:12px;align-items:flex-start;flex-wrap:wrap;">
+                <img id="bannerImgPreview" src="" style="width:200px;height:100px;object-fit:cover;border-radius:8px;background:var(--bg-secondary,#f5f5f5);display:none;" />
+                <div style="display:flex;flex-direction:column;gap:8px;">
+                  <input type="file" id="bannerImgFile" accept="image/*" onchange="uploadBannerImg(this)">
+                  <input type="text" id="bannerImageUrl" placeholder="或直接粘贴图片URL" style="padding:8px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:13px;width:300px;">
+                  <span style="font-size:12px;color:var(--text-secondary);">建议尺寸 750×340，选文件上传或直接填 URL</span>
+                </div>
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="bannerLink">跳转链接（可选）</label>
+              <input type="text" id="bannerLink" placeholder="点击跳转的小程序页面路径，如 /pages/goods/detail?id=xxx">
+            </div>
+            <div class="form-group">
+              <label for="bannerSort">排序</label>
+              <input type="number" id="bannerSort" value="0" placeholder="数字越小越靠前">
+            </div>
+            <div class="form-group">
+              <label for="bannerStatus">状态</label>
+              <select id="bannerStatus">
+                <option value="active">显示</option>
+                <option value="inactive">隐藏</option>
+              </select>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button class="btn btn-outline" onclick="closeModal('bannerModalOverlay')">取消</button>
+            <button class="btn btn-primary" onclick="saveBanner()">保存</button>
+          </div>
         </div>
       </div>
 
@@ -1086,12 +1189,13 @@ var titles = {
   koc: '🎯 KOC 管理',
   settlement: '💰 结算管理',
   chat: '💬 客服消息',
-  aftersale: '↩️ 退货管理'
+  aftersale: '↩️ 退货管理',
+  banners: '🖼️ 轮播图设置'
 };
 
 function switchView(view, el) {
   currentView = view;
-  document.querySelectorAll('.nav-item').forEach(function(n) { n.classList.remove('active'); });
+  document.querySelectorAll('.nav-item, .nav-sub-item').forEach(function(n) { n.classList.remove('active'); });
   if (el) el.classList.add('active');
   document.querySelectorAll('.view').forEach(function(v) { v.classList.remove('active'); });
   document.getElementById('view-' + view).classList.add('active');
@@ -1107,6 +1211,12 @@ function switchView(view, el) {
   else if (view === 'settlement') loadSettlement();
   else if (view === 'chat') loadChatView();
   else if (view === 'aftersale') loadAftersales();
+  else if (view === 'banners') loadBanners();
+}
+
+// 折叠/展开导航分组（设置菜单）
+function toggleNavGroup(groupId) {
+  document.getElementById(groupId).classList.toggle('open');
 }
 
 function toggleSidebar() {
@@ -2693,6 +2803,149 @@ var mockOrders = [
   { id: 'o6', orderNo: '20260614001', amount: 77.60, itemCount: 4, receiver: '周八', phone: '131****7890', status: 'pending', createTime: '2026-06-14 10:30', address: '成都市武侯区天府大道1号', items: [{ name: '有机小番茄', price: 12.80, quantity: 4, subtotal: 51.20 }] }
 ];
 
+// ==============================
+// Banners 轮播图管理
+// ==============================
+var banners = [];
+
+function loadBanners() {
+  apiGet('/banners').then(function(data) {
+    var d = data.data || data || {};
+    banners = d.list || [];
+    renderBanners();
+  }).catch(function() {
+    banners = [];
+    renderBanners();
+    showToast('轮播图加载失败', 'error');
+  });
+}
+
+function renderBanners() {
+  var tbody = document.getElementById('bannersTable');
+  var empty = document.getElementById('bannersEmpty');
+  if (!banners.length) {
+    tbody.innerHTML = '';
+    empty.style.display = 'block';
+    return;
+  }
+  empty.style.display = 'none';
+  tbody.innerHTML = banners.map(function(b) {
+    var thumb = b.imageUrl
+      ? '<img src="' + b.imageUrl + '" style="width:120px;height:54px;object-fit:cover;border-radius:6px;background:#f5f5f5;" />'
+      : '<div style="width:120px;height:54px;display:flex;align-items:center;justify-content:center;background:#f5f5f5;border-radius:6px;color:#ccc;font-size:12px;">无图片</div>';
+    var statusBadge = b.status === 'active'
+      ? '<span class="badge badge-success">显示</span>'
+      : '<span class="badge badge-muted">隐藏</span>';
+    var toggleBtn = b.status === 'active'
+      ? '<button class="btn btn-outline btn-sm" onclick="toggleBannerStatus(\'' + b.id + '\', \'inactive\')">隐藏</button>'
+      : '<button class="btn btn-outline btn-sm" onclick="toggleBannerStatus(\'' + b.id + '\', \'active\')">显示</button>';
+    return '<tr>'
+      + '<td>' + thumb + '</td>'
+      + '<td>' + (b.title || '') + '</td>'
+      + '<td style="font-size:12px;color:var(--text-secondary);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + (b.link || '-') + '</td>'
+      + '<td>' + (b.sort != null ? b.sort : 0) + '</td>'
+      + '<td>' + statusBadge + '</td>'
+      + '<td style="text-align:right;white-space:nowrap;">'
+      + '<button class="btn btn-outline btn-sm" onclick="openBannerModal(\'' + b.id + '\')">编辑</button> '
+      + toggleBtn + ' '
+      + '<button class="btn btn-outline btn-sm" style="color:var(--danger);" onclick="deleteBanner(\'' + b.id + '\')">删除</button>'
+      + '</td></tr>';
+  }).join('');
+}
+
+function openBannerModal(id) {
+  document.getElementById('bannerEditId').value = id || '';
+  if (id) {
+    var b = banners.find(function(x) { return x.id === id; }) || {};
+    document.getElementById('bannerModalTitle').textContent = '编辑轮播图';
+    document.getElementById('bannerTitle').value = b.title || '';
+    document.getElementById('bannerImageUrl').value = b.imageUrl || '';
+    document.getElementById('bannerLink').value = b.link || '';
+    document.getElementById('bannerSort').value = b.sort != null ? b.sort : 0;
+    document.getElementById('bannerStatus').value = b.status || 'active';
+    var preview = document.getElementById('bannerImgPreview');
+    if (b.imageUrl) { preview.src = b.imageUrl; preview.style.display = 'block'; }
+    else { preview.src = ''; preview.style.display = 'none'; }
+  } else {
+    document.getElementById('bannerModalTitle').textContent = '新增轮播图';
+    document.getElementById('bannerTitle').value = '';
+    document.getElementById('bannerImageUrl').value = '';
+    document.getElementById('bannerLink').value = '';
+    document.getElementById('bannerSort').value = '0';
+    document.getElementById('bannerStatus').value = 'active';
+    var preview2 = document.getElementById('bannerImgPreview');
+    preview2.src = ''; preview2.style.display = 'none';
+  }
+  document.getElementById('bannerImgFile').value = '';
+  openModal('bannerModalOverlay');
+}
+
+// 上传轮播图图片（复用 /upload 接口）
+function uploadBannerImg(input) {
+  var file = input.files && input.files[0];
+  if (!file) return;
+  var fd = new FormData();
+  fd.append('files', file);
+  showToast('图片上传中…', 'info');
+  fetch(API_BASE + '/upload', { method: 'POST', headers: uploadHeaders(), body: fd })
+    .then(function(r) { return r.json(); })
+    .then(function(res) {
+      if (res && res.code === 0 && res.data && res.data.urls && res.data.urls.length) {
+        var url = res.data.urls[0];
+        document.getElementById('bannerImageUrl').value = url;
+        var preview = document.getElementById('bannerImgPreview');
+        preview.src = url; preview.style.display = 'block';
+        showToast('上传成功', 'success');
+      } else {
+        showToast('上传失败', 'error');
+      }
+    })
+    .catch(function() { showToast('上传失败', 'error'); });
+}
+
+function saveBanner() {
+  var id = document.getElementById('bannerEditId').value;
+  var title = document.getElementById('bannerTitle').value.trim();
+  var imageUrl = document.getElementById('bannerImageUrl').value.trim();
+  var link = document.getElementById('bannerLink').value.trim();
+  var sort = parseInt(document.getElementById('bannerSort').value, 10) || 0;
+  var status = document.getElementById('bannerStatus').value;
+
+  if (!title) { showToast('请填写标题', 'error'); return; }
+  if (!imageUrl) { showToast('请上传图片或填写图片URL', 'error'); return; }
+
+  var payload = { title: title, imageUrl: imageUrl, link: link, sort: sort, status: status };
+  var req = id
+    ? apiPut('/banners/' + id, payload)
+    : apiPost('/banners', payload);
+
+  req.then(function() {
+    closeModal('bannerModalOverlay');
+    loadBanners();
+    showToast(id ? '保存成功' : '新增成功', 'success');
+  }).catch(function() {
+    showToast('保存失败', 'error');
+  });
+}
+
+function deleteBanner(id) {
+  if (!confirm('确定删除该轮播图吗？')) return;
+  apiDel('/banners/' + id).then(function() {
+    loadBanners();
+    showToast('已删除', 'success');
+  }).catch(function() { showToast('删除失败', 'error'); });
+}
+
+function toggleBannerStatus(id, status) {
+  apiPut('/banners/' + id, { status: status }).then(function() {
+    loadBanners();
+    showToast(status === 'active' ? '已显示' : '已隐藏', 'success');
+  }).catch(function() { showToast('操作失败', 'error'); });
+}
+
+// ==============================
+// Mock Data
+// ==============================
 var mockSettlements = [
   { id: 's1', period: '2026-06-01 ~ 2026-06-15', orderCount: 86, amount: 25800.00, status: '待结算', settleTime: '--' },
   { id: 's2', period: '2026-05-16 ~ 2026-05-31', orderCount: 112, amount: 33600.00, status: '已结算', settleTime: '2026-06-03' },

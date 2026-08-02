@@ -401,3 +401,18 @@ model AppSetting {
   value     String
   updatedAt DateTime @updatedAt
 }
+
+// 首页轮播图。sort 越小越靠前；status=active 显示，inactive 隐藏。
+// imageUrl 为 COS 图片地址；link 可选，点击跳转（商品详情/分类等小程序页面路径）。
+model Banner {
+  id        String   @id @default(cuid())
+  title     String
+  imageUrl  String   @db.Text
+  link      String?  @db.Text
+  sort      Int      @default(0)
+  status    String   @default("active")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status, sort])
+}

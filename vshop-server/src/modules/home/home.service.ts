@@ -18,24 +18,41 @@ export class HomeService {
     const cached = await this.cacheManager.get<any>(HOME_CACHE_KEY);
     if (cached) return cached;
 
-    const categories = await this.prisma.category.findMany({
-      where: { status: 'active' },
-      orderBy: { sort: 'asc' },
-      include: {
-        subCategories: {
-          include: {
-            _count: { select: { goods: true } },
+    const [categories, banners] = await Promise.all([
+      this.prisma.category.findMany({
+        where: { status: 'active' },
+        orderBy: { sort: 'asc' },
+        include: {
+          subCategories: {
+            include: {
+              _count: { select: { goods: true } },
+            },
           },
         },
-      },
-    });
+      }),
+      // 轮播图从数据库查（status=active，按 sort 升序）
+      this.prisma.banner.findMany({
+        where: { status: 'active' },
+        orderBy: [{ sort: 'asc' }, { createdAt: 'desc' }],
+      }),
+    ]);
 
     const result = {
-      banners: [
-        { title: '产地直采·新鲜果蔬每日直达', color: '#FF6B35' },
-        { title: '每日20:00前下单·次日达', color: '#07C160' },
-        { title: '满39元免配送费', color: '#2E7D32' },
-      ],
+      // 无数据库轮播图时 fallback 到默认文案（保证首页不空）
+      banners: banners.length > 0
+        ? banners.map((b) => ({
+            id: b.id,
+            title: b.title,
+            imageUrl: b.imageUrl,
+            link: b.link || '',
+            // 无图时用绿色兜底，小程序 wxml 会判断有无 imageUrl 决定显示图片还是色块
+            color: b.imageUrl ? '' : '#07C160',
+          }))
+        : [
+            { title: '产地直采·新鲜果蔬每日直达', color: '#FF6B35' },
+            { title: '每日20:00前下单·次日达', color: '#07C160' },
+            { title: '满39元免配送费', color: '#2E7D32' },
+          ],
       categories: categories.map((c) => ({
         id: c.id,
         name: c.name,

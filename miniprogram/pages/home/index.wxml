@@ -28,8 +28,9 @@
   <swiper class="banner" autoplay circular interval="3000" duration="500">
     <block wx:for="{{banners}}" wx:key="index">
       <swiper-item>
-        <view class="banner-item" style="background-color:{{item.color}}" data-link="{{item.link}}" bindtap="onBannerTap">
-          <view class="banner-text">
+        <view class="banner-item {{item.imageUrl ? 'banner-item-img' : ''}}" style="background-color:{{item.color}}" data-link="{{item.link}}" bindtap="onBannerTap">
+          <image wx:if="{{item.imageUrl}}" class="banner-img" src="{{item.imageUrl}}" mode="aspectFill" lazy-load />
+          <view class="banner-text" wx:if="{{!item.imageUrl}}">
             <text class="banner-title">{{item.title}}</text>
           </view>
           <view class="banner-dots">
