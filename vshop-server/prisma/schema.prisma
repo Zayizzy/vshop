@@ -99,7 +99,7 @@ model Good {
 model GoodImage {
   id      String @id @default(cuid())
   goodId  String
-  url     String
+  url     String @db.Text
   sort    Int    @default(0)
 
   good Good @relation(fields: [goodId], references: [id])
@@ -109,7 +109,7 @@ model GoodImage {
 model GoodDetailImage {
   id      String @id @default(cuid())
   goodId  String
-  url     String
+  url     String @db.Text
   sort    Int    @default(0)
 
   good Good @relation(fields: [goodId], references: [id])
