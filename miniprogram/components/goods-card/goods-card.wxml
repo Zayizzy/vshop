@@ -1,6 +1,17 @@
 <view class="c-card" bindtap="onTap">
   <view class="c-card-img-wrap" style="background-color:{{imgBg}};">
-    <image class="c-card-img" src="{{resolved.image}}" mode="aspectFill" style="height:{{imgHeight}};" lazy-load />
+    <image
+      wx:if="{{resolved.image}}"
+      class="c-card-img {{imgError ? 'c-card-img-hidden' : ''}}"
+      src="{{resolved.image}}"
+      mode="aspectFill"
+      style="height:{{imgHeight}};"
+      lazy-load
+      binderror="onImgError"
+    />
+    <view class="c-card-placeholder" style="height:{{imgHeight}};" wx:if="{{!resolved.image || imgError}}">
+      <text class="c-card-placeholder-emoji">🛒</text>
+    </view>
     <view class="c-card-tag" wx:if="{{resolved.tag}}">{{resolved.tag}}</view>
   </view>
   <view class="c-card-body">

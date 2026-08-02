@@ -26,10 +26,13 @@ Component({
   },
   data: {
     resolved: {},
+    // 图片加载失败标记（true 时显示占位，避免空白卡片让整体布局看起来错乱）
+    imgError: false,
   },
   observers: {
     item(val) {
-      this.setData({ resolved: this.resolve(val) })
+      // 切换 item 时重置 imgError，避免上一张图的失败状态残留
+      this.setData({ resolved: this.resolve(val), imgError: false })
     },
   },
   lifetimes: {
@@ -63,6 +66,10 @@ Component({
     },
     onTap() {
       this.triggerEvent('tap', { id: this.data.resolved.id })
+    },
+    // 图片加载失败（404/网络错误）→ 显示占位，避免空白卡片
+    onImgError() {
+      this.setData({ imgError: true })
     },
   },
 })

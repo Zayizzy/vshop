@@ -24,6 +24,24 @@
   display: block;
   transition: transform 0.3s ease;
 }
+.c-card-img-hidden {
+  /* 图片加载失败时隐藏 <image> 自身，仅展示占位 */
+  display: none !important;
+}
+.c-card-placeholder {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* 用背景色兜底，即便 emoji 字体缺失也不会出现透明空洞 */
+  background-color: rgba(255, 255, 255, 0.35);
+}
+.c-card-placeholder-emoji {
+  font-size: 72rpx;
+  opacity: 0.5;
+  /* emoji 在低端机上偶发错位，加 line-height 1 防止基线偏移 */
+  line-height: 1;
+}
 .c-card:active .c-card-img {
   transform: scale(1.03);
 }
