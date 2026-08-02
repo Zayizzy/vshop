@@ -127,8 +127,19 @@ export class CosService {
           Expires: SIGN_EXPIRES,
           Protocol: 'https',
         },
-        (err: any, data: any) =>
-          err ? reject(err) : resolve(data && data.url),
+        (err: any, data: any) => {
+          if (err) return reject(err);
+          // SDK 版本不同，URL 可能在 url / Url 属性中
+          const signedUrl = data?.url || data?.Url || data?.signedUrl;
+          if (signedUrl) {
+            resolve(signedUrl);
+          } else {
+            // fallback：手动拼接 https URL（putObject 已成功，key 有效）
+            const baseUrl = `https://${this.bucket}.cos.${this.region}.myqcloud.com/${key}`;
+            this.logger.warn(`getObjectUrl 未返回 URL，使用 fallback：${baseUrl}`);
+            resolve(baseUrl);
+          }
+        },
       );
     });
 
