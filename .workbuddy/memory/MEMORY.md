@@ -47,3 +47,20 @@
 - v1.1：KOC分销体系完整上线
 - v1.2：营销与运营深化
 - v2.0：效率与体验升级
+
+## 订单状态语义（重要，勿混淆）
+后端 Order.status 五态（`payment.service.ts:83` 注释为权威定义）：
+- `pending` = 待付款（下单未支付）
+- `shipping` = 待发货（已支付，等供应商发货）
+- `receiving` = 待收货（已发货，运输中）
+- `done` = 已完成（用户确认收货）
+- `cancelled` = 已取消
+
+状态流转：
+- 下单 → pending；支付成功 → payment.status=paid + order.status: pending→shipping（`payment.service.ts:84`）
+- 发货 → order.status: shipping→receiving，包裹 status=2（`admin.service.ts:675`）
+- 确认收货 → order.status: receiving→done，包裹 status=5（`order.service.ts:592`）
+
+包裹状态（OrderPackage.status, Int）：0待发货 1已打单 2已发货 3运输中 4派送中 5已签收
+
+注意：admin 后台 `public/index.html` 曾把 shipping 错显为"已发货"（2026-08-02 修复），小程序端 `miniprogram/pages/order/list.js` 一直是正确的。

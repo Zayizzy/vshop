@@ -219,7 +219,7 @@ model OrderItem {
   skuId     String
   goodTitle String
   specName  String?
-  image     String?
+  image     String?  @db.Text
   // 单价以「分」为单位（Int）
   price     Int
   quantity  Int
