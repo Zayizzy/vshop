@@ -555,12 +555,20 @@ export class AdminService {
 
   // ===== 订单管理 =====
 
-  async getOrders(
+  /**
+   * 构建订单查询 where 条件（getOrders / exportOrders 共用）。
+   * - supplierId 为空时查全量（超管看全局）
+   * - status: 'all' 或空表示不限
+   * - keyword: 模糊匹配订单号 / 收货人 / 手机号
+   * - startDate/endDate: 按 createdAt 区间过滤 [startDate, endDate)（endDate 传当天时会自动包含整天）
+   */
+  private buildOrderWhere(
     supplierId: string,
-    params: { status?: string; keyword?: string; page: number; pageSize: number },
+    params: { status?: string; keyword?: string; startDate?: string; endDate?: string },
   ) {
-    const { status, keyword, page, pageSize } = params;
+    const { status, keyword, startDate, endDate } = params;
     const where: any = {};
+    if (supplierId) where.supplierId = supplierId;
     if (status && status !== 'all') where.status = status;
     if (keyword && keyword.trim()) {
       const kw = keyword.trim();
@@ -570,6 +578,30 @@ export class AdminService {
         { address: { name: { contains: kw } } },
       ];
     }
+    if (startDate || endDate) {
+      where.createdAt = {};
+      if (startDate) {
+        const s = new Date(startDate);
+        if (!isNaN(s.getTime())) where.createdAt.gte = s;
+      }
+      if (endDate) {
+        // endDate 传 '2026-08-02' 时应包含当天整天，故 +1 天作为上界
+        const e = new Date(endDate);
+        if (!isNaN(e.getTime())) {
+          e.setDate(e.getDate() + 1);
+          where.createdAt.lt = e;
+        }
+      }
+    }
+    return where;
+  }
+
+  async getOrders(
+    supplierId: string,
+    params: { status?: string; keyword?: string; startDate?: string; endDate?: string; page: number; pageSize: number },
+  ) {
+    const { page, pageSize } = params;
+    const where = this.buildOrderWhere(supplierId, params);
 
     const [orders, total] = await Promise.all([
       this.prisma.order.findMany({
@@ -611,6 +643,72 @@ export class AdminService {
       pageSize,
       totalPages: Math.ceil(total / pageSize),
     };
+  }
+
+  /**
+   * 导出订单为 CSV（全量，不分页）。
+   * 复用 buildOrderWhere 查询条件，含快递信息。
+   * 返回 UTF-8 with BOM 的 CSV 字符串（Excel 可正确识别中文）。
+   */
+  async exportOrdersCsv(
+    supplierId: string,
+    params: { status?: string; keyword?: string; startDate?: string; endDate?: string },
+  ): Promise<{ filename: string; csv: string; count: number }> {
+    const where = this.buildOrderWhere(supplierId, params);
+    const orders = await this.prisma.order.findMany({
+      where,
+      include: { items: true, address: true, packages: true },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    const STATUS_TEXT: Record<string, string> = {
+      pending: '待付款', shipping: '待发货', receiving: '待收货', done: '已完成', cancelled: '已取消',
+    };
+    const SYNC_TEXT: Record<string, string> = {
+      synced: '已同步', failed: '同步失败', '': '未同步',
+    };
+
+    // CSV 表头
+    const headers = [
+      '订单号', '状态', '收货人', '手机号', '商品数', '商品总额(元)', '实付金额(元)',
+      '创建时间', '快递公司', '快递单号', '店管家同步',
+    ];
+    // CSV 转义：含逗号/引号/换行的字段用双引号包裹，内部双引号转义为两个双引号
+    const esc = (v: any) => {
+      const s = v == null ? '' : String(v);
+      if (/[",\n\r]/.test(s)) return '"' + s.replace(/"/g, '""') + '"';
+      return s;
+    };
+    const fmtTime = (d: Date) => {
+      const pad = (n: number) => String(n).padStart(2, '0');
+      return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    };
+
+    const rows = orders.map(o => {
+      // 取第一个有快递单号的包裹
+      const pkg = o.packages.find(p => p.expressNo) || o.packages[0];
+      return [
+        o.orderSn,
+        STATUS_TEXT[o.status] || o.status,
+        o.address?.name || '',
+        o.address?.phone || '',
+        o.items.reduce((sum, i) => sum + i.quantity, 0),
+        centToYuan(o.totalAmount).toFixed(2),
+        centToYuan(o.payAmount).toFixed(2),
+        fmtTime(o.createdAt),
+        pkg?.expressCompany || '',
+        pkg?.expressNo || '',
+        SYNC_TEXT[o.dianjiaSyncStatus || ''] || '未同步',
+      ].map(esc).join(',');
+    });
+
+    // BOM + 表头 + 数据行
+    const csv = '\uFEFF' + headers.map(esc).join(',') + '\r\n' + rows.join('\r\n');
+    const now = new Date();
+    const pad = (n: number) => String(n).padStart(2, '0');
+    const filename = `orders_${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}_${pad(now.getHours())}${pad(now.getMinutes())}.csv`;
+
+    return { filename, csv, count: orders.length };
   }
 
   async getOrderDetail(supplierId: string, id: string) {
@@ -708,14 +806,114 @@ export class AdminService {
     return { id, status: updated.status };
   }
 
+  /**
+   * 结算概览。
+   *
+   * 业务定义（按 supplier 维度聚合；supplierId 为空则查全量，便于超管查看全局）：
+   *  - 已收入 totalRevenue = 所有「已支付」订单的 payAmount 合计（元）
+   *  - 已结算 settledAmount = 已支付 且 订单状态=done 的 payAmount 合计
+   *  - 待结算 pendingSettlement = 已收入 - 已结算
+   *  - 本月概况 = 按订单 createdAt 落在当月 [monthStart, monthEnd) 的已支付订单统计
+   *  - 结算记录 list = 按「自然月」分组聚合（按月对账），仅取最近 12 个月；
+   *      status = 该月所有订单均 done → '已结算'，否则 '待结算'；
+   *      settleTime = 已结算的取该月订单最大 updatedAt；待结算为 '--'
+   */
   async getSettlement(supplierId: string) {
+    // 仅统计「已支付」订单（payment.status=paid）
+    const where: any = { payment: { status: 'paid' } };
+    if (supplierId) where.supplierId = supplierId;
+
+    const paidOrders = await this.prisma.order.findMany({
+      where,
+      select: {
+        id: true,
+        payAmount: true,
+        status: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
+
+    // 1) 总额三件套
+    let totalRevenueCent = 0;
+    let settledCent = 0;
+    for (const o of paidOrders) {
+      totalRevenueCent += o.payAmount || 0;
+      if (o.status === 'done') settledCent += o.payAmount || 0;
+    }
+    const pendingCent = totalRevenueCent - settledCent;
+
+    // 2) 本月概况：按 createdAt 落在当月
+    const now = new Date();
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+    const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+    const monthOrders = paidOrders.filter(
+      (o) => o.createdAt >= monthStart && o.createdAt < monthEnd,
+    );
+    const monthlyOrders = monthOrders.length;
+    const monthlyAmountCent = monthOrders.reduce(
+      (s, o) => s + (o.payAmount || 0),
+      0,
+    );
+
+    // 3) 结算记录：按自然月分组聚合
+    interface MonthGroup {
+      periodStart: Date;
+      periodEnd: Date;
+      orders: typeof paidOrders;
+    }
+    const groupMap = new Map<string, MonthGroup>();
+    for (const o of paidOrders) {
+      const d = new Date(o.createdAt);
+      const ps = new Date(d.getFullYear(), d.getMonth(), 1);
+      const pe = new Date(d.getFullYear(), d.getMonth() + 1, 1);
+      const key = `${ps.getFullYear()}-${String(ps.getMonth() + 1).padStart(2, '0')}`;
+      let g = groupMap.get(key);
+      if (!g) {
+        g = { periodStart: ps, periodEnd: pe, orders: [] as typeof paidOrders };
+        groupMap.set(key, g);
+      }
+      g.orders.push(o);
+    }
+    // 按期开始日期降序，取最近 12 个月
+    const groups: MonthGroup[] = Array.from(groupMap.values())
+      .sort((a, b) => b.periodStart.getTime() - a.periodStart.getTime())
+      .slice(0, 12);
+
+    const fmt = (d: Date) =>
+      `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    // 周期结束 = 下一月 1 号 - 1 天，即本月最后一天
+    const endOfMonth = (d: Date) => {
+      const e = new Date(d.getFullYear(), d.getMonth() + 1, 0);
+      return fmt(e);
+    };
+
+    const list = groups.map((g) => {
+      const orderCount = g.orders.length;
+      const amountCent = g.orders.reduce((s, o) => s + (o.payAmount || 0), 0);
+      const allDone = g.orders.every((o) => o.status === 'done');
+      let latestUpdate: Date | null = null;
+      for (const o of g.orders) {
+        if (!latestUpdate || o.updatedAt > latestUpdate) latestUpdate = o.updatedAt;
+      }
+      return {
+        period: `${fmt(g.periodStart)} ~ ${endOfMonth(g.periodStart)}`,
+        orderCount,
+        amount: centToYuan(amountCent),
+        status: allDone ? '已结算' : '待结算',
+        settleTime: allDone && latestUpdate
+          ? latestUpdate.toISOString().slice(0, 10)
+          : '--',
+      };
+    });
+
     return {
-      totalRevenue: 25800.50, pendingSettlement: 8650, settledAmount: 17150.50,
-      thisMonth: { revenue: 12800, commission: 640, netIncome: 12160 },
-      records: [
-        { period: '2026.06.01-15', amount: 8650, status: 'pending', orderCount: 128 },
-        { period: '2026.05.01-31', amount: 12800.50, status: 'settled', orderCount: 205, settledAt: '2026-06-05' },
-      ],
+      totalRevenue: centToYuan(totalRevenueCent),
+      pendingSettlement: centToYuan(pendingCent),
+      settledAmount: centToYuan(settledCent),
+      monthlyOrders,
+      monthlyAmount: centToYuan(monthlyAmountCent),
+      list,
     };
   }
 

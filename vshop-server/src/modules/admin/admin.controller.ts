@@ -1,5 +1,5 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, Query, Req, UseGuards } from '@nestjs/common';
-import { Request } from 'express';
+import { Controller, Get, Post, Put, Delete, Body, Param, Query, Req, Res, UseGuards } from '@nestjs/common';
+import { Request, Response } from 'express';
 import { AdminService, requireKocManager } from './admin.service';
 import { Public } from '../../common/guards/public.decorator';
 import { AdminAuthGuard } from '../../common/guards/admin-auth.guard';
@@ -131,6 +131,8 @@ export class AdminController {
     @Req() req: Request,
     @Query('status') status?: string,
     @Query('keyword') keyword?: string,
+    @Query('startDate') startDate?: string,
+    @Query('endDate') endDate?: string,
     @Query('page') page?: string,
     @Query('pageSize') pageSize?: string,
   ) {
@@ -138,10 +140,34 @@ export class AdminController {
     const data = await this.adminService.getOrders(supplierId, {
       status,
       keyword,
+      startDate,
+      endDate,
       page: Number(page) || 1,
       pageSize: Number(pageSize) || 20,
     });
     return { code: 0, message: 'success', data };
+  }
+
+  // 导出订单 CSV（全量，不分页）。必须放在 orders/:id 之前，否则 'export' 会被当成 :id
+  @Get('orders/export')
+  @UseGuards(AdminAuthGuard)
+  async exportOrders(
+    @Req() req: Request,
+    @Res() res: Response,
+    @Query('status') status?: string,
+    @Query('keyword') keyword?: string,
+    @Query('startDate') startDate?: string,
+    @Query('endDate') endDate?: string,
+  ) {
+    const supplierId = (req as any).user.supplierId;
+    const { filename, csv, count } = await this.adminService.exportOrdersCsv(supplierId, {
+      status, keyword, startDate, endDate,
+    });
+    // 中文文件名需 RFC 5987 编码，避免乱码
+    const encodedFilename = encodeURIComponent(filename);
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"; filename*=UTF-8''${encodedFilename}`);
+    res.send(csv);
   }
 
   @Get('orders/:id')

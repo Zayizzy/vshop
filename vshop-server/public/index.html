@@ -539,7 +539,8 @@ table .actions { display: flex; gap: 8px; flex-wrap: wrap; }
         <div class="filter-bar" style="flex-wrap:wrap;gap:12px;">
           <div class="filter-tabs">
             <button class="filter-tab active" data-filter="all" onclick="filterOrders('all', this)">全部</button>
-            <button class="filter-tab" data-filter="pending" onclick="filterOrders('pending', this)">待发货</button>
+            <button class="filter-tab" data-filter="pending" onclick="filterOrders('pending', this)">待付款</button>
+            <button class="filter-tab" data-filter="shipping" onclick="filterOrders('shipping', this)">待发货</button>
             <button class="filter-tab" data-filter="receiving" onclick="filterOrders('receiving', this)">待收货</button>
             <button class="filter-tab" data-filter="done" onclick="filterOrders('done', this)">已完成</button>
             <button class="filter-tab" data-filter="cancelled" onclick="filterOrders('cancelled', this)">已取消</button>
@@ -552,6 +553,14 @@ table .actions { display: flex; gap: 8px; flex-wrap: wrap; }
             <button class="btn btn-sm btn-outline" style="color:#07C160;border-color:#07C160;" onclick="syncAllOrdersToDianjia(false)">批量同步店管家</button>
             <input type="text" id="orderKeyword" placeholder="搜索订单号/收货人/手机" style="padding:8px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:13px;width:240px;" onkeydown="if(event.key==='Enter')searchOrders()">
             <button class="btn btn-primary btn-sm" onclick="searchOrders()">搜索</button>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-left:auto;">
+            <span style="font-size:13px;color:var(--text-secondary);">下单日期：</span>
+            <input type="date" id="orderStartDate" style="padding:8px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:13px;">
+            <span style="font-size:13px;color:var(--text-secondary);">至</span>
+            <input type="date" id="orderEndDate" style="padding:8px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:13px;">
+            <button class="btn btn-sm btn-outline" onclick="clearOrderDateRange()">清空日期</button>
+            <button class="btn btn-sm btn-accent" onclick="exportOrdersCsv()">导出CSV</button>
           </div>
         </div>
         <div class="card">
@@ -892,6 +901,7 @@ table .actions { display: flex; gap: 8px; flex-wrap: wrap; }
     </div>
     <div class="modal-body">
       <input type="hidden" id="shipOrderId">
+      <div id="shipOrderInfo" style="background:var(--bg-secondary,#f5f5f5);border-radius:var(--radius-sm,6px);padding:12px;margin-bottom:16px;font-size:13px;line-height:1.8;"></div>
       <div class="form-group">
         <label for="shipCompany">&#x5FEB;&#x9012;&#x516C;&#x53F8;</label>
         <select id="shipCompany">
@@ -1202,12 +1212,14 @@ function renderDashboard(data) {
 // Status Helper
 // ==============================
 function statusBadge(s) {
+  // 订单状态语义（与后端 payment.service.ts 一致）：
+  //   pending=待付款(下单未支付) shipping=待发货(已支付待发货) receiving=待收货(已发货) done=已完成 cancelled=已取消
   var m = { 'active': 'badge-success', 'inactive': 'badge-muted', '上架': 'badge-success', '下架': 'badge-muted',
-             'pending': 'badge-warning', 'shipping': 'badge-info', 'receiving': 'badge-info',
+             'pending': 'badge-muted', 'shipping': 'badge-warning', 'receiving': 'badge-info',
              'done': 'badge-success', 'cancelled': 'badge-danger',
-             '待发货': 'badge-warning', '已发货': 'badge-info', '已完成': 'badge-success',
+             '待付款': 'badge-muted', '待发货': 'badge-warning', '待收货': 'badge-info', '已完成': 'badge-success',
              '已结算': 'badge-success', '待结算': 'badge-warning' };
-  var t = { 'pending': '待付款', 'shipping': '已发货', 'receiving': '运输中', 'done': '已完成', 'cancelled': '已取消', 'active': '已上架', 'inactive': '已下架' };
+  var t = { 'pending': '待付款', 'shipping': '待发货', 'receiving': '待收货', 'done': '已完成', 'cancelled': '已取消', 'active': '已上架', 'inactive': '已下架' };
   return '<span class="badge ' + (m[s] || 'badge-muted') + '">' + (t[s] || s) + '</span>';
 }
 
@@ -2017,9 +2029,13 @@ function deleteSubCategory(id) {
 // ==============================
 function loadOrders() {
   var keyword = (document.getElementById('orderKeyword').value || '').trim();
+  var startDate = (document.getElementById('orderStartDate').value || '').trim();
+  var endDate = (document.getElementById('orderEndDate').value || '').trim();
   var qs = '?page=' + orderPage + '&pageSize=' + orderPageSize;
   if (orderFilter !== 'all') qs += '&status=' + orderFilter;
   if (keyword) qs += '&keyword=' + encodeURIComponent(keyword);
+  if (startDate) qs += '&startDate=' + encodeURIComponent(startDate);
+  if (endDate) qs += '&endDate=' + encodeURIComponent(endDate);
   apiGet('/orders' + qs).then(function(data) {
     var d = data.data || data;
     orders = d.list || [];
@@ -2038,6 +2054,54 @@ function searchOrders() {
   loadOrders();
 }
 
+// 清空日期范围并重新查询
+function clearOrderDateRange() {
+  document.getElementById('orderStartDate').value = '';
+  document.getElementById('orderEndDate').value = '';
+  orderPage = 1;
+  loadOrders();
+}
+
+// 导出当前筛选条件下的全量订单为 CSV（不分页）
+function exportOrdersCsv() {
+  var keyword = (document.getElementById('orderKeyword').value || '').trim();
+  var startDate = (document.getElementById('orderStartDate').value || '').trim();
+  var endDate = (document.getElementById('orderEndDate').value || '').trim();
+  var qs = '?';
+  var parts = [];
+  if (orderFilter !== 'all') parts.push('status=' + encodeURIComponent(orderFilter));
+  if (keyword) parts.push('keyword=' + encodeURIComponent(keyword));
+  if (startDate) parts.push('startDate=' + encodeURIComponent(startDate));
+  if (endDate) parts.push('endDate=' + encodeURIComponent(endDate));
+  qs += parts.join('&');
+
+  showToast('正在导出订单…', 'info');
+  // 导出需带 Authorization 头（window.open 无法带），故用 fetch + Blob 触发下载
+  fetch(API_BASE + '/orders/export' + qs, { headers: authHeaders() })
+    .then(function(r) {
+      if (!r.ok) throw new Error('导出失败');
+      // 从 Content-Disposition 解析文件名（优先 filename*=UTF-8''）
+      var cd = r.headers.get('Content-Disposition') || '';
+      var m = cd.match(/filename\*=UTF-8''([^;]+)/i);
+      var filename = m ? decodeURIComponent(m[1]) : 'orders.csv';
+      return r.blob().then(function(b) { return { blob: b, filename: filename }; });
+    })
+    .then(function(res) {
+      var url = URL.createObjectURL(res.blob);
+      var a = document.createElement('a');
+      a.href = url;
+      a.download = res.filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      showToast('导出成功', 'success');
+    })
+    .catch(function() {
+      showToast('导出失败，请重试', 'error');
+    });
+}
+
 function renderOrders() {
   var list = orders;
   var tbody = document.getElementById('ordersTable');
@@ -2049,8 +2113,11 @@ function renderOrders() {
     empty.style.display = 'none';
     tbody.innerHTML = list.map(function(o) {
       var actions = '<button class="btn btn-outline btn-sm" onclick="openOrderDetail(\'' + o.id + '\')">详情</button>';
-      // 按状态显示操作：pending=待发货可发货/取消；receiving=待收货可完成
+      // 按状态显示操作：
+      //   pending=待付款(仅取消) shipping=待发货(发货/取消) receiving=待收货(确认完成)
       if (o.status === 'pending') {
+        actions += ' <button class="btn btn-outline btn-sm" onclick="cancelOrder(\'' + o.id + '\')">取消</button>';
+      } else if (o.status === 'shipping') {
         actions += ' <button class="btn btn-accent btn-sm" onclick="openShipModal(\'' + o.id + '\')">发货</button>';
         actions += ' <button class="btn btn-outline btn-sm" onclick="cancelOrder(\'' + o.id + '\')">取消</button>';
       } else if (o.status === 'receiving') {
@@ -2499,6 +2566,15 @@ function openShipModal(id) {
   document.getElementById('shipOrderId').value = id;
   document.getElementById('shipCompany').value = '';
   document.getElementById('shipTracking').value = '';
+  // 展示当前发货订单的关键信息，避免误发
+  var o = orders.find(function(x) { return x.id === id; }) || {};
+  var info = document.getElementById('shipOrderInfo');
+  var html = '';
+  if (o.orderNo) html += '<div><span style="color:var(--text-secondary);">订单号：</span><strong>' + o.orderNo + '</strong></div>';
+  if (o.receiver) html += '<div><span style="color:var(--text-secondary);">收货人：</span>' + o.receiver + (o.phone ? '（' + o.phone + '）' : '') + '</div>';
+  if (o.itemCount) html += '<div><span style="color:var(--text-secondary);">商品数：</span>' + o.itemCount + ' 件</div>';
+  if (o.payAmount != null) html += '<div><span style="color:var(--text-secondary);">实付金额：</span><strong>¥' + parseFloat(o.payAmount || 0).toFixed(2) + '</strong></div>';
+  info.innerHTML = html || '<div style="color:var(--text-secondary);">订单加载中…</div>';
   openModal('shipModalOverlay');
 }
 
